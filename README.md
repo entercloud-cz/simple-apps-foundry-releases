@@ -15,4 +15,7 @@ instance of it, in its own tenant.
 
   An instance pins each image by digest.
 
-No release has been published yet.
+**The current release is [v0.1.0](https://github.com/entercloud-cz/simple-apps-foundry-releases/releases/tag/v0.1.0)**,
+the first. Its `RELEASE-NOTES.md` opens with the upgrade notes. Before you use a release's files, check them with
+`sha256sum --check --strict SHA256SUMS`. An instance sets `coreImages.registry: ghcr.io/entercloud-cz` and pins
+`coreVersion` to the release's tag.
