@@ -1,0 +1,137 @@
+# Stage `preview_<env>` for a PROMOTION environment of kind prod: show the approver what the
+# release would change, before the environment's approval check of deploy_<env> (ADR-0029).
+#
+# A normal job (not a deployment job, no environment), so the environment's approval does not
+# apply, but the service connection sc-{slug}-{env} still carries its Required template and
+# Branch control checks. (Provisioning must not put an Approval check on the prod service
+# connection itself, or the preview would wait for it too.) preview.sh runs `az deployment group what-if` of release.bicep through
+# release.bicepparam with this run's release manifest and the environment's release record, the
+# scan gate against today's instance.yaml (not enforced here), and the newer-run check. The result
+# goes to the run summary and the artifact preview-<env>. Informational: differences never fail
+# the stage; errors (no release record, invalid input, what-if failure) do.
+
+parameters:
+  - name: app
+    type: object
+  - name: environment
+    type: object
+  - name: action
+    type: string
+    default: deliver
+    values:
+      - deliver
+      - redeploy
+  - name: sourceRunId
+    type: number
+    default: 0
+
+stages:
+  - stage: preview_${{ parameters.environment.name }}
+    displayName: Preview ${{ parameters.environment.name }}
+    ${{ if eq(parameters.action, 'redeploy') }}:
+      # Redeploy: the earlier run's artifacts, republished by stage `source`.
+      dependsOn: source
+      condition: succeeded()
+    ${{ else }}:
+      dependsOn:
+        - verify
+        - deploy_${{ parameters.environment.promoteFrom }}
+      condition: and(succeeded(), eq(dependencies.verify.outputs['scan.decide.promote'], 'true'))
+    isSkippable: false
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - job: preview
+        displayName: What-if for ${{ parameters.environment.name }}
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 30
+        steps:
+          - checkout: core
+            path: s/core
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+            lfs: false
+            persistCredentials: false
+            target:
+              commands: restricted
+              settableVariables: none
+          - checkout: self
+            path: s/config
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+            lfs: false
+            persistCredentials: false
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: DownloadPipelineArtifact@2
+            displayName: Download release-manifest
+            inputs:
+              buildType: current
+              artifactName: release-manifest
+              targetPath: $(Pipeline.Workspace)/release-manifest
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: DownloadPipelineArtifact@2
+            displayName: Download scan
+            inputs:
+              buildType: current
+              artifactName: scan
+              targetPath: $(Pipeline.Workspace)/scan
+            target:
+              commands: restricted
+              settableVariables: none
+          - template: ../steps/install-tools.yml
+            parameters:
+              tools: [node, bicep]
+          - template: ../steps/platform-cli.yml
+          - task: AzureCLI@2
+            displayName: What-if of the release, scan gate, newer-run check
+            inputs:
+              azureSubscription: sc-${{ parameters.app.slug }}-${{ parameters.environment.name }}
+              scriptType: bash
+              scriptLocation: scriptPath
+              scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/preview.sh
+              addSpnToEnvironment: false
+              useGlobalConfig: false
+              failOnStandardError: false
+              workingDirectory: $(Pipeline.Workspace)
+            env:
+              SAF_SLUG: ${{ parameters.app.slug }}
+              SAF_ENV_NAME: ${{ parameters.environment.name }}
+              SAF_PROMOTE_FROM: ${{ parameters.environment.promoteFrom }}
+              SAF_ACTION: ${{ parameters.action }}
+              SAF_SERVICE_CONNECTION: sc-${{ parameters.app.slug }}-${{ parameters.environment.name }}
+              SAF_ADO_ENVIRONMENT: ${{ parameters.app.slug }}-${{ parameters.environment.name }}
+            target:
+              commands: restricted
+              settableVariables: none
+          # task.uploadsummary is not allowed in restricted mode; this step prints only the fixed
+          # command line below.
+          - bash: |
+              set -euo pipefail
+              summary="$PIPELINE_WORKSPACE/saf-out/preview/summary.md"
+              if [ -f "$summary" ]; then
+                echo "##vso[task.uploadsummary]$summary"
+              fi
+            displayName: Upload preview summary
+            condition: succeededOrFailed()
+            target:
+              commands: any
+              settableVariables: none
+          - task: PublishPipelineArtifact@1
+            displayName: Publish preview-${{ parameters.environment.name }}
+            condition: succeededOrFailed()
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/preview
+              artifact: preview-${{ parameters.environment.name }}
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none

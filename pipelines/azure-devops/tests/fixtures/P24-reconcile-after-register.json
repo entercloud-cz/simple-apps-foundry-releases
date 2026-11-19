@@ -1,0 +1,11 @@
+{
+  "rule": "P24",
+  "description": "provision() removes the assignments before it deploys the registration, so a failed removal keeps the record.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "    remove_assignments \"$app_env\"\n    register \"$app_env\" \"$(jq -r '.detail.entraGroup // \"\"' \"$planned\")\"\n",
+      "replace": "    register \"$app_env\" \"$(jq -r '.detail.entraGroup // \"\"' \"$planned\")\"\n    remove_assignments \"$app_env\"\n"
+    }
+  ]
+}

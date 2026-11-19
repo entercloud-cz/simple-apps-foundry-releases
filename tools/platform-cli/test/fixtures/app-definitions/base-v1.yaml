@@ -1,0 +1,29 @@
+# Fixture: the base version (main) of an app definition, for the --base immutability checks.
+schemaVersion: "1.0-draft"
+slug: demo-app
+title: Demo app
+generation: 2
+owner:
+  objectId: 00000000-0000-0000-0000-00000000e001
+  principalType: User
+  email: jane.owner@contoso.com
+deputy:
+  objectId: 00000000-0000-0000-0000-00000000e002
+  principalType: User
+  email: john.deputy@contoso.com
+repository:
+  provider: azureDevOps
+  project: Apps
+  name: demo-app
+authentication:
+  mode: required
+data:
+  database:
+    engine: postgres
+    size: S
+  storage: {}
+environments:
+  nonprod:
+    networkMode: externalOnly
+  prod:
+    networkMode: externalOnly

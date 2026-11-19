@@ -1,0 +1,11 @@
+{
+  "rule": "V06",
+  "description": "The Entra effect is informational: nothing in its loop stops the run.",
+  "patches": [
+    {
+      "file": "scripts/platform-validation.sh",
+      "find": "      printf '%s\\n' \"$path: the Entra effect could not be computed (see the validation of this file above)\" | saf_neutralise\n",
+      "replace": "      saf_die \"the Entra effect could not be computed\"\n"
+    }
+  ]
+}

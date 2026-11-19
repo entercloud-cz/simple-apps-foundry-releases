@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "plan.decide sets exactly the plan's outputs.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/plan.yml",
+      "find": "                - ado\n                - entraPlan\n",
+      "replace": "                - ado\n                - entraPlan\n                - scope\n"
+    }
+  ]
+}

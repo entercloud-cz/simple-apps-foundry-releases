@@ -1,0 +1,11 @@
+{
+  "rule": "T10",
+  "description": "continueOnError on the deploy step itself (not the deploy-event step) is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/deploy.yml",
+      "find": "                  displayName: Push by digest, deploy release.bicep, smoke test\n",
+      "replace": "                  displayName: Push by digest, deploy release.bicep, smoke test\n                  continueOnError: true\n"
+    }
+  ]
+}

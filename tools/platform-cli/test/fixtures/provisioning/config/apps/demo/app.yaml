@@ -1,0 +1,51 @@
+# Fixture: app definition shaped like the sandbox test app the provisioning inputs were checked
+# against. Placeholder IDs only.
+schemaVersion: "1.0-draft"
+slug: demo
+title: Demo
+description: Test app.
+generation: 0
+owner:
+  objectId: 00000000-0000-0000-0000-00000000e001
+  principalType: User
+  email: jane.owner@contoso.com
+deputy:
+  objectId: 00000000-0000-0000-0000-00000000e002
+  principalType: User
+  email: john.deputy@contoso.com
+developers: []
+repository:
+  provider: azureDevOps
+  project: Apps
+  name: demo
+  defaultBranch: main
+authentication:
+  mode: required
+  roles:
+    - value: Reader
+      displayName: Reader
+      description: Can view the app.
+    - value: Editor
+      displayName: Editor
+      description: Can change data in the app.
+    - value: Admin
+      displayName: Admin
+      description: Can manage the app.
+  assignments:
+    - role: Admin
+      principalType: User
+      objectId: 00000000-0000-0000-0000-00000000e002
+      displayName: John Deputy
+    - role: Reader
+      principalType: User
+      objectId: 00000000-0000-0000-0000-00000000e001
+      displayName: Jane Owner
+environments:
+  nonprod:
+    networkMode: externalOnly
+    budget:
+      monthlyAmount: 20
+  prod:
+    networkMode: externalOnly
+    budget:
+      monthlyAmount: 20

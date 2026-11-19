@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "entra-plan.sh waits for every unit before it decides entraNeeded.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra-plan.sh",
+      "find": "done\nprov_join\n",
+      "replace": "done\n"
+    }
+  ]
+}

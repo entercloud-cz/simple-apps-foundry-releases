@@ -1,0 +1,48 @@
+# Downloads artifacts of earlier stages of THIS run (buildType current) to
+# $(Pipeline.Workspace)/in/<artifact>. Set by the core templates only. (The artifact `plan` of stage
+# validate comes with steps/setup.yml, which installs the platform CLI from it.)
+#
+# `artifacts`: always there when this job runs; a missing one fails the job (a stage never guesses
+# upstream state): the plan_<env> jobs and decide of stage plan, and a stage that runs whenever this
+# one does.
+#
+# `optional` (ADR-0048 section 5): the artifacts of stages that may be skipped (a stage runs only
+# when one of its units runs; entra only on an Entra change, ADR-0033). Each is downloaded only when
+# its job ran: the job that lists it must map
+#   saf.result.<artifact>: $[ stageDependencies.<stage>.<job>.result ]
+# which is empty when that stage was skipped or never started (an approval rejected or timed out),
+# and depend on that stage directly. Failed still has an artifact: every such job creates its output
+# folder (steps/setup.yml `artifact`, marker stage.json) before its checkouts and publishes it with
+# always(). Consumers trust only status files and the plan: no status file = not ok, and a unit the
+# plan sent to a stage without an ok status there is not ok. (Listed by name rather than switched by
+# a boolean parameter: rule T03 allows none.)
+
+parameters:
+  - name: artifacts
+    type: object
+  - name: optional
+    type: object
+    default: []
+
+steps:
+  - ${{ each name in parameters.artifacts }}:
+    - task: DownloadPipelineArtifact@2
+      displayName: Download ${{ name }}
+      inputs:
+        buildType: current
+        artifactName: ${{ name }}
+        targetPath: $(Pipeline.Workspace)/in/${{ name }}
+      target:
+        commands: restricted
+        settableVariables: none
+  - ${{ each name in parameters.optional }}:
+    - task: DownloadPipelineArtifact@2
+      displayName: Download ${{ name }} (when its stage ran)
+      condition: and(succeeded(), in(variables['saf.result.${{ name }}'], 'Succeeded', 'SucceededWithIssues', 'Failed'))
+      inputs:
+        buildType: current
+        artifactName: ${{ name }}
+        targetPath: $(Pipeline.Workspace)/in/${{ name }}
+      target:
+        commands: restricted
+        settableVariables: none

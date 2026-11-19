@@ -1,0 +1,26 @@
+{
+  "description": "An environment cannot promote from itself.",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      },
+      {
+        "name": "prod",
+        "kind": "prod",
+        "promoteFrom": "prod"
+      }
+    ]
+  },
+  "expect": {
+    "errors": [
+      "an environment cannot promote from itself"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "plan.sh reads lists (ADR-0050): no landing-zone record read per app.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/plan.sh",
+      "find": "facts\nif [ \"$(jq '.revisions | length' \"$out/lazy.json\")\" -gt 0 ]; then\n",
+      "replace": "for slug in \"${PROV_APPS[@]}\"; do prov_record sub \"lz-$slug-$env_name\" \"\" \"$bulk/lz-$slug.json\"; done\nfacts\nif [ \"$(jq '.revisions | length' \"$out/lazy.json\")\" -gt 0 ]; then\n"
+    }
+  ]
+}

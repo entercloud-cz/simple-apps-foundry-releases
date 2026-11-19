@@ -1,0 +1,11 @@
+{
+  "rule": "P20",
+  "description": "A host change's previous host is deleted right after the deployment that took it off the route (the record forgets it afterwards).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  front_door_cleanup change\n}\n",
+      "replace": "}\n"
+    }
+  ]
+}

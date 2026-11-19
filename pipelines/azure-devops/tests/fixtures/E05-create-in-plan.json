@@ -1,0 +1,11 @@
+{
+  "rule": "E05",
+  "description": "The plan stage deploys instead of previewing.",
+  "patches": [
+    {
+      "file": "scripts/platform/plan.sh",
+      "find": "plat_arm what-if environment \"$preview\"",
+      "replace": "plat_arm create environment \"$preview\""
+    }
+  ]
+}

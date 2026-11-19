@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "The plan decides the same way whatever started the run: no script reads BUILD_REASON.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra-plan.sh",
+      "find": "    action=rotate\n",
+      "replace": "    [ \"${BUILD_REASON:-}\" = Schedule ] || return 0\n    action=rotate\n"
+    }
+  ]
+}

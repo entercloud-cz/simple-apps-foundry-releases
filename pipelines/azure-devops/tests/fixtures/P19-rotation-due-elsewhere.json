@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "Only entra_plan decides a rotation (rotation-due runs only in entra-plan.sh).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "  prov_write_frontdoor_entry \"$out\"\n",
+      "replace": "  prov_write_frontdoor_entry \"$out\"\n  saf_cli provisioning rotation-due --expires none > /dev/null\n"
+    }
+  ]
+}

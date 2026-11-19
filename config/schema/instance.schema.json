@@ -1,0 +1,2232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:simple-apps-foundry:schema:instance:1.0-draft",
+  "title": "Instance configuration (instance.yaml) — DRAFT",
+  "description": "Configuration of one company's instance of the platform (one Entra tenant). Lives in that company's platform-config repo. DRAFT: shape will change during F0/F1; see docs/adr/0002-core-product-and-per-company-instances.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "coreVersion",
+    "tenantId",
+    "defaultRegion",
+    "naming",
+    "scm",
+    "environments",
+    "platformAdmins",
+    "approvals",
+    "portal"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0-draft"
+    },
+    "coreVersion": {
+      "description": "Pinned core release this instance runs, e.g. v1.2.0.",
+      "type": "string",
+      "pattern": "^v\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
+    },
+    "coreImages": {
+      "description": "Where this instance imports core images from (ADR-0030): the core release registry or a mirror of it. Digests are pinned by core in images/images.json; provisioning imports the placeholder into each app's registry by digest.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "registry"
+      ],
+      "properties": {
+        "registry": {
+          "description": "The registry, with the path of its repositories when it has one: ghcr.io/contoso (the public core packages, ADR-0065) or corereleases.azurecr.io (a mirror). No scheme, no tag.",
+          "type": "string",
+          "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+(/[a-z0-9]+([._-][a-z0-9]+)*)*$"
+        }
+      }
+    },
+    "coreReleases": {
+      "description": "Where this instance takes core releases from (ADR-0067): the public releases repository, with a mirror tag per release (the files the instance's pipelines read) and the GitHub Release of that tag with the bundle. infra/platform/instance/instance.sh core checks a release from there and pushes its tag into the platform project's repository core.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository"
+      ],
+      "properties": {
+        "repository": {
+          "description": "The releases repository's URL: https://github.com/<owner>/<repository>, without .git and without a trailing slash.",
+          "type": "string",
+          "pattern": "^https://github\\.com/[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?/(?!\\.{1,2}$)(?!.*\\.git$)[A-Za-z0-9._-]{1,100}$"
+        }
+      }
+    },
+    "productName": {
+      "description": "Product name shown in the portal, emails and docs. Working name; replace freely.",
+      "type": "string",
+      "minLength": 1,
+      "default": "SAF"
+    },
+    "tenantId": {
+      "$ref": "#/$defs/guid"
+    },
+    "defaultRegion": {
+      "description": "Azure region for platform resources unless an environment overrides it. Chosen when the platform is deployed.",
+      "$ref": "#/$defs/azureRegion"
+    },
+    "naming": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prefix"
+      ],
+      "properties": {
+        "prefix": {
+          "description": "Instance prefix used in resource names (ADR-0020): 2-8 lowercase letters and digits, no hyphens, immutable. E.g. 'contoso' -> rg-contoso-app-<slug>-<env>.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]{1,7}$"
+        }
+      }
+    },
+    "scm": {
+      "$ref": "#/$defs/scm"
+    },
+    "environments": {
+      "description": "List of platform environments. Start with one nonprod and one prod; more may be added. Code must never hardcode environment names.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/environment"
+      }
+    },
+    "network": {
+      "description": "Instance-wide network settings.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "internalSystems": {
+          "description": "Catalogue of internal systems apps may reach (ADR-0027, network-modes.md). The allow-list is per CAE (environment x mode), not per app.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/internalSystem"
+          }
+        }
+      }
+    },
+    "portal": {
+      "description": "Where the portal runs and how it reaches app Key Vaults (ADR-0025): through a private endpoint of its own for vaults of apps in VNet-based modes (externalHybrid, or externalOnly with network vnet), and over the public endpoint for vaults of apps in managed-network External-only CAEs. The portal always runs in its own CAE and VNet with a NAT Gateway (stable egress IP), whatever the environments' network variants.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hostEnvironment",
+        "network"
+      ],
+      "properties": {
+        "hostEnvironment": {
+          "description": "Environment that hosts the portal's own CAE (cae-{prefix}-portal-{env}). It is also where the instance's custom role definitions (App Deployer, App Environment Joiner, Platform Job Secret Writer; ADR-0021, ADR-0035) live: a person deploys infra/platform/roles.bicep once, in this environment's subscription, with every environment's subscription as assignable scope (no pipeline writes role definitions, ADR-0043), and this environment's subscription holds the Entra deployments (ADR-0033).",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]{1,7}$"
+        },
+        "network": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "vnetAddressSpace",
+            "caeSubnetPrefix",
+            "privateEndpointSubnetPrefix"
+          ],
+          "properties": {
+            "vnetAddressSpace": {
+              "$ref": "#/$defs/cidr"
+            },
+            "caeSubnetPrefix": {
+              "$ref": "#/$defs/caeSubnetCidr"
+            },
+            "privateEndpointSubnetPrefix": {
+              "description": "Subnet for the portal-side private endpoints: one per app Key Vault of an app in a VNet-based mode per environment, plus the host environment's private environment Key Vault (ADR-0003) and the portal's own database. Managed-network External-only vaults need none. /24 for about 250 endpoints; /23 above that.",
+              "$ref": "#/$defs/cidr"
+            },
+            "routeTableId": {
+              "description": "Optional. Set only if the portal must reach internal destinations through the host environment's hub (for example an internal SMTP relay): the portal VNet is then peered to that hub and its CAE subnet uses this route table. Without it the portal VNet is connected to nothing and egresses through a NAT Gateway. App Key Vaults never need it.",
+              "$ref": "#/$defs/resourceId"
+            },
+            "approvalReference": {
+              "description": "Network team approval of the portal VNet (address space and, if used, the hub connection).",
+              "type": "string"
+            }
+          }
+        },
+        "clientId": {
+          "description": "Optional. A GUID: the client (application) ID of the portal's Entra app registration (infra/entra/portal-registration.bicep), the audience of the portal API. Delivery pipelines report each deploy with a token for api://{clientId}/.default (ADR-0037). Without clientId or apiBaseUrl they skip that report. It also switches the portal's Container App on: the host environment's platform pipeline deploys portal.bicep without it (pass 1) until clientId is set, then with it (pass 2; ADR-0043, amendment 2026-11-14).",
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "apiBaseUrl": {
+          "description": "Optional. https://<host>[:port] with no path, query, fragment or trailing slash, lowercase: the portal's public base URL, e.g. https://portal.contoso.com. Delivery pipelines post deploy events to {apiBaseUrl}/api/pipeline/... from Microsoft-hosted agents, so it must be reachable from the internet (ADR-0037). Without clientId or apiBaseUrl they skip that report.",
+          "type": "string",
+          "maxLength": 270,
+          "pattern": "^https://[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+(:[1-9][0-9]{0,4})?$"
+        },
+        "identityPrincipalId": {
+          "description": "Optional. A GUID: the principal (object) ID of the portal's runtime identity id-{prefix}-portal (bootstrap.bicep output portalIdentity.principalId in the host environment). Provisioning gives it Reader on every app resource group, so the portal can check which delivery identity reports a deploy (ADR-0037). Without it the landing zones assign nothing to the portal.",
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        }
+      }
+    },
+    "platformAdmins": {
+      "description": "Entra group with full portal administration.",
+      "$ref": "#/$defs/entraGroup"
+    },
+    "approvals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platformTeam"
+      ],
+      "properties": {
+        "platformTeam": {
+          "description": "Entra group of the platform team; approves new apps, data services, domains and (iteration 1) prod deployments.",
+          "$ref": "#/$defs/entraGroup"
+        },
+        "prodDeployApprovers": {
+          "description": "Who approves production deployments. 'appOwners' (owner + deputy, configurable per app in the portal) is planned after iteration 1.",
+          "enum": [
+            "platformTeam",
+            "appOwners"
+          ],
+          "default": "platformTeam"
+        },
+        "allowSelfApproval": {
+          "description": "Lets the person who requested a run approve it (ADR-0034). Only for an instance one person runs alone, e.g. a development sandbox: it removes the four-eyes rule from every platform-team approval (prod deployments, sc-platform-entra). `platform ado plan|bootstrap` print a warning while it is true.",
+          "type": "boolean",
+          "default": false
+        },
+        "entraChanges": {
+          "description": "Who approves Entra changes (app registrations, role assignments, sign-in consent, Easy Auth secrets) that the provisioning pipeline applies (ADR-0051). 'pullRequest' (default): the reviewed platform-config pull request is the approval; sc-platform-entra has no Approval check, and `platform ado bootstrap` requires a required reviewer policy with approvals.platformTeam on platform-config's default branch. 'separate': the stage entra also waits for its own Approval check on sc-platform-entra (ADR-0023), for tenants whose identity team asks for a second, separate approval.",
+          "enum": ["pullRequest", "separate"],
+          "default": "pullRequest"
+        }
+      }
+    },
+    "authentication": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enforcement": {
+          "description": "'required': every app must use Entra sign-in. 'ownerChoice': owners may request an anonymous app (needs approval).",
+          "enum": [
+            "required",
+            "ownerChoice"
+          ],
+          "default": "required"
+        },
+        "defaultAppRoles": {
+          "description": "App roles proposed for every new app in the wizard. Values at most 20 characters (ADR-0020).",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9.]{0,19}$"
+          },
+          "default": [
+            "Reader",
+            "Editor",
+            "Admin"
+          ]
+        }
+      }
+    },
+    "dns": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "zones": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dnsZone"
+          }
+        },
+        "hostPatterns": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "How the portal proposes a custom host name per environment kind. {sub} = subdomain (defaults to the app slug), {zone} = selected zone.",
+          "properties": {
+            "prod": {
+              "type": "string",
+              "default": "{sub}.{zone}"
+            },
+            "nonprod": {
+              "type": "string",
+              "default": "{sub}-test.{zone}"
+            }
+          }
+        },
+        "reservedSubdomains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "www",
+            "mail",
+            "portal",
+            "platform",
+            "api",
+            "admin",
+            "autodiscover"
+          ],
+          "description": "Subdomains the portal never offers to apps."
+        }
+      }
+    },
+    "frontDoor": {
+      "description": "Azure Front Door mode (ADR-0010). managed: the platform deploys one separate Front Door profile per listed environment (afd-{prefix}-{env} in that environment's platform RG; never one profile for two environments). Default per profile, by the environment's kind: prod = Premium with WAF in prevention and managed rule sets; nonprod = Standard with WAF in detection and custom rules only. Apps opt in per environment by portal request. external: Front Door is managed outside the platform; the platform only prepares the app and shows the configuration data.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "managed",
+            "external"
+          ],
+          "default": "managed"
+        },
+        "managed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "profiles"
+          ],
+          "properties": {
+            "profiles": {
+              "description": "One profile per environment that may serve apps through Front Door. Environments not listed offer no Front Door.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/frontDoorProfile"
+              }
+            }
+          }
+        },
+        "external": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "profiles": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "frontDoorId": {
+                    "description": "Optional expected Front Door ID (X-Azure-FDID). If absent, the portal asks for it when an app is marked behind this profile.",
+                    "$ref": "#/$defs/guid"
+                  },
+                  "allowedEnvironments": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9]{1,7}$"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "external"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "managed"
+          ]
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "external"
+          ]
+        }
+      }
+    },
+    "data": {
+      "$ref": "#/$defs/dataDefaults"
+    },
+    "scanning": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "description": "Vulnerability scanner chosen by the platform team. trivy: the scanner of this core; the promote job gates production on its stored verdict. defender: later, not in iteration 1 (ADR-0016, amended 2026-11-12); accepted here, but with this core the prod gate fails closed for it.",
+          "enum": [
+            "trivy",
+            "defender"
+          ],
+          "default": "trivy"
+        },
+        "blockProdPromotionOn": {
+          "description": "Lowest severity that blocks promotion to prod.",
+          "enum": [
+            "none",
+            "critical",
+            "high"
+          ],
+          "default": "critical"
+        },
+        "onlyWithAvailableFix": {
+          "description": "Only findings with a fixed version available block promotion.",
+          "type": "boolean",
+          "default": true
+        },
+        "defender": {
+          "description": "Only with provider 'defender' (ADR-0016; later, not in iteration 1): the prod promotion gate waits for Defender findings on the nonprod digest.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "onTimeout": {
+              "enum": [
+                "block",
+                "warn"
+              ],
+              "default": "block"
+            },
+            "maxWaitHours": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 72,
+              "default": 12
+            }
+          }
+        }
+      },
+      "if": {
+        "properties": {
+          "provider": {
+            "const": "defender"
+          }
+        },
+        "required": [
+          "provider"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "defender"
+          ]
+        }
+      }
+    },
+    "locale": {
+      "description": "Language and currency settings of this instance. See docs/adr/0018-localization-defaults-english-and-eur.md.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defaultLanguage": {
+          "description": "Default portal UI language. Must be one of 'languages' (not expressible cleanly in JSON Schema; enforced by the portal config validation).",
+          "enum": [
+            "en",
+            "cs"
+          ],
+          "default": "en"
+        },
+        "languages": {
+          "description": "Shipped UI languages offered to users of this instance. Must include 'defaultLanguage'.",
+          "type": "array",
+          "items": {
+            "enum": [
+              "en",
+              "cs"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "default": [
+            "en",
+            "cs"
+          ]
+        },
+        "currency": {
+          "description": "Reporting currency (ISO 4217 code) for costs and budgets of this instance.",
+          "type": "string",
+          "pattern": "^[A-Z]{3}$",
+          "default": "EUR"
+        }
+      }
+    },
+    "costs": {
+      "description": "Cost data settings (ADR-0017, ADR-0018).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "costType": {
+          "description": "Cost Management cost type for the portal's cost view. Budgets always evaluate actual cost.",
+          "enum": [
+            "ActualCost",
+            "AmortizedCost"
+          ],
+          "default": "ActualCost"
+        },
+        "fx": {
+          "description": "Conversion of costs and budgets when an environment's billing currency (environments[].billingCurrency, the Currency column of Cost Management) differs from locale.currency (ADR-0017 amendment 2026-11-11, ADR-0018). none = no conversion: platform validate instance rejects an environment billed in another currency, and the portal shows such costs in their own currency, never summed, and names the subscription on /api/config/status; fixed = the planning rates in fixedRates, taken on the day asOf; ecb = reserved for a later release (ECB reference rates, which needs egress from the portal): today it converts nothing, like none.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "enum": [
+                "none",
+                "ecb",
+                "fixed"
+              ],
+              "default": "none"
+            },
+            "fixedRates": {
+              "description": "Units of locale.currency per 1 unit of the billing currency, keyed by ISO 4217 code (USD: 0.92 in an EUR instance = 1 USD is 0.92 EUR). Positive; locale.currency itself is left out or 1 (platform validate instance). Every environments[].billingCurrency other than locale.currency needs a rate.",
+              "type": "object",
+              "propertyNames": {
+                "pattern": "^[A-Z]{3}$"
+              },
+              "additionalProperties": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "asOf": {
+              "description": "The day the fixed rates were taken (YYYY-MM-DD; platform validate instance checks it is a real date). The portal stores it with every converted cost snapshot and shows it next to converted amounts.",
+              "type": "string",
+              "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+            }
+          },
+          "if": {
+            "properties": {
+              "source": {
+                "const": "fixed"
+              }
+            },
+            "required": [
+              "source"
+            ]
+          },
+          "then": {
+            "required": [
+              "fixedRates",
+              "asOf"
+            ],
+            "properties": {
+              "fixedRates": {
+                "minProperties": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "budgets": {
+      "description": "Per-app monthly budgets (ADR-0017). A budget's startDate is not configured: provisioning reuses the existing budget's startDate, else the first day of the current UTC month.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "off",
+            "optional",
+            "required"
+          ],
+          "default": "optional"
+        },
+        "defaultMonthlyAmount": {
+          "description": "Default budget in locale.currency, whole units (the Budgets API takes integers).",
+          "type": "integer",
+          "minimum": 1
+        },
+        "notifyAtPercent": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "default": [
+            80,
+            100
+          ],
+          "description": "Actual-cost notification thresholds. At most 4, so one of the 5 budget notifications stays for the forecast.",
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "forecastNotifyAtPercent": {
+          "description": "Forecasted-cost notification thresholds. Total notifications (actual + forecast) must be at most 5 (portal validation).",
+          "type": "array",
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "default": [
+            100
+          ]
+        }
+      },
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "required"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "required": [
+          "defaultMonthlyAmount"
+        ]
+      }
+    },
+    "notifications": {
+      "description": "Portal email notifications (ADR-0012). Iteration 1 providers: m365SharedMailbox and smtp. Azure Communication Services Email ('acs') is planned for a later release and is not accepted yet.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "email": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "provider",
+            "sender"
+          ],
+          "properties": {
+            "provider": {
+              "description": "m365SharedMailbox: Graph sendMail as a shared mailbox, managed identity + Exchange RBAC for Applications. smtp: an SMTP relay. Later: acs.",
+              "enum": [
+                "m365SharedMailbox",
+                "smtp"
+              ]
+            },
+            "sender": {
+              "description": "From address. For m365SharedMailbox, the shared mailbox's primary SMTP address (the mailbox the portal sends as).",
+              "type": "string",
+              "format": "email"
+            },
+            "replyTo": {
+              "type": "string",
+              "format": "email"
+            },
+            "platformTeamAddress": {
+              "description": "Platform team mailbox that receives platform notifications (waiting prod releases, failures).",
+              "type": "string",
+              "format": "email"
+            },
+            "m365SharedMailbox": {
+              "description": "Microsoft 365 shared mailbox (provider m365SharedMailbox). The portal sends with Microsoft Graph sendMail as the mailbox in 'sender', authenticated with its managed identity and authorised by Exchange Online RBAC for Applications: role 'Application Mail.Send' with a management scope that contains only that mailbox. No client secret, no tenant-wide Mail.Send in Entra ID (ADR-0012).",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "managementScope": {
+                  "description": "Name of the Exchange management scope that contains only the sender mailbox (created by the customer's Exchange admins).",
+                  "type": "string"
+                },
+                "approvalReference": {
+                  "description": "Identity or messaging team change id for the RBAC for Applications assignment.",
+                  "type": "string"
+                }
+              }
+            },
+            "smtp": {
+              "description": "SMTP relay settings (provider smtp).",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "host",
+                "port",
+                "tls",
+                "auth"
+              ],
+              "properties": {
+                "host": {
+                  "$ref": "#/$defs/hostname"
+                },
+                "port": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65535,
+                  "examples": [
+                    587,
+                    465,
+                    25
+                  ]
+                },
+                "tls": {
+                  "description": "startTls (usually 587), implicitTls (usually 465), or none (only for an IP-allow-listed relay without authentication on the internal network).",
+                  "enum": [
+                    "startTls",
+                    "implicitTls",
+                    "none"
+                  ]
+                },
+                "auth": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "mode"
+                  ],
+                  "properties": {
+                    "mode": {
+                      "description": "none: the relay allow-lists the portal's egress IP (NAT Gateway, or the firewall when portal.network.routeTableId is set). basic: username and password; the password is a secret in the portal host environment's private environment Key Vault (its public one if the environment has no VNet-based CAE), never in this file.",
+                      "enum": [
+                        "none",
+                        "basic"
+                      ]
+                    },
+                    "username": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "passwordSecretName": {
+                      "description": "Name of the secret in the host environment's private environment Key Vault (kv{prefix}{env}n{h5}; kv{prefix}{env}p{h5} if the environment has no VNet-based CAE, ADR-0020); the portal identity has Key Vault Secrets User on this secret only.",
+                      "type": "string",
+                      "pattern": "^[0-9A-Za-z-]{1,127}$"
+                    }
+                  },
+                  "if": {
+                    "properties": {
+                      "mode": {
+                        "const": "basic"
+                      }
+                    },
+                    "required": [
+                      "mode"
+                    ]
+                  },
+                  "then": {
+                    "required": [
+                      "username",
+                      "passwordSecretName"
+                    ]
+                  },
+                  "else": {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "username"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "passwordSecretName"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "if": {
+                "properties": {
+                  "auth": {
+                    "properties": {
+                      "mode": {
+                        "const": "basic"
+                      }
+                    },
+                    "required": [
+                      "mode"
+                    ]
+                  }
+                },
+                "required": [
+                  "auth"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "tls": {
+                    "enum": [
+                      "startTls",
+                      "implicitTls"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "const": "smtp"
+                  }
+                },
+                "required": [
+                  "provider"
+                ]
+              },
+              "then": {
+                "required": [
+                  "smtp"
+                ],
+                "not": {
+                  "required": [
+                    "m365SharedMailbox"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "const": "m365SharedMailbox"
+                  }
+                },
+                "required": [
+                  "provider"
+                ]
+              },
+              "then": {
+                "not": {
+                  "required": [
+                    "smtp"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "observability": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "logRetentionDays": {
+          "description": "Retention of the platform's own Log Analytics workspace per environment (the apps' logs and requests too). Default 90: at least lifecycle.unusedAfterDaysWithoutRequests, so the Lifecycle tab can tell that an app is unused (ADR-0054); `platform validate instance` warns when it is shorter. The platform pipeline applies a change (ADR-0043).",
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 730,
+          "default": 90
+        },
+        "auditRetentionDays": {
+          "description": "How long the portal keeps its audit log (who did what, ADR-0012): entries older than this are deleted by the portal. At least 90 so a typo can't wipe the log; the default is a year and a month.",
+          "type": "integer",
+          "minimum": 90,
+          "maximum": 3650,
+          "default": 400
+        },
+        "defaultAlerts": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "decommission": {
+      "description": "Decommissioning of apps (ADR-0056). Absent: the defaults.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "graceDays": {
+          "description": "Days between the app's stop (retire) and the first day its resources may be deleted. The portal sets an app's decommission.deleteAfter to the request day plus this; provisioning also waits this long after the stop.",
+          "type": "integer",
+          "minimum": 7,
+          "maximum": 365,
+          "default": 30
+        },
+        "repository": {
+          "description": "The app repository of a starter (repository.template a stack, ADR-0039) in the delete phase: keep (default) or delete. Either way the delete phase first renames it {name}-deleted-{requestedOn}, with -i{incarnation} above incarnation 0 and -2 … -9 after it while Azure DevOps has the name already (ADR-0061). A bring-your-own or unmanaged repository is always kept, renamed the same way.",
+          "enum": ["keep", "delete"],
+          "default": "keep"
+        }
+      }
+    },
+    "lifecycle": {
+      "description": "Lifecycle rules. Shown per app in the portal (the Lifecycle tab, the catalog; recertification reminders by email; ADR-0054), NOT enforced in iteration 1 (see docs/roadmap.md, F4).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxBuildAgeDays": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 90
+        },
+        "criticalCveFixDays": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 14
+        },
+        "highCveFixDays": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 30
+        },
+        "recertificationMonths": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 12
+        },
+        "unusedAfterDaysWithoutRequests": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 60
+        }
+      }
+    },
+    "maintenance": {
+      "description": "One maintenance window for all scheduled provisioning work (ADR-0048): the maintenance run of \\platform\\provisioning starts at the window's start on each of its days; drift checks, Easy Auth rotations, the Front Door backend ranges and scheduled upgrades (ADR-0049) happen in it. Absent: the defaults.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "window": {
+          "description": "Nights that start on `days`, at `start` (UTC, because Azure Pipelines schedules are UTC; the portal shows it in local time), for `hours`.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "days": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 7,
+              "uniqueItems": true,
+              "items": { "enum": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] },
+              "default": ["mon", "tue", "wed", "thu"]
+            },
+            "start": {
+              "description": "UTC, HH:MM.",
+              "type": "string",
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+              "default": "20:00"
+            },
+            "hours": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 24,
+              "default": 6
+            }
+          }
+        },
+        "driftCheckDays": {
+          "description": "A unit not checked for this many days is checked again in the next run (ADR-0048).",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 90,
+          "default": 30
+        },
+        "requiredUpgradeDays": {
+          "description": "Default time to apply a required upgrade before it runs on its own in the window (ADR-0049); an upgrade note may set its own.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 180,
+          "default": 14
+        },
+        "upgrades": {
+          "description": "Instance default for app upgrades (ADR-0049): manual (the owner, deputy or a platform admin schedules them) or automatic (the portal schedules every upgrade into the next window); the portal may override it per app.",
+          "enum": ["manual", "automatic"],
+          "default": "manual"
+        },
+        "registryRetention": {
+          "description": "Old build images in the app registries of build environments (no promoteFrom), removed in the maintenance window (ADR-0059). An image is deleted only when it is older than `days`, not among the app's `keepLatest` newest builds, not running in any environment of the app, carries only tags the delivery pipeline writes and is not locked. Promotion environments are never purged. Absent: these defaults.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "description": "dryRun (default): only report what would be deleted; purge: delete what the rules allow; off: do nothing. Deleting is an explicit choice of the instance, after reading a dry run's report.",
+              "enum": ["purge", "dryRun", "off"],
+              "default": "dryRun"
+            },
+            "days": {
+              "description": "An image younger than this many days is kept. At least 45: a delivery run waits for its promotion at most the approval timeout (7 days) plus the Exclusive lock timeout (30 days), so an image still awaiting promotion is always younger.",
+              "type": "integer",
+              "minimum": 45,
+              "maximum": 3650,
+              "default": 90
+            },
+            "keepLatest": {
+              "description": "The app's newest builds that are always kept, however old (rollback targets).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          }
+        }
+      }
+    },
+    "identities": {
+      "description": "Platform identities: pre-created ones, if the instance bootstrap does not create them (workload identity federation only; no secrets), and the principal IDs the platform pipeline needs.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entraProvisioningPrincipalId": {
+          "description": "A GUID: the principal (object) ID of the Entra provisioning identity id-{prefix}-entra-provisioning (bootstrap.bicep output entraProvisioningIdentity.principalId in the portal host environment). The platform pipeline of every environment gives it Platform Job Secret Writer on each kvset job (ADR-0035, ADR-0043); the host environment's pipeline checks it against the identity. Required by the platform pipeline.",
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "provisioning": {
+          "description": "Azure provisioning identities, one per environment (ADR-0031): id-{prefix}-provisioning-{env} in that environment's own subscription, with Contributor and a conditioned RBAC Administrator there and no Graph permissions. The key is the environment name; platform validate checks that it names an environment of this instance and that the identity's resource ID is in that environment's subscription. Optional: the pipelines find each identity by its name, and infra/platform/bootstrap.bicep creates it.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9]{1,7}$": {
+              "$ref": "#/$defs/managedIdentityRef"
+            }
+          }
+        },
+        "portal": {
+          "description": "Portal API and jobs.",
+          "$ref": "#/$defs/managedIdentityRef"
+        },
+        "entraProvisioning": {
+          "description": "Entra provisioning identity: the only identity with Graph permissions, used in an approval-gated stage (ADR-0023).",
+          "$ref": "#/$defs/managedIdentityRef"
+        },
+        "adoAutomation": {
+          "description": "Azure DevOps automation identity (ADR-0022).",
+          "$ref": "#/$defs/managedIdentityRef"
+        }
+      }
+    },
+    "branding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "logoUrl": {
+          "description": "The instance's logo in the portal's sidebar and top bar: an https URL of a png, jpg, gif, webp or svg image (by its file name, at most 2048 characters), or a data URI of one in base64 (at most 65536 characters). The portal shows it as an image only and allows exactly its origin in its CSP (ADR-0027 amendment 2026-11-12).",
+          "type": "string",
+          "anyOf": [
+            {
+              "maxLength": 2048,
+              "pattern": "^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?/[^\\s\"'<>?#\\\\]*\\.([Pp][Nn][Gg]|[Jj][Pp][Ee]?[Gg]|[Gg][Ii][Ff]|[Ww][Ee][Bb][Pp]|[Ss][Vv][Gg])([?#][^\\s\"'<>\\\\]*)?$"
+            },
+            {
+              "maxLength": 65536,
+              "pattern": "^data:image/(png|jpeg|gif|webp|svg\\+xml);base64,[A-Za-z0-9+/]+={0,2}$"
+            }
+          ]
+        },
+        "primaryColor": {
+          "description": "The portal's accent (buttons, links, selection, focus, the production chip). The portal derives the dark theme from it and uses it only when every derived pair reaches WCAG 2.2 AA contrast (portal/shared/src/brand.ts); otherwise it keeps the platform's blue. The Settings area refuses such a colour.",
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        },
+        "appThemes": {
+          "description": "The app themes (brand variants) the portal offers in the new-app wizard, with a preview. Absent = the core's built-in themes. `none` (the starter's neutral look) and `custom` (the team's own brand) are always offered as well.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/appTheme" }
+        },
+        "defaultAppTheme": {
+          "description": "The theme the wizard preselects: an id of the offered themes, `none` or `custom`. Default: the first offered theme.",
+          "type": "string",
+          "pattern": "^(none|custom|[a-z][a-z0-9-]{1,30})$"
+        }
+      }
+    },
+    "newApps": {
+      "description": "How the portal's new-app wizard asks for a new app (ADR-0047).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "basicMode": {
+          "description": "Basic mode of the new-app wizard (ADR-0047): the requester gives the app's name, owners, users and look, and the portal fills in the technical choices below. Advanced mode asks for every choice. The values must be offered by the instance (`platform validate instance` checks it).",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "description": "Offer basic mode, preselected. false = the wizard asks for every choice (advanced mode only).",
+              "type": "boolean",
+              "default": true
+            },
+            "networkMode": {
+              "description": "Network mode of the new app in its build environments. Every build environment must offer it (externalHybrid with an active egress baseline).",
+              "enum": ["externalOnly", "externalHybrid"],
+              "default": "externalOnly"
+            },
+            "databaseEngine": {
+              "description": "The database basic mode requests, or none. The engine must be enabled under data. It is also the engine the advanced mode and the Data tab preselect (none: Azure SQL when enabled, else PostgreSQL).",
+              "enum": ["postgres", "azureSql", "none"],
+              "default": "azureSql"
+            },
+            "databaseSize": {
+              "description": "Size of that database; the engine must define it under data.<engine>.sizes.",
+              "enum": ["S", "M", "L"],
+              "default": "S"
+            },
+            "storage": {
+              "description": "Request file storage (a storage account). data.storage must be enabled.",
+              "type": "boolean",
+              "default": true
+            },
+            "companyDomain": {
+              "description": "Give the app the address {short name} on the default company zone of each build environment that offers custom domains (dns.hostPatterns). Where none is offered, the app keeps its default address.",
+              "type": "boolean",
+              "default": true
+            },
+            "stack": {
+              "description": "The starter of the new repository.",
+              "enum": ["node-ts", "python-fastapi", "dotnet"],
+              "default": "node-ts"
+            }
+          }
+        },
+        "capacity": {
+          "description": "The default capacity reservation (ADR-0053): every app and environment whose app.yaml sets no capacity reserves this, and the wizard's basic mode requests it. Default size s with maxReplicas 3 (1.5 vCPU). It must fit every cell's budget (`platform validate instance` checks it).",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "size": {
+              "description": "Container size: xs = 0.25 vCPU / 0.5 GiB, s = 0.5 / 1, m = 1 / 2, l = 2 / 4.",
+              "enum": ["xs", "s", "m", "l"],
+              "default": "s"
+            },
+            "maxReplicas": {
+              "description": "Most replicas (1 to 10).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "default": 3
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "appTheme": {
+      "description": "One app theme: a name, a short description and the design tokens provisioning writes into a new app repository (theme/theme.json, theme/theme.css).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "tokens"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{1,30}$", "not": { "enum": ["none", "custom"] } },
+        "name": { "$ref": "#/$defs/appThemeText" },
+        "description": { "$ref": "#/$defs/appThemeText" },
+        "logoUrl": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "tokens": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["primary", "onPrimary", "background", "surface", "text", "mutedText", "border", "accent", "fontFamily", "headingFontFamily", "radius"],
+          "properties": {
+            "primary": { "$ref": "#/$defs/hexColor" },
+            "onPrimary": { "$ref": "#/$defs/hexColor" },
+            "background": { "$ref": "#/$defs/hexColor" },
+            "surface": { "$ref": "#/$defs/hexColor" },
+            "text": { "$ref": "#/$defs/hexColor" },
+            "mutedText": { "$ref": "#/$defs/hexColor" },
+            "border": { "$ref": "#/$defs/hexColor" },
+            "accent": { "$ref": "#/$defs/hexColor" },
+            "fontFamily": { "$ref": "#/$defs/fontStack" },
+            "headingFontFamily": { "$ref": "#/$defs/fontStack" },
+            "radius": { "type": "string", "pattern": "^[0-9]{1,2}px$" }
+          }
+        }
+      }
+    },
+    "appThemeText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "cs": { "type": "string", "minLength": 1, "maxLength": 120 }
+      }
+    },
+    "hexColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+    "fontStack": {
+      "description": "A CSS font-family list of installed or system fonts (no web font downloads).",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9 ,'\"-]{1,200}$"
+    },
+    "guid": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    },
+    "azureRegion": {
+      "type": "string",
+      "pattern": "^[a-z]+[a-z0-9]*$",
+      "examples": [
+        "westeurope",
+        "germanywestcentral"
+      ]
+    },
+    "cidr": {
+      "type": "string",
+      "pattern": "^(\\d{1,3}\\.){3}\\d{1,3}/\\d{1,2}$"
+    },
+    "ipv4": {
+      "type": "string",
+      "format": "ipv4"
+    },
+    "resourceId": {
+      "type": "string",
+      "pattern": "^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/.+$"
+    },
+    "entraGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "objectId"
+      ],
+      "properties": {
+        "objectId": {
+          "$ref": "#/$defs/guid"
+        },
+        "displayName": {
+          "type": "string"
+        }
+      }
+    },
+    "managedIdentityRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resourceId"
+      ],
+      "properties": {
+        "resourceId": {
+          "$ref": "#/$defs/resourceId"
+        }
+      }
+    },
+    "scm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider"
+      ],
+      "properties": {
+        "provider": {
+          "description": "Azure DevOps is supported first; GitHub Enterprise Cloud later.",
+          "enum": [
+            "azureDevOps",
+            "github"
+          ]
+        },
+        "azureDevOps": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "organizationUrl",
+            "platformProject",
+            "platformConfigRepo",
+            "appsProject"
+          ],
+          "properties": {
+            "organizationUrl": {
+              "type": "string",
+              "format": "uri"
+            },
+            "platformProject": {
+              "description": "Project holding the platform-config repo, generated per-app pipelines and service connections. App teams have no admin rights here.",
+              "type": "string"
+            },
+            "platformConfigRepo": {
+              "type": "string"
+            },
+            "platformConfigDefaultBranch": {
+              "description": "Default branch of the platform-config repo, as a short name (no refs/heads/). The provisioning pipeline triggers on it, and Branch control on the platform service connections allows only it and refs/tags/v* (ADR-0032).",
+              "type": "string",
+              "pattern": "^(?!refs/)(?!.*\\.\\.)[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$",
+              "maxLength": 200,
+              "default": "main"
+            },
+            "appsProject": {
+              "description": "Default project where the portal creates new app repos.",
+              "type": "string"
+            },
+            "allowedProjects": {
+              "description": "Other projects of the same organization whose repos may be connected as app repos.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            }
+          }
+        },
+        "github": {
+          "description": "LATER (not iteration 1).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "organization",
+            "platformConfigRepo"
+          ],
+          "properties": {
+            "enterprise": {
+              "type": "string"
+            },
+            "organization": {
+              "type": "string"
+            },
+            "platformConfigRepo": {
+              "type": "string"
+            },
+            "allowedOrganizations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "const": "azureDevOps"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "azureDevOps"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "const": "github"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "github"
+            ]
+          }
+        }
+      ]
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "subscriptionId",
+        "networkModes"
+      ],
+      "properties": {
+        "name": {
+          "description": "Short environment name used in resource names (ADR-0020): 2-8 lowercase letters and digits, unique in the instance, immutable. E.g. 'nonprod', 'prod'.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]{1,7}$"
+        },
+        "kind": {
+          "description": "Behaviour class. prod: approval-gated, prod-grade defaults (backups, purge protection). nonprod: deploy on push, no approval.",
+          "enum": [
+            "prod",
+            "nonprod"
+          ]
+        },
+        "promoteFrom": {
+          "description": "Name of the environment whose ACR this environment imports images from, by digest (ADR-0007). Absent = build environment (images are pushed). Required for kind prod.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]{1,7}$"
+        },
+        "subscriptionId": {
+          "$ref": "#/$defs/guid"
+        },
+        "region": {
+          "description": "Overrides defaultRegion for this environment.",
+          "$ref": "#/$defs/azureRegion"
+        },
+        "billingCurrency": {
+          "description": "ISO 4217 code of the currency Azure bills this environment's subscription in (its billing account or profile; Cost Management returns costs in it and evaluates budgets in it). Absent = locale.currency. When it differs, costs.fx.source must be fixed with a rate for it: provisioning converts app budgets from locale.currency into it, and the portal converts costs back (ADR-0018).",
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "vaultGeneration": {
+          "description": "Seed input for the names of the environment's two Key Vaults, kv{prefix}{env}{p|n}{h5} (ADR-0020). Bump only when an environment vault must be re-created while its soft-deleted predecessor still blocks the name (purge protection in prod keeps it for up to 90 days). Never lower it.",
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "hub": {
+          "$ref": "#/$defs/hub",
+          "description": "Required when the environment enables a connected mode (externalHybrid, internalOnly)."
+        },
+        "networkModes": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "externalOnly": {
+              "description": "External only (ADR-0003). Network variant per environment: managed (default) or vnet.",
+              "$ref": "#/$defs/externalOnlyMode"
+            },
+            "externalHybrid": {
+              "$ref": "#/$defs/connectedMode"
+            },
+            "internalOnly": {
+              "description": "LATER (not iteration 1): internal-only CAE; needs customer certificates and DNS integration.",
+              "$ref": "#/$defs/connectedMode"
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "prod"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "promoteFrom"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "networkModes": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "externalHybrid"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "internalOnly"
+                    ]
+                  }
+                ]
+              }
+            },
+            "required": [
+              "networkModes"
+            ]
+          },
+          "then": {
+            "required": [
+              "hub"
+            ]
+          }
+        }
+      ]
+    },
+    "externalOnlyMode": {
+      "description": "Internet ingress, no access to the internal network (ADR-0003). The network variant is chosen per environment when the platform environment is deployed and is effectively immutable: a Container Apps environment's network type can't be changed after creation, so changing it means recreating the CAE and moving its apps. network 'managed' (default): workload-profile CAE on the Azure-managed network, no custom VNet, no address space; app Key Vaults, databases and storage use public endpoints with Entra-only access and no private endpoints; outbound IPs are not stable. network 'vnet': isolated spoke VNet created by the platform and peered or connected to nothing, with the CAE subnet (NAT Gateway egress) and a private-endpoint subnet; the portal reaches app vaults through its own private endpoints (ADR-0025). Platform jobs run in this CAE in both variants (ADR-0028).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "network": {
+          "description": "managed (default): Azure-managed network, public endpoints with Entra-only access, security by identity (residual risk accepted by the product owner on 2026-10-26). vnet: isolated custom VNet with private endpoints and NAT Gateway; requires vnetAddressSpace, caeSubnetPrefix and privateEndpointSubnetPrefix. Read-only in the Settings area once the environment's External-only CAE exists.",
+          "enum": [
+            "managed",
+            "vnet"
+          ],
+          "default": "managed"
+        },
+        "vnetAddressSpace": {
+          "$ref": "#/$defs/cidr",
+          "description": "Only with network vnet."
+        },
+        "caeSubnetPrefix": {
+          "description": "Only with network vnet. Delegated CAE subnet: /27 minimum, /26 minimum for prod, /25 default (network-modes.md).",
+          "$ref": "#/$defs/caeSubnetCidr"
+        },
+        "privateEndpointSubnetPrefix": {
+          "description": "Only with network vnet. Separate subnet for private endpoints (app Key Vault, database, storage, the environment's private Key Vault kv{prefix}{env}n{h5}); /24 recommended for about 60 apps.",
+          "$ref": "#/$defs/cidr"
+        },
+        "natGatewayPublicIpCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16,
+          "default": 1,
+          "description": "Only with network vnet. Public IPs on the spoke's NAT Gateway."
+        },
+        "cells": {
+          "$ref": "#/$defs/cells"
+        }
+      },
+      "if": {
+        "properties": {
+          "network": {
+            "const": "vnet"
+          }
+        },
+        "required": [
+          "network"
+        ]
+      },
+      "then": {
+        "required": [
+          "vnetAddressSpace",
+          "caeSubnetPrefix",
+          "privateEndpointSubnetPrefix"
+        ]
+      },
+      "else": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "vnetAddressSpace"
+              ]
+            },
+            {
+              "required": [
+                "caeSubnetPrefix"
+              ]
+            },
+            {
+              "required": [
+                "privateEndpointSubnetPrefix"
+              ]
+            },
+            {
+              "required": [
+                "natGatewayPublicIpCount"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "connectedMode": {
+      "description": "Spoke connected to the customer's hub; egress through the customer's firewall via a route table the network team owns.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vnet",
+        "caeSubnetPrefix",
+        "privateEndpointSubnetPrefix",
+        "routeTableId"
+      ],
+      "properties": {
+        "vnet": {
+          "description": "Either an existing spoke VNet (network team owns peering) or one the platform creates and peers to the environment's hub.",
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "existingVnetId"
+              ],
+              "properties": {
+                "existingVnetId": {
+                  "$ref": "#/$defs/resourceId"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "create"
+              ],
+              "properties": {
+                "create": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "addressSpace"
+                  ],
+                  "properties": {
+                    "addressSpace": {
+                      "$ref": "#/$defs/cidr"
+                    },
+                    "useRemoteGateways": {
+                      "type": "boolean",
+                      "default": false
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "caeSubnetPrefix": {
+          "$ref": "#/$defs/caeSubnetCidr"
+        },
+        "privateEndpointSubnetPrefix": {
+          "description": "Separate subnet for private endpoints; /24 recommended.",
+          "$ref": "#/$defs/cidr"
+        },
+        "routeTableId": {
+          "description": "Existing route table (owned by the network team) routing egress to the firewall. Re-asserted on every deploy (docs/architecture/lessons-from-v1.md).",
+          "$ref": "#/$defs/resourceId"
+        },
+        "dnsServers": {
+          "description": "Custom DNS servers of the VNet (usually AD DNS). Empty = Azure-provided DNS.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ipv4"
+          },
+          "default": []
+        },
+        "egressAllowListProcess": {
+          "description": "Free-text pointer shown in the portal and written into the request texts: how requests for firewall rules (an app's access to network.internalSystems, the environment's hub connection and egress baseline) reach the customer's network team, for example an ITSM queue (ADR-0027, amended 2026-11-12). The allow-list itself is per CAE, not per app.",
+          "type": "string"
+        },
+        "egressBaseline": {
+          "description": "Status of the one-time, standing firewall rule set for this CAE subnet: Container Apps platform FQDNs, Entra/managed identity, Application Insights and every app registry (*.azurecr.io plus the registry data endpoint), so new apps need no per-app firewall change (ADR-0003, network-modes.md). Provisioning refuses new apps in this mode until status is active.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "notRequested",
+                "requested",
+                "active"
+              ]
+            },
+            "reference": {
+              "description": "Network team change or ticket id.",
+              "type": "string"
+            }
+          }
+        },
+        "cells": {
+          "$ref": "#/$defs/cells"
+        }
+      }
+    },
+    "cells": {
+      "description": "Capacity cells of this network mode (ADR-0053). A cell is one Container Apps environment with its platform jobs (kvset, dbinit) and, in a VNet-based mode, its CAE subnet. Absent = one cell 01 with the defaults. Cell 01 keeps the mode's existing names (cae-{prefix}-{mode}-{env}, its subnet and jobs); a later cell gets the suffix -c{id}. Until the platform pipeline deploys more than one cell per mode, `platform validate instance` refuses a second cell.",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 99,
+      "items": {
+        "$ref": "#/$defs/cell"
+      }
+    },
+    "cell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "Two digits, 01 to 99, unique in the mode and immutable (the cell's resource names derive from it). Apps name it in app.yaml environments.<env>.cell.",
+          "$ref": "#/$defs/cellId"
+        },
+        "capacity": {
+          "description": "What the cell can promise to its apps.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cores": {
+              "description": "Budget of reserved vCPU: the reserved cores of the cell's apps (the vCPU of each app's size x its maxReplicas, ADR-0053) must not exceed it. Default 80 of the 100-core Consumption quota of a Container Apps environment (ManagedEnvironmentConsumptionCores, measured in the sandbox on 2026-11-11), which leaves room for revision changes and the platform jobs.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 80
+            }
+          }
+        }
+      }
+    },
+    "cellId": {
+      "description": "Capacity cell id (ADR-0053): two digits, 01 to 99.",
+      "type": "string",
+      "pattern": "^(0[1-9]|[1-9][0-9])$"
+    },
+    "dnsZone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "provider",
+        "allowedEnvironments"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,}$"
+        },
+        "provider": {
+          "description": "azureDns: records written automatically (direct RP calls, DNS Zone Contributor on the zone). manual: custom/external DNS; the portal shows the records to create by hand.",
+          "enum": [
+            "azureDns",
+            "manual"
+          ]
+        },
+        "azureDnsZoneId": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "allowedEnvironments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "approvers": {
+          "description": "Overrides the platform team as approver for domains in this zone.",
+          "$ref": "#/$defs/entraGroup"
+        },
+        "default": {
+          "type": "boolean",
+          "default": false,
+          "description": "Preselected in the portal (new-app wizard URL step, Domains & URLs tab). At most one default zone per environment kind; the portal falls back to the first allowed zone."
+        },
+        "description": {
+          "type": "string",
+          "description": "Shown to developers when they pick a domain."
+        }
+      },
+      "if": {
+        "properties": {
+          "provider": {
+            "const": "azureDns"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "azureDnsZoneId"
+        ]
+      }
+    },
+    "sizeMap": {
+      "description": "Maps portal t-shirt sizes to service-specific settings.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "S"
+      ],
+      "properties": {
+        "S": {
+          "$ref": "#/$defs/dbSize"
+        },
+        "M": {
+          "$ref": "#/$defs/dbSize"
+        },
+        "L": {
+          "$ref": "#/$defs/dbSize"
+        }
+      }
+    },
+    "dbSize": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sku"
+      ],
+      "properties": {
+        "sku": {
+          "type": "string"
+        },
+        "storageGb": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tier": {
+          "description": "Service tier. PostgreSQL: Burstable | GeneralPurpose | MemoryOptimized. Azure SQL: implied by the SKU (e.g. S0 = Standard).",
+          "enum": [
+            "Burstable",
+            "GeneralPurpose",
+            "MemoryOptimized",
+            "Standard"
+          ]
+        }
+      }
+    },
+    "dataDefaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "postgres": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "version": {
+              "description": "PostgreSQL major version of every new app server (Flexible Server), the same in every environment (ADR-0011). Written as a string because the Azure API takes a string. A new default needs a core release; the platform doesn't upgrade the major version of an existing server in iteration 1. The values a region accepts are checked at deployment (TODO(verify): supported range, PG-1).",
+              "type": "string",
+              "pattern": "^[1-9][0-9]$",
+              "default": "16"
+            },
+            "sizes": {
+              "$ref": "#/$defs/sizeMap",
+              "default": {
+                "S": {
+                  "sku": "Standard_B1ms",
+                  "tier": "Burstable",
+                  "storageGb": 32
+                },
+                "M": {
+                  "sku": "Standard_B2s",
+                  "tier": "Burstable",
+                  "storageGb": 64
+                },
+                "L": {
+                  "sku": "Standard_D2ds_v5",
+                  "tier": "GeneralPurpose",
+                  "storageGb": 128
+                }
+              },
+              "description": "Same mapping in every environment, prod included (ADR-0011): S and M Burstable, L General Purpose."
+            },
+            "cpuCreditAlert": {
+              "description": "Alert owners (and in prod the platform team) when a Burstable server runs low on CPU credits.",
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        "azureSql": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "sizes": {
+              "$ref": "#/$defs/sizeMap",
+              "default": {
+                "S": {
+                  "sku": "S0",
+                  "storageGb": 250
+                }
+              }
+            },
+            "allowServerless": {
+              "description": "Serverless is opt-in only (auto-pause latency).",
+              "type": "boolean",
+              "default": false
+            },
+            "backupStorageRedundancy": {
+              "description": "Backup storage redundancy per environment kind, always set explicitly (the Azure default is Geo).",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "prod": {
+                  "enum": [
+                    "Geo",
+                    "GeoZone",
+                    "Zone",
+                    "Local"
+                  ],
+                  "default": "Geo"
+                },
+                "nonprod": {
+                  "enum": [
+                    "Geo",
+                    "GeoZone",
+                    "Zone",
+                    "Local"
+                  ],
+                  "default": "Local"
+                }
+              }
+            }
+          }
+        },
+        "storage": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "prodRedundancy": {
+              "enum": [
+                "LRS",
+                "ZRS",
+                "GRS"
+              ],
+              "default": "ZRS"
+            },
+            "nonprodRedundancy": {
+              "enum": [
+                "LRS",
+                "ZRS"
+              ],
+              "default": "LRS"
+            },
+            "protection": {
+              "description": "Blob protection in every environment: soft delete (blobs and containers), versioning, change feed and point-in-time restore (PITR retention = soft delete - 1 day).",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "softDeleteDaysProd": {
+                  "type": "integer",
+                  "minimum": 2,
+                  "maximum": 365,
+                  "default": 35
+                },
+                "softDeleteDaysNonprod": {
+                  "type": "integer",
+                  "minimum": 2,
+                  "maximum": 365,
+                  "default": 7
+                },
+                "pointInTimeRestore": {
+                  "type": "boolean",
+                  "default": true
+                }
+              }
+            },
+            "vaultedBackup": {
+              "description": "Azure Backup vaulted backup for blobs, opt-in per app in prod (about 13 USD/month per protected account, list price; adds a delete lock). One Backup vault per environment and region (bvault-{prefix}-{env}).",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "offeredInProd": {
+                  "type": "boolean",
+                  "default": true
+                },
+                "retentionDays": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 3650,
+                  "default": 30
+                }
+              }
+            }
+          }
+        },
+        "backup": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "retentionDaysProd": {
+              "description": "7-35 days, because PostgreSQL Flexible Server accepts no less than 7. Point-in-time restore retention of every database in prod environments (PostgreSQL and Azure SQL), the portal database on a prod host included.",
+              "type": "integer",
+              "minimum": 7,
+              "maximum": 35,
+              "default": 35
+            },
+            "retentionDaysNonprod": {
+              "description": "7-35 days, because PostgreSQL Flexible Server accepts no less than 7 (Azure SQL alone would accept 1, but the value is shared). Point-in-time restore retention of every database in nonprod environments, the portal database on a nonprod host included.",
+              "type": "integer",
+              "minimum": 7,
+              "maximum": 35,
+              "default": 7
+            },
+            "geoRedundantProd": {
+              "type": "boolean",
+              "default": true,
+              "description": "PostgreSQL geo-redundant backup in prod. Set at server creation only; provisioning fails if the environment's region doesn't support it."
+            }
+          }
+        }
+      }
+    },
+    "caeSubnetCidr": {
+      "description": "CAE subnet: /27 minimum, /26 minimum for prod, /25 default (network-modes.md).",
+      "type": "string",
+      "pattern": "^(\\d{1,3}\\.){3}\\d{1,3}/(1[6-9]|2[0-7])$"
+    },
+    "hostname": {
+      "type": "string",
+      "pattern": "^([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)*[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?$"
+    },
+    "hub": {
+      "description": "Customer hub that the environment's connected spokes (externalHybrid, later internalOnly) are peered to. Never used by externalOnly, in either network variant (ADR-0003).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vnetId",
+        "firewallPrivateIp"
+      ],
+      "properties": {
+        "vnetId": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "firewallPrivateIp": {
+          "description": "Next hop for route tables (shown in the portal; route tables themselves are owned by the network team).",
+          "$ref": "#/$defs/ipv4"
+        }
+      }
+    },
+    "internalSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "location",
+        "endpoints",
+        "connectivity",
+        "allowedEnvironments",
+        "allowedNetworkModes",
+        "requiresApproval",
+        "owner"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z](-?[a-z0-9])+$",
+          "maxLength": 40
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "location": {
+          "enum": [
+            "onPrem",
+            "azure"
+          ]
+        },
+        "endpoints": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/internalEndpoint"
+          }
+        },
+        "connectivity": {
+          "description": "How traffic reaches the system from the hub firewall.",
+          "enum": [
+            "expressRoute",
+            "vpn",
+            "hubPeering",
+            "other"
+          ]
+        },
+        "allowedEnvironments": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]{1,7}$"
+          }
+        },
+        "allowedNetworkModes": {
+          "description": "Only connected modes can reach internal systems.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "externalHybrid",
+              "internalOnly"
+            ]
+          }
+        },
+        "requiresApproval": {
+          "description": "Whether the system's owner must approve an app's access before the network team opens the firewall rule. The portal's request text says so (ADR-0027, amended 2026-11-12: an app's access is a ready-to-send text, not a pull request).",
+          "type": "boolean"
+        },
+        "owner": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "team": {
+              "type": "string"
+            }
+          }
+        },
+        "firewallRules": {
+          "description": "Firewall-rule status per environment x network mode (one rule serves the whole CAE).",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "environment",
+              "networkMode",
+              "status"
+            ],
+            "properties": {
+              "environment": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9]{1,7}$"
+              },
+              "networkMode": {
+                "enum": [
+                  "externalHybrid",
+                  "internalOnly"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "notRequested",
+                  "requested",
+                  "active",
+                  "removed"
+                ]
+              },
+              "reference": {
+                "description": "Ticket or change id at the network team.",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "internalEndpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ports",
+        "protocol"
+      ],
+      "properties": {
+        "host": {
+          "$ref": "#/$defs/hostname"
+        },
+        "ip": {
+          "$ref": "#/$defs/ipv4"
+        },
+        "cidr": {
+          "$ref": "#/$defs/cidr"
+        },
+        "ports": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              },
+              {
+                "type": "string",
+                "pattern": "^\\d{1,5}-\\d{1,5}$"
+              }
+            ]
+          }
+        },
+        "protocol": {
+          "enum": [
+            "tcp",
+            "udp"
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "host"
+          ]
+        },
+        {
+          "required": [
+            "ip"
+          ]
+        },
+        {
+          "required": [
+            "cidr"
+          ]
+        }
+      ]
+    },
+    "frontDoorProfile": {
+      "description": "Managed Front Door profile of one environment. Omitted values take the default for the environment's kind (resolved by platform validate and written explicitly by the Settings area): prod -> sku Premium, waf.mode prevention, waf.managedRuleSets true; nonprod -> sku Standard, waf.mode detection, waf.managedRuleSets false.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "environment"
+      ],
+      "properties": {
+        "environment": {
+          "description": "Environment whose apps this profile serves and whose platform RG holds it. Each environment at most once (semantic check).",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]{1,7}$"
+        },
+        "sku": {
+          "description": "Tier of this environment's profile. Default by environment kind: Premium for prod (WAF managed rule sets, bot protection, Private Link), Standard for nonprod (custom WAF rules only).",
+          "enum": [
+            "Standard",
+            "Premium"
+          ]
+        },
+        "waf": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "description": "WAF policy (waf{prefix}{env}) mode. Default by environment kind: prevention for prod, detection for nonprod. off = no policy.",
+              "enum": [
+                "off",
+                "detection",
+                "prevention"
+              ]
+            },
+            "managedRuleSets": {
+              "description": "Use managed rule sets (Default Rule Set, Bot Manager). Requires the Premium tier; Standard supports custom rules only. Default: true where the effective tier is Premium, false on Standard.",
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "if": {
+        "properties": {
+          "waf": {
+            "properties": {
+              "managedRuleSets": {
+                "const": true
+              }
+            },
+            "required": [
+              "managedRuleSets"
+            ]
+          }
+        },
+        "required": [
+          "waf"
+        ]
+      },
+      "then": {
+        "required": [
+          "sku"
+        ],
+        "properties": {
+          "sku": {
+            "const": "Premium"
+          }
+        }
+      }
+    }
+  }
+}

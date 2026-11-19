@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "prov-lib.sh runs prov_env_guard before anything else (pipeline variables could turn on tracing or inject code into the CLI).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "}\nprov_env_guard\n",
+      "replace": "}\n"
+    }
+  ]
+}

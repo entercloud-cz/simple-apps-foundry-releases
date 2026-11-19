@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "decide.sh sets only the plan's outputs, after checking every value.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/decide.sh",
+      "find": "names=(ado entraPlan)\n",
+      "replace": "names=(ado entraPlan entraNeeded)\n"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+# The look of {{APP_NAME}}
+
+This folder holds the app's theme: its colours, fonts and corner radius, chosen when the app was
+requested in the portal. The platform wrote it once, when it created the repository. From now on
+it is the app's own code: changing the theme in the portal later changes nothing here.
+
+| File | Contents |
+|---|---|
+| `theme.css` | the theme as CSS variables on `:root`: `--brand-primary`, `--brand-on-primary`, `--brand-background`, `--brand-surface`, `--brand-text`, `--brand-muted-text`, `--brand-border`, `--brand-accent`, `--brand-font`, `--brand-heading-font`, `--brand-radius` |
+| `theme.json` | the same values as data (`id`, `name`, `description`, `logoUrl` when the theme has a logo, `tokens`), for code that can't read CSS, such as PDF or e-mail templates and charts |
+
+## How the app uses it
+
+- **Node.js starter:** `src/client/main.tsx` imports `theme.css`, and `src/client/styles.css`
+  styles the pages with the variables. Without this folder the app falls back to a neutral look.
+- **Other stacks:** when the app gets pages, serve `theme.css` with the app's own static files
+  and link it before the app's own stylesheet.
+
+Use the variables for every colour, font and radius (`color: var(--brand-text)`), never
+hard-coded values. The AI agent's `ui-and-brand` skill has the rules: contrast, accessibility,
+the logo.
+
+## Own brand: replace the placeholders
+
+If `theme.json` has `"placeholder": true`, the app asked for its own brand and the values are
+placeholders (a built-in theme of the platform). Replace them in **both** files with your brand's
+colours, fonts and corner radius, then delete `"placeholder": true` and the `PLACEHOLDERS`
+comment at the top of `theme.css`.
+
+- Text must stay readable: at least 4.5:1 contrast between text and its background (WCAG AA),
+  for `--brand-text` on `--brand-background` and `--brand-surface`, and for
+  `--brand-on-primary` on `--brand-primary`.
+- Fonts: fonts installed on users' devices, or font files kept in this repository if their
+  licence allows it. Never fonts loaded from another website.
+- Logo: keep the file in the repository and serve it from the app; the app's security settings
+  block images from other websites.
+
+## Changing the look
+
+Edit `theme.css` and `theme.json` together so they keep the same values, and note the change in
+`CHANGELOG.md`.

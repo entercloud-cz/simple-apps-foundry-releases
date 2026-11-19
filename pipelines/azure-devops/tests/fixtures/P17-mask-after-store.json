@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "The ARM token is masked before it is stored, not after.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "  echo \"##vso[task.setsecret]$token\"\n  SAF_ARM_TOKEN=\"$token\"\n",
+      "replace": "  SAF_ARM_TOKEN=\"$token\"\n  echo \"##vso[task.setsecret]$token\"\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "T24",
+  "description": "A preview stage that runs on the environment (and so waits for the approval) is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/preview.yml",
+      "find": "      - job: preview\n        displayName: What-if for ${{ parameters.environment.name }}\n",
+      "replace": "      - job: preview\n        environment: ${{ parameters.app.slug }}-${{ parameters.environment.name }}\n        displayName: What-if for ${{ parameters.environment.name }}\n"
+    }
+  ]
+}

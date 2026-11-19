@@ -1,0 +1,16 @@
+{
+  "rule": "P19",
+  "description": "The marker comparison comes before the restart in restart_stale().",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "    az rest --method post --url \"$app_id/revisions/$rev/restart?api-version=2024-03-01\" --only-show-errors --output none\n",
+      "replace": ""
+    },
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  tag=\"$(jq -r '.tag' \"$dir/app.json\")\"\n",
+      "replace": "  tag=\"$(jq -r '.tag' \"$dir/app.json\")\"\n  az rest --method post --url \"$app_id/revisions/$rev/restart?api-version=2024-03-01\" --only-show-errors --output none\n"
+    }
+  ]
+}

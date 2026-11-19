@@ -1,0 +1,11 @@
+{
+  "rule": "P14",
+  "description": "azure_post_<env> reads the ado artifact (service connection federation).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure-post.yml",
+      "find": "                - ado\n",
+      "replace": ""
+    }
+  ]
+}

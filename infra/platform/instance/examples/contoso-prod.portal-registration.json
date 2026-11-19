@@ -1,0 +1,12 @@
+{
+  "prefix": "contoso",
+  "environmentName": "prod",
+  "environmentKind": "prod",
+  "productName": "SAF",
+  "caeDefaultDomain": "happyfield-00000000.westeurope.azurecontainerapps.io",
+  "devRedirectUris": [],
+  "platformAdminsGroupId": "00000000-0000-0000-0000-00000000c001",
+  "platformTeamGroupId": "00000000-0000-0000-0000-00000000c002",
+  "tenantId": "00000000-0000-0000-0000-000000000001",
+  "portalIdentityPrincipalId": "00000000-0000-0000-0000-00000000e102"
+}

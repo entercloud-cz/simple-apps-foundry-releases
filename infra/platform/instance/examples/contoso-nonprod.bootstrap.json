@@ -1,0 +1,14 @@
+{
+  "prefix": "contoso",
+  "environmentName": "nonprod",
+  "location": "westeurope",
+  "instanceIdentities": false,
+  "entraEnvironments": [],
+  "federation": {},
+  "instancePrincipals": {
+    "portal": "00000000-0000-0000-0000-00000000e102",
+    "entraProvisioning": "00000000-0000-0000-0000-00000000d101"
+  },
+  "managedBy": "SAF",
+  "tags": {}
+}

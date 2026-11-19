@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "No provisioning template passes the run's reason to a script.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure-post.yml",
+      "find": "              SAF_ENV_NAME: ${{ parameters.environment.name }}\n              SAF_PROMOTE_FROM: ${{ parameters.environment.promoteFrom }}\n",
+      "replace": "              SAF_ENV_NAME: ${{ parameters.environment.name }}\n              SAF_PROMOTE_FROM: ${{ parameters.environment.promoteFrom }}\n              SAF_REASON: $(Build.Reason)\n"
+    }
+  ]
+}

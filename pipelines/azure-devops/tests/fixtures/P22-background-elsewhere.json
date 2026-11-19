@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "Background jobs only in the runner (prov_run_app).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "prov_units_check\n",
+      "replace": "prov_units_check\nsleep 1 &\n"
+    }
+  ]
+}

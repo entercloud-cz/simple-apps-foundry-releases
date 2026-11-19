@@ -1,0 +1,11 @@
+{
+  "rule": "T06",
+  "description": "An AzureCLI task with a service connection in the verify stage is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/verify.yml",
+      "find": "          - task: PublishPipelineArtifact@1\n            displayName: Publish platform-inputs\n",
+      "replace": "          - task: AzureCLI@2\n            displayName: sneaky\n            inputs:\n              azureSubscription: sc-demo-nonprod\n              scriptType: bash\n              scriptLocation: inlineScript\n              inlineScript: az account show\n            target:\n              commands: restricted\n              settableVariables: none\n          - task: PublishPipelineArtifact@1\n            displayName: Publish platform-inputs\n"
+    }
+  ]
+}

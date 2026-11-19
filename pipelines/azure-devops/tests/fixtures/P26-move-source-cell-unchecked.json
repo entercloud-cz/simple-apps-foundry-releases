@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The move names the source CAE in the capacity cell the live app runs in (the plan's fromCell, ADR-0053, ADR-0060 amendment 2026-11-16), never in app.yaml's cell: another cell's CAE of the mode isn't the app's to take the Joiner from.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  prov_names \"$slug\" \"$dir/names-from.json\" \"$env_name\" \"$from\" \"\" \"\" \"${from_cell:-none}\"\n",
+      "replace": "  prov_names \"$slug\" \"$dir/names-from.json\" \"$env_name\" \"$from\"\n"
+    }
+  ]
+}

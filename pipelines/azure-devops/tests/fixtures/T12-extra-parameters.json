@@ -1,0 +1,11 @@
+{
+  "rule": "T12",
+  "description": "deploy.sh passing a second --parameters (e.g. deployedBy) is rejected.",
+  "patches": [
+    {
+      "file": "scripts/deploy.sh",
+      "find": "      --parameters \"$release_param\" \\\n",
+      "replace": "      --parameters \"$release_param\" \\\n      --parameters deployedBy=provisioning \\\n"
+    }
+  ]
+}
