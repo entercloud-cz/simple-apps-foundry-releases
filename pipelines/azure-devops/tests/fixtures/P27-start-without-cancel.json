@@ -1,0 +1,11 @@
+{
+  "rule": "P27",
+  "description": "A stopped Container App is started only when the plan says the decommissioning was cancelled (ADR-0056).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "    if prov_was_retired \"$slug\" \"$env_name\"; then start_step; fi\n",
+      "replace": "    start_step\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "decide.sh has plan-units write the registry purge's plan with the same time as the units (ADR-0059).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/decide.sh",
+      "find": " --registry \"$out/registry.json\")",
+      "replace": ")"
+    }
+  ]
+}

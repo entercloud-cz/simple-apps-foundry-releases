@@ -1,0 +1,11 @@
+{
+  "rule": "P14",
+  "description": "A provisioning script must run from the core checkout, not from platform-config (s/config).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure.yml",
+      "find": "              scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/provisioning/azure.sh\n",
+      "replace": "              scriptPath: $(Pipeline.Workspace)/s/config/pipelines/azure-devops/scripts/provisioning/azure.sh\n"
+    }
+  ]
+}

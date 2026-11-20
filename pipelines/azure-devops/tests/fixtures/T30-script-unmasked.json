@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "The token must be masked (task.setsecret) before it is used.",
+  "patches": [
+    {
+      "file": "scripts/report.sh",
+      "find": "printf '##vso[task.setsecret]%s\\n' \"$token\"\n",
+      "replace": ""
+    }
+  ]
+}

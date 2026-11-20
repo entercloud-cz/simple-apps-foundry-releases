@@ -1,0 +1,11 @@
+{
+  "rule": "P18",
+  "description": "The ARM token of the Easy Auth secret's delete (ADR-0061) is unset right after the call.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "  unset SAF_ARM_TOKEN\n  prov_unlock\n",
+      "replace": "  prov_unlock\n"
+    }
+  ]
+}

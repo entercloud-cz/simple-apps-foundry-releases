@@ -1,0 +1,11 @@
+{
+  "rule": "T13",
+  "description": "Fetching a blob without a digest is rejected.",
+  "patches": [
+    {
+      "file": "scripts/trivy-db.sh",
+      "find": "\"$(repo_name \"$repo\")@$layer\"",
+      "replace": "\"$repo\""
+    }
+  ]
+}

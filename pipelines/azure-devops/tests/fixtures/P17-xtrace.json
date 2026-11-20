@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "No xtrace in the script that handles the tokens.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "prov_host_environment sc-platform-entra\n",
+      "replace": "prov_host_environment sc-platform-entra\nset -x\n"
+    }
+  ]
+}

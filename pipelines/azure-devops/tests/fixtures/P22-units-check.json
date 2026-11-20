@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "Every stage script after plan checks the plan before its app loop.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra-plan.sh",
+      "find": "\nprov_units_check\n\n# entra_phase_runs",
+      "replace": "\n\n# entra_phase_runs"
+    }
+  ]
+}

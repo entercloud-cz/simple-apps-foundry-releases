@@ -1,0 +1,11 @@
+{
+  "rule": "T09",
+  "description": "Provisioning uses only allowlisted tasks.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure-post.yml",
+      "find": "          - task: AzureCLI@2\n",
+      "replace": "          - task: AzurePowerShell@5\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "A custom domain is deleted only after fd_domain_owned confirmed it still holds this app's host (cd-{host} isn't injective).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "    if ! fd_domain_owned \"$cd\" \"$host\"; then\n",
+      "replace": "    if false; then\n"
+    }
+  ]
+}

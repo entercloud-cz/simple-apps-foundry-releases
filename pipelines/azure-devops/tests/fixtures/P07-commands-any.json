@@ -1,0 +1,11 @@
+{
+  "rule": "P07",
+  "description": "An AzureCLI step with commands: any is rejected.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure.yml",
+      "find": "              commands: restricted\n              settableVariables: none\n          - task: PublishPipelineArtifact@1",
+      "replace": "              commands: any\n              settableVariables: none\n          - task: PublishPipelineArtifact@1"
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+# Upgrade notes of the core's provisioning units (ADR-0049). Validated by
+# config/schema/upgrades.schema.json; core CI fails when a unit of infra/app/units.json is `since:
+# unreleased` and `versions.unreleased` has no note for it. Tagging a release renames `unreleased`
+# to the version (tools/scripts/release-units.mjs, docs/runbooks/release-core.md).
+#
+# minAppVersion: the oldest app version (a unit's recorded core version, tag saf-u-<unit>) this
+# core can still manage. A unit applied by an older version is upgraded by any run that processes
+# its app. Move it deliberately, and say so in the CHANGELOG.
+#
+# Per version, per unit that changed in it:
+#   level: optional | recommended | required
+#   restart: true when the app's revisions restart
+#   entraApproval: true when the upgrade redeploys the sign-in registration (unit entra): with
+#                  approvals.entraChanges separate it waits for the approval of the stage `entra`; with
+#                  pullRequest (the default) it only says so (ADR-0051)
+#   requires: units upgraded together with this one (ADR-0049 item 8)
+#   deadlineDays: required only; default instance.yaml maintenance.requiredUpgradeDays
+#   notes: {en, cs}: what changes for the app, in one or two plain sentences (Czech: informal "ty")
+#
+# A change that moves no unit gets no note here, even when an instance must act: such a step is the
+# operator's, in the CHANGELOG. Example: the Entra records in one resource group per environment
+# (ADR-0063) change where the stage entra keeps a registration's record, not the registration (the
+# entra template and inputs are the same), so no app upgrades; the instance re-runs the host
+# bootstrap with entraEnvironments.
+minAppVersion: v0.1.0-rc.32
+versions:
+  v0.1.0-rc.50:
+    # Capacity cells in the app's templates (ADR-0060 amendment 2026-11-16, ADR-0053 amended): landing-zone.bicep,
+    # release.bicep and frontdoor.bicep take the parameter cell and name the CAE of the app's cell. Cell 01 (every app
+    # today) keeps its names, so nothing changes in Azure; the units' views name the cell only when it isn't 01, so no
+    # unit's i changes either. The template hashes moved: optional upgrades, no restart.
+    lz:
+      level: optional
+      restart: false
+      entraApproval: false
+      notes:
+        en: Your app's landing zone now knows which capacity cell your app runs in, so the platform can later run apps in more than one cell and move your app with a network mode change into any of them. Nothing changes in your app or its data, and it keeps running.
+        cs: Základní prostředky tvé aplikace teď vědí, ve které kapacitní buňce aplikace běží, takže platforma později může provozovat aplikace ve víc buňkách a při změně síťového režimu tvou aplikaci přesunout do kterékoli z nich. V aplikaci ani v jejích datech se nic nemění a běží dál.
+    release:
+      level: optional
+      restart: false
+      entraApproval: false
+      notes:
+        en: Your running app now knows which capacity cell it runs in. It stays where it is, with the same version and settings, and only the platform version label changes, so it keeps running without a restart.
+        cs: Běžící aplikace teď ví, ve které kapacitní buňce běží. Zůstává, kde je, se stejnou verzí i nastavením, mění se jen štítek s verzí platformy, takže běží dál bez restartu.
+    frontdoor:
+      level: optional
+      restart: false
+      entraApproval: false
+      notes:
+        en: Your app's custom domain now knows which capacity cell the app runs in. The domain and its address stay as they are.
+        cs: Vlastní doména tvé aplikace teď ví, ve které kapacitní buňce aplikace běží. Doména i její adresa zůstávají, jak jsou.
+  v0.1.0-rc.48:
+    # ADR-0061 (amended 2026-11-15): the registration's uniqueName takes app.yaml incarnation
+    # ({prefix}-{slug}-{env}--i{n} above 0). For incarnation 0 the uniqueName, app role ids and every
+    # property are what they were, but the template (its hash) changed: entra_plan compares the hash, so
+    # the upgrade redeploys the registration with the same values (entraApproval: with approvals.entraChanges
+    # separate the stage entra waits for its approval; with pullRequest nothing waits).
+    entra:
+      level: optional
+      restart: false
+      entraApproval: true
+      notes:
+        en: The platform can now give a new app that takes the name of a deleted app its own sign-in registration. For your app nothing changes. The upgrade applies the same registration again, with the same name, roles and assignments, and sign-in keeps working. Where the platform team approves sign-in changes separately, the upgrade waits for that approval.
+        cs: Platforma teď umí nové aplikaci, která převezme jméno smazané aplikace, dát vlastní registraci přihlášení. U tvé aplikace se nic nemění. Aktualizace znovu použije stejnou registraci se stejným názvem, rolemi i přiřazeními a přihlášení funguje dál. Kde tým platformy schvaluje změny přihlášení zvlášť, aktualizace na to schválení počká.
+  v0.1.0-rc.44:
+    # The prepare pass of a network mode change (ADR-0060, batch 2a): the landing zone's parameter modeChange
+    # (null changes no resource) and public network access as an explicit input of the data modules.
+    lz:
+      level: optional
+      restart: false
+      entraApproval: false
+      notes:
+        en: Your app's landing zone gets ready for a later change of how the app is connected to the network (its network mode); nothing uses that yet. Nothing changes in your app or its data, and it keeps running.
+        cs: Základní prostředky tvé aplikace se připraví na pozdější změnu toho, jak je aplikace připojená k síti (síťový režim); zatím to nic nepoužívá. V aplikaci ani v jejích datech se nic nemění a běží dál.
+  v0.1.0-rc.43:
+    # The registry image purge (ADR-0059): the landing zone gives the environment's provisioning identity
+    # Container Registry Repository Contributor on the app's registry of a build environment.
+    lz:
+      level: recommended
+      restart: false
+      entraApproval: false
+      notes:
+        en: The platform can clean up your app's old builds in the environment new builds land in first. After this upgrade it deletes, in the maintenance window, builds older than the platform's retention (90 days by default) that run nowhere and aren't among your newest ones; what runs in any environment and your newest builds always stay. Nothing else changes; the app keeps running.
+        cs: Platforma může uklízet stará sestavení tvé aplikace v prostředí, kam nová sestavení přicházejí jako první. Po téhle aktualizaci v okně údržby smaže sestavení starší, než je doba uchování platformy (výchozí 90 dní), která nikde neběží a nepatří mezi tvá nejnovější; to, co běží v kterémkoli prostředí, a tvá nejnovější sestavení zůstanou vždy. Nic jiného se nemění, aplikace běží dál.
+  v0.1.0-rc.36:
+    # The portal shows the app repository's README and CHANGELOG (US11.09, ADR-0039 amended 2026-11-12) and
+    # whether the app's service connections are disabled or dormant (ADR-0058).
+    ado:
+      level: optional
+      restart: false
+      entraApproval: false
+      notes:
+        en: The portal gets read access to your app's repository and to its deploy connections, so the app's page can show its README and CHANGELOG and warn when a connection is turned off or unused. Nothing else changes; your deploys work as before.
+        cs: Portál dostane přístup ke čtení repozitáře tvé aplikace a jejích připojení pro nasazení, aby stránka aplikace mohla ukázat její README a CHANGELOG a upozornit, když je připojení vypnuté nebo dlouho nepoužité. Nic jiného se nemění; nasazování funguje jako dřív.
+  v0.1.0-rc.33:
+    # App availability isolation (ADR-0052): the DNS records of a custom domain carry the app's mark.
+    frontdoor:
+      level: optional
+      restart: false
+      entraApproval: false
+      notes:
+        en: The two DNS records of your app's custom domain get a label naming your app and environment (ADR-0052), so the platform never overwrites a record that belongs to someone else. The domain and its address stay as they are.
+        cs: Dva DNS záznamy vlastní domény tvé aplikace dostanou štítek s názvem aplikace a prostředí (ADR-0052), aby platforma nikdy nepřepsala záznam, který patří někomu jinému. Doména i její adresa zůstávají, jak jsou.
+  # The first release with provisioning by unit (ADR-0048) and controlled upgrades (ADR-0049). An app
+  # provisioned before it has no unit tags, so its first run records every unit (reason new).
+  v0.1.0-rc.32:
+    lz:
+      level: optional
+      restart: false
+      entraApproval: false
+      notes:
+        en: Provisioning now records your app's landing zone (its resource group, identities, registry, vault and data) per unit (ADR-0048), so later changes run only what they need. Nothing changes in the app itself.
+        cs: Zřizování si teď základní prostředky tvé aplikace (skupinu prostředků, identity, registr, trezor a data) zapisuje po částech (ADR-0048), takže pozdější změny spustí jen to, co potřebují. V aplikaci samotné se nic nemění.
+    entra:
+      level: optional
+      restart: false
+      entraApproval: false
+      notes:
+        en: Provisioning now records your app's sign-in registration per unit (ADR-0048). The registration itself doesn't change, so no approval is needed.
+        cs: Zřizování si teď registraci přihlášení tvé aplikace zapisuje po částech (ADR-0048). Registrace samotná se nemění, takže není potřeba žádné schválení.
+    release:
+      level: optional
+      restart: false
+      entraApproval: false
+      notes:
+        en: Provisioning now records your running app per unit (ADR-0048), and the app gets a label with the platform version that set it up last. Only labels change, so the app keeps running as it is.
+        cs: Zřizování si teď běžící aplikaci zapisuje po částech (ADR-0048) a aplikace dostane štítek s verzí platformy, která ji naposledy nastavila. Mění se jen štítky, takže aplikace běží dál beze změny.
+    frontdoor:
+      level: optional
+      restart: false
+      entraApproval: false
+      notes:
+        en: Provisioning now records your app's custom domain per unit (ADR-0048). The domain and its address stay as they are.
+        cs: Zřizování si teď vlastní doménu tvé aplikace zapisuje po částech (ADR-0048). Doména i její adresa zůstávají, jak jsou.
+    pep:
+      level: optional
+      restart: false
+      entraApproval: false
+      notes:
+        en: Provisioning now records the portal's private connection to your app's secret vault per unit (ADR-0048). Setting secrets in the portal works as before.
+        cs: Zřizování si teď soukromé připojení portálu k trezoru tajných hodnot tvé aplikace zapisuje po částech (ADR-0048). Nastavování tajných hodnot v portálu funguje jako dřív.
+    ado:
+      level: optional
+      restart: false
+      entraApproval: false
+      notes:
+        en: Provisioning now records your app's pipelines and their connections in Azure DevOps per unit (ADR-0048). Your deploys work as before.
+        cs: Zřizování si teď pipeline tvé aplikace a jejich propojení v Azure DevOps zapisuje po částech (ADR-0048). Nasazování funguje jako dřív.

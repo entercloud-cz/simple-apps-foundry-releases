@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "az rest with the method in a variable counts as a write (only a literal GET doesn't).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "  prov_write_frontdoor_entry \"$out\"\n",
+      "replace": "  prov_write_frontdoor_entry \"$out\"\n  m=post\n  az rest --method \"$m\" --url \"$app_id/stop?api-version=2024-03-01\"\n"
+    }
+  ]
+}

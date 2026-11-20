@@ -1,0 +1,11 @@
+{
+  "rule": "P03",
+  "description": "The job decide uses only the host environment's provisioning connection.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/plan.yml",
+      "find": "            displayName: Compare the Entra registrations with their records\n            condition: succeededOrFailed()\n            inputs:\n              azureSubscription: sc-platform-provisioning-${{ parameters.hostEnvironment }}\n",
+      "replace": "            displayName: Compare the Entra registrations with their records\n            condition: succeededOrFailed()\n            inputs:\n              azureSubscription: sc-platform-ado\n"
+    }
+  ]
+}

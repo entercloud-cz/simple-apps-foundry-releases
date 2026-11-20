@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "Where an app's Entra plan is (units/entra or entra_plan) is decided by prov_entra_dir in prov-lib.sh.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "prov_entra_dir() {\n",
+      "replace": "prov_entra_folder() {\n"
+    }
+  ]
+}

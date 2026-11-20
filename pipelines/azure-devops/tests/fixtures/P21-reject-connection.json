@@ -1,0 +1,10 @@
+{
+  "rule": "P21",
+  "description": "No provisioning script rejects a private endpoint connection.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "append": "\nprov_reject() {\n  az keyvault private-endpoint-connection reject --id \"$1\" --only-show-errors\n}\n"
+    }
+  ]
+}

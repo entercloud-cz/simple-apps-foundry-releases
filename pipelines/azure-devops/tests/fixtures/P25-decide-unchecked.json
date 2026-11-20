@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "decide.sh checks every value is true or false before it sets any output.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/decide.sh",
+      "find": "  [[ \"$value\" =~ ^(true|false)$ ]] || saf_die \"the plan has no stage output $name\"\n",
+      "replace": ""
+    }
+  ]
+}

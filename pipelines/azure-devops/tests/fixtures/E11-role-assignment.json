@@ -1,0 +1,10 @@
+{
+  "rule": "E11",
+  "description": "A platform script writes a role assignment itself.",
+  "patches": [
+    {
+      "file": "scripts/platform/deploy.sh",
+      "append": "az role assignment create --assignee \"$tenant\" --role Owner --scope \"/subscriptions/$subscription\"\n"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+// Fictional Contoso instance, environment `nonprod` (config/examples/instance.example.yaml).
+// In a real instance the platform pipeline in platform-config generates this file from
+// instance.yaml with schema defaults resolved (infra/README.md). Placeholder IDs only.
+using '../environment.bicep'
+
+param prefix = 'contoso'
+param environmentName = 'nonprod'
+param environmentKind = 'nonprod'
+param location = 'westeurope'
+param vaultGeneration = 0
+param hub = {
+  vnetId: '/subscriptions/00000000-0000-0000-0000-00000000f001/resourceGroups/rg-network-hub/providers/Microsoft.Network/virtualNetworks/vnet-hub-westeurope'
+  firewallPrivateIp: '10.0.1.4'
+}
+param networkModes = {
+  externalOnly: {
+    network: 'managed'
+  }
+  externalHybrid: {
+    vnet: {
+      existingVnetId: '/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-network-nonprod/providers/Microsoft.Network/virtualNetworks/vnet-spoke-apps-nonprod'
+    }
+    caeSubnetPrefix: '10.21.0.0/25'
+    privateEndpointSubnetPrefix: '10.21.1.0/24'
+    routeTableId: '/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-network-nonprod/providers/Microsoft.Network/routeTables/rt-to-firewall'
+    dnsServers: [
+      '10.0.0.4'
+      '10.0.0.5'
+    ]
+    egressAllowListProcess: 'Service desk queue \'Network - firewall rules\''
+    egressBaseline: {
+      status: 'active'
+      reference: 'CHG-1101'
+    }
+  }
+}
+param frontDoor = {
+  environment: 'nonprod'
+  sku: 'Standard'
+  waf: {
+    mode: 'detection'
+    managedRuleSets: false
+  }
+}
+param logRetentionDays = 90
+param platformAlertEmails = [
+  'platform-team@contoso.com'
+]
+param managedBy = 'SAF'
+param tags = {}
+// Pass 2 (ADR-0035): saf-jobs is imported into the platform registry by this digest (placeholder
+// here; the real one is in images/images.json). Pass 1 passes ''.
+param platformJobsImageDigest = 'sha256:0000000000000000000000000000000000000000000000000000000000000000'
+// Bootstrap output entraProvisioningIdentity.principalId of the portal host environment (prod).
+param entraProvisioningPrincipalId = '00000000-0000-0000-0000-00000000d101'
+// instance.yaml portal.identityPrincipalId: Log Analytics Reader on the workspace for id-contoso-portal
+// (ADR-0026); '' = none.
+param portalIdentityPrincipalId = '00000000-0000-0000-0000-00000000e102'

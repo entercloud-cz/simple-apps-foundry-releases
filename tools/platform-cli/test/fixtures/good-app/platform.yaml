@@ -1,0 +1,15 @@
+schemaVersion: "1.0-draft"
+app: demo-app
+runtime:
+  port: 8080
+  size: s
+  health:
+    liveness: /healthz
+    readiness: /readyz
+  env:
+    - name: LOG_LEVEL
+      value: info
+    - name: API_KEY
+      secret: api-key
+secrets:
+  - api-key

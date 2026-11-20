@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "The Azure DevOps stages run one app at a time.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/ado.sh",
+      "find": "prov_plan_apps \"\"\n",
+      "replace": "prov_plan_apps \"\"\nprov_parallel\n"
+    }
+  ]
+}

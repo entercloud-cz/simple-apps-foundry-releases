@@ -1,0 +1,16 @@
+{
+  "rule": "T26",
+  "description": "A newer-run guard that runs only after the image is published is rejected.",
+  "patches": [
+    {
+      "file": "scripts/deploy.sh",
+      "find": "if [ \"$action\" = deliver ] && saf_newer_run_deployed; then\n",
+      "replace": "if false; then\n"
+    },
+    {
+      "file": "scripts/deploy.sh",
+      "find": "[ \"$(resolve_digest \"$login_server/$repository@$digest\")\" = \"$digest\" ] \\\n  || saf_die \"the registry does not resolve the image digest\"\n",
+      "replace": "[ \"$(resolve_digest \"$login_server/$repository@$digest\")\" = \"$digest\" ] \\\n  || saf_die \"the registry does not resolve the image digest\"\nif saf_newer_run_deployed; then exit 0; fi\n"
+    }
+  ]
+}

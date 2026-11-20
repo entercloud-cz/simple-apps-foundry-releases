@@ -1,0 +1,11 @@
+{
+  "rule": "P16",
+  "description": "The step entraDecide of plan.decide reads the plan phase's entra-needed.txt.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/plan.yml",
+      "find": "            condition: always()\n            env:\n              SAF_ENTRA_PHASE: plan\n",
+      "replace": "            condition: always()\n            env:\n              SAF_ENTRA_PHASE: landing\n"
+    }
+  ]
+}

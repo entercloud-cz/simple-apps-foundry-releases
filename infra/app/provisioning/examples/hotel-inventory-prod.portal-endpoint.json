@@ -1,0 +1,13 @@
+{
+  "prefix": "contoso",
+  "portalEnvironmentName": "prod",
+  "location": "westeurope",
+  "environmentName": "prod",
+  "slug": "hotel-inventory",
+  "generation": 0,
+  "vaultSubscriptionId": "00000000-0000-0000-0000-00000000b001",
+  "networkMode": "externalHybrid",
+  "externalOnlyNetwork": "managed",
+  "managedBy": "SAF",
+  "vnetBased": true
+}

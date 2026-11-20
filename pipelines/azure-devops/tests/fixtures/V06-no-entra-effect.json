@@ -1,0 +1,11 @@
+{
+  "rule": "V06",
+  "description": "The validation prints the Entra effect of every changed app.yaml (ADR-0051): it may not be dropped.",
+  "patches": [
+    {
+      "file": "scripts/platform-validation.sh",
+      "find": "    if ! saf_cli provisioning entra-effect --base \"$base_file\" --head \"$head_file\" --instance \"$instance\" | saf_neutralise; then\n",
+      "replace": "    if ! true; then\n"
+    }
+  ]
+}

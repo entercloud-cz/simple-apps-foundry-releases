@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "A unit that ran and didn't finish loses its tag, so the next run processes it again.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/record.sh",
+      "find": "--operation delete \\\n      --tags \"${deletes[@]}\"",
+      "replace": "--operation merge \\\n      --tags \"${deletes[@]}\""
+    }
+  ]
+}

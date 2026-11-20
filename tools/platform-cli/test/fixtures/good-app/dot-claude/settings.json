@@ -1,0 +1,6 @@
+{
+  "permissions": {
+    "allow": ["Bash(platform check *)"],
+    "deny": ["Read(./.env)", "Read(./.env.*)"]
+  }
+}

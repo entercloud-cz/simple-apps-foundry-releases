@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "prov_tags_restore writes saf-u-files back after a landing-zone deployment.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "  files=\"$(prov_files_tag \"$slug\" \"$env_name\" filesTag)\"\n",
+      "replace": "  files=\"\"\n"
+    }
+  ]
+}

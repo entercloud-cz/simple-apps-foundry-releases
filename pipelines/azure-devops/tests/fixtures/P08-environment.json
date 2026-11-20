@@ -1,0 +1,11 @@
+{
+  "rule": "P08",
+  "description": "Provisioning jobs use no ADO environment (the checks sit on the service connections).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure.yml",
+      "find": "      - job: landing_zones\n",
+      "replace": "      - job: landing_zones\n        environment: platform-nonprod\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "The scope parameter only reaches validate.sh, which only widens the run.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/validate.yml",
+      "find": "              SAF_SCOPE: ${{ parameters.scope }}\n",
+      "replace": "              SAF_SCOPE: ${{ parameters.scope }}\n              SAF_SKIP: ${{ parameters.scope }}\n"
+    }
+  ]
+}

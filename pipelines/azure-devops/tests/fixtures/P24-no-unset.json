@@ -1,0 +1,11 @@
+{
+  "rule": "P24",
+  "description": "The Graph token is unset right after entra-reconcile.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  unset SAF_GRAPH_TOKEN\n",
+      "replace": "  saf_info \"done\"\n"
+    }
+  ]
+}

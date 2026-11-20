@@ -1,0 +1,7 @@
+# Context is the repository root: only the CLI and the schemas are needed.
+*
+!tools/platform-cli
+!config/schema
+**/node_modules
+tools/platform-cli/dist
+tools/platform-cli/test/fixtures

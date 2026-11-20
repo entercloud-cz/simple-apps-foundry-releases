@@ -1,0 +1,11 @@
+{
+  "rule": "V05",
+  "description": "Folder names from the pull request are printed only through saf_neutralise.",
+  "patches": [
+    {
+      "file": "scripts/platform-validation.sh",
+      "find": "  printf '%s\\n' \"== apps/$name/app.yaml\" | saf_neutralise\n",
+      "replace": "  saf_info \"== apps/$name/app.yaml\"\n"
+    }
+  ]
+}

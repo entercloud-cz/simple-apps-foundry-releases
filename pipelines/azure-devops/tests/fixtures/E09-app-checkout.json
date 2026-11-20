@@ -1,0 +1,11 @@
+{
+  "rule": "E09",
+  "description": "The platform pipeline checks out an app repository.",
+  "patches": [
+    {
+      "file": "templates/platform/stages/validate.yml",
+      "find": "              tools: [node]\n",
+      "replace": "              tools: [node]\n          - checkout: app\n            path: s/app\n            fetchDepth: 1\n            fetchTags: false\n            submodules: false\n            lfs: false\n            persistCredentials: false\n            target:\n              commands: restricted\n              settableVariables: none\n"
+    }
+  ]
+}

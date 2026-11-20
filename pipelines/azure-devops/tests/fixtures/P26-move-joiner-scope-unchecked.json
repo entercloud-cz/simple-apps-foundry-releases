@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The move deletes the delivery identity's role only at exactly the source CAE (ADR-0060, ADR-0052): never one inherited or elsewhere.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "    if [ \"${scope,,}\" != \"${cae,,}\" ] || [[ \"${id,,}\" != \"${cae,,}/providers/microsoft.authorization/roleassignments/\"* ]]; then continue; fi\n",
+      "replace": "    true\n"
+    }
+  ]
+}

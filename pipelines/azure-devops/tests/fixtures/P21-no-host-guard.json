@@ -1,0 +1,11 @@
+{
+  "rule": "P21",
+  "description": "Only the portal host environment's stage deploys portal-side endpoints.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  if [ \"$env_name\" != \"$host\" ]; then\n    portal_endpoint_approvals \"$host\"\n    return 0\n  fi\n",
+      "replace": "  portal_endpoint_approvals \"$host\"\n"
+    }
+  ]
+}

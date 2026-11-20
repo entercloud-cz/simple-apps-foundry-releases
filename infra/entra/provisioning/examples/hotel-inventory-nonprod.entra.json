@@ -1,0 +1,38 @@
+{
+  "prefix": "contoso",
+  "environmentName": "nonprod",
+  "environmentKind": "nonprod",
+  "slug": "hotel-inventory",
+  "incarnation": 0,
+  "appTitle": "Hotel Inventory",
+  "hosts": [
+    "ca-hotel-inventory.happyfield-00000000.westeurope.azurecontainerapps.io"
+  ],
+  "appRoles": [
+    {
+      "value": "Reader",
+      "displayName": "Reader",
+      "description": "Can view stock levels."
+    },
+    {
+      "value": "Editor",
+      "displayName": "Editor",
+      "description": "Can change stock levels."
+    },
+    {
+      "value": "Admin",
+      "displayName": "Admin",
+      "description": "Can manage the app."
+    }
+  ],
+  "roleAssignments": [
+    {
+      "principalId": "00000000-0000-0000-0000-00000000c101",
+      "role": "Reader"
+    },
+    {
+      "principalId": "00000000-0000-0000-0000-00000000c102",
+      "role": "Admin"
+    }
+  ]
+}

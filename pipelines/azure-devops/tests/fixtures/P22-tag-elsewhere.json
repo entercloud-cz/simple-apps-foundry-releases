@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "The unit tags are written only by prov_tags_restore and record.sh.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  # 5. Restart when",
+      "replace": "  az tag update --resource-id \"/subscriptions/$subscription/resourceGroups/$rg\" --operation merge --tags saf-u-release=x\n  # 5. Restart when"
+    }
+  ]
+}
