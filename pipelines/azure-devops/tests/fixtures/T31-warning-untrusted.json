@@ -1,0 +1,11 @@
+{
+  "rule": "T31",
+  "description": "The capacity warning is fixed text: release-manifest.sh never passes the CLI's (untrusted) message to a logging command.",
+  "patches": [
+    {
+      "file": "scripts/release-manifest.sh",
+      "find": "      saf_warn \"platform.yaml is above the app's capacity reservation (or delivery.yml has none); see the WARNING lines of this step\"\n",
+      "replace": "      saf_warn \"$(jq -r '.warnings[0]' \"$work/release-inputs.json\")\"\n"
+    }
+  ]
+}

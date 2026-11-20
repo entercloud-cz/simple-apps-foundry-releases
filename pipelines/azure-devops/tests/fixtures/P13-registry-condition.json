@@ -1,0 +1,11 @@
+{
+  "rule": "P13",
+  "description": "registry_<env> runs on its own output registry_<env> of the plan (ADR-0059), not on another stage's.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/registry.yml",
+      "find": "eq(dependencies.plan.outputs['decide.decide.registry_${{ parameters.environment.name }}'], 'true'))",
+      "replace": "eq(dependencies.plan.outputs['decide.decide.post_${{ parameters.environment.name }}'], 'true'))"
+    }
+  ]
+}

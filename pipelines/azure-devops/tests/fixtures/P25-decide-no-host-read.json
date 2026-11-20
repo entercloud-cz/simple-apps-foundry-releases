@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "The job decide reads the host environment itself before it decides (the host's plan job is merged into it, ADR-0050).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/plan.yml",
+      "find": "                  scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/provisioning/plan.sh\n                  addSpnToEnvironment: false\n                  useGlobalConfig: false\n                  failOnStandardError: false\n                  workingDirectory: $(Pipeline.Workspace)\n                env:\n                  SAF_ENV_NAME: ${{ parameters.hostEnvironment }}\n",
+      "replace": "                  scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/provisioning/azure.sh\n                  addSpnToEnvironment: false\n                  useGlobalConfig: false\n                  failOnStandardError: false\n                  workingDirectory: $(Pipeline.Workspace)\n                env:\n                  SAF_ENV_NAME: ${{ parameters.hostEnvironment }}\n"
+    }
+  ]
+}

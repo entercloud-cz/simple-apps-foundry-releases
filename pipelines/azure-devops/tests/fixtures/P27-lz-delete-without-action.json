@@ -1,0 +1,11 @@
+{
+  "rule": "P27",
+  "description": "A landing zone's delete (ADR-0056) runs only for an lz unit whose plan action is delete.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "  if [ \"$(prov_unit_action \"$slug\" \"$env_name\" lz)\" = delete ]; then\n    prov_run_app",
+      "replace": "  if prov_unit_runs \"$slug\" \"$env_name\" lz; then\n    prov_run_app"
+    }
+  ]
+}

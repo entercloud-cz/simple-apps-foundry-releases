@@ -1,0 +1,11 @@
+{
+  "rule": "P23",
+  "description": "The kvset job's state is read inside a test, where errexit doesn't apply: a read error would pass as job-outdated.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  job_state=\"$(prov_job_state \"$secret_job\")\"\n  if [ \"$job_state\" != current ]; then\n",
+      "replace": "  if [ \"$(prov_job_state \"$secret_job\")\" != current ]; then\n"
+    }
+  ]
+}

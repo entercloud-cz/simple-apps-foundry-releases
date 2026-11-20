@@ -1,0 +1,11 @@
+{
+  "rule": "T13",
+  "description": "The deploy-event POST must not follow redirects (the bearer token would go elsewhere).",
+  "patches": [
+    {
+      "file": "scripts/report.sh",
+      "find": "--request POST --header @\"$hdr\"",
+      "replace": "--request POST --location --header @\"$hdr\""
+    }
+  ]
+}

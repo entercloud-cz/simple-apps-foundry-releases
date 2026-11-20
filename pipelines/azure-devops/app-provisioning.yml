@@ -1,0 +1,254 @@
+# Provisioning pipeline: the ONLY entry point the instance's `\platform\provisioning` pipeline
+# extends (ADR-0032, ADR-0031, ADR-0006).
+#
+# platform-config's pipelines/provisioning.yml (written by `platform generate`, runs on a merge to
+# the default branch that changes apps/ or instance.yaml, and in the maintenance window, ADR-0048)
+# declares the core repository resource
+# `core` pinned to refs/tags/<coreVersion> and extends this file:
+#
+#   extends:
+#     template: pipelines/azure-devops/app-provisioning.yml@core
+#     parameters:
+#       environments:               # instance order
+#         - { name: nonprod, kind: nonprod, promoteFrom: '' }
+#         - { name: prod, kind: prod, promoteFrom: nonprod }
+#       hostEnvironment: nonprod    # instance portal.hostEnvironment
+#       scope: ${{ parameters.scope }}  # changed | all (queue-time parameter of provisioning.yml)
+#       upgrade: ${{ parameters.upgrade }}  # none | all | slug,... (queue-time parameter, ADR-0049)
+#
+# Rules this file and everything it includes follow (tests/check-templates.py, rules P01-P25 and
+# the generic T rules):
+#   - exactly four parameters, `environments` (object), `hostEnvironment` (string, the
+#     environment whose subscription holds the Entra deployments, ADR-0033), `scope` (string,
+#     changed | all, ADR-0046: `all` runs every unit of every app except the outdated ones ADR-0049
+#     holds) and `upgrade` (string, none | all | up to 50 slugs separated by commas, ADR-0049: the
+#     named apps' outdated units run, with the units their upgrade notes require). `scope` and
+#     `upgrade` reach validate.sh only, and only the plan code reads them; both only widen a run, they
+#     never skip a unit or a check. No booleans, no step/job/stage lists, no list of apps to skip;
+#     which apps exist and what they need is read from platform-config at run time;
+#   - every stage `isSkippable: false`; no root or stage variables, no variable groups; job variables
+#     only saf.coreRef (validate) and saf.result.<artifact> (the conditional downloads);
+#   - one service connection per job: `validate` and `report` none, plan_<env>, the Azure stages and
+#     registry_<env> only sc-platform-provisioning-<env>, plan.decide and `entra_plan` only
+#     sc-platform-provisioning-<hostEnvironment> (plan.decide's steps decide and entraDecide none),
+#     `entra` only sc-platform-entra, the ADO stages only sc-platform-ado; no System.AccessToken;
+#   - every step `target: { commands: restricted, settableVariables: none }` (the summary upload
+#     step of `report` prints one fixed command line; the `decide` step of plan.decide may set
+#     exactly lz_<env>, post_<env>, record_<env>, registry_<env> of each build environment, ado and
+#     entraPlan; its step `entraDecide` and the `decide` step of entra_plan exactly entraNeeded);
+#   - deployments only through infra/app/provisioning/*.bicepparam and
+#     infra/entra/provisioning/app-registration.bicepparam, nothing else as parameters;
+#   - only built-in tasks; tools from tools/tools.json through install-tool.sh; the platform CLI
+#     built once by validate and installed from this run's artifact `plan` by every other job;
+#   - the Easy Auth secret only through `platform provisioning easyauth-secret` in the stage
+#     `entra`, with tokens masked and passed in the environment, never as arguments or files.
+#
+# Provisioning by unit (ADR-0048): what provisioning does for an app is split into units, lz (landing
+# zone, both passes, dbinit), entra (registration, Easy Auth secret), release (Container App, Easy
+# Auth restart), frontdoor (custom domain) and pep (portal-side vault endpoint) per app and
+# environment, and ado (Azure DevOps objects) per app. Stage `plan` decides which units run; a stage
+# runs only when one of its units runs, and processes only those units:
+#
+#   validate ──► plan ──► azure_<E> (after azure_<S>) ──┬─► ado_resources ──────────┬─► azure_post_<E> (after azure_post_<S>)
+#                 │                                      └─► entra_plan ──► entra ──┘       ──► ado_pipelines ──┬─► report
+#                 └───────────────────────────────────────────────────► entra                                    └─► record_<E>
+#   azure_post_<B> ──► registry_<B> (each build environment B: no promoteFrom) ──► report, record_<E>
+#
+#   Every stage after plan depends on plan (its condition reads plan's outputs) and on every stage
+#   whose artifact it may download; entra_plan and entra run once for every environment;
+#   azure_post_<E> waits for entra (when it runs; with approvals.entraChanges separate also for its
+#   approval, ADR-0051) because a new registration's client
+#   ID is needed for the release. An entra-only change goes from plan to entra (ADR-0050): its
+#   comparison is made in plan.decide; entra_plan runs only for entra units whose landing zone runs
+#   too. With one agent (ADR-0050) every job runs after the other; nothing relies on parallel jobs.
+#
+#   stage           runs when (output of plan.decide)  what
+#   validate        always                             validate-run (incl. core's infra/app/units.json), instance.yaml,
+#                                                      `generate --check`, every apps/*/app.yaml, i of every unit
+#                                                      (`provisioning units`), the CLI for the later jobs; artifact plan
+#   plan            validate succeeded                 plan_<E> (one job per environment but the host, read only):
+#                                                      the state of every app in lists, not one read per app (ADR-0050:
+#                                                      tags, landing-zone and custom-domain records, Container Apps,
+#                                                      platform jobs, vault secret attributes, custom domains, backend
+#                                                      ranges; `provisioning plan-facts`); decide (the host's connection,
+#                                                      after them): the host's read and the Entra records, step decide
+#                                                      (no connection, `provisioning plan-units` -> artifact units,
+#                                                      outputs below), the Entra comparison of the entra units whose
+#                                                      landing zone doesn't run (units/entra), step entraDecide
+#                                                      (entraNeeded)
+#   azure_<E>       lz_<E>                             landing zone lz-{slug}-{E}, first pass, of the apps whose lz runs
+#   ado_resources   ado                                per app whose ado runs: service connections, environments, checks,
+#                                                      repo rights (platform ado apply)
+#   entra_plan      entraPlan                          per app x environment whose entra runs with its lz: Entra inputs vs the record
+#                                                      entra-{slug}-{env} in rg-{prefix}-entra-{env} or, deployed before
+#                                                      ADR-0063, rg-{prefix}-entra (build-params, template
+#                                                      hash, compare; no preflight), no approval; plans every absent or
+#                                                      due Easy Auth secret; sets the output entraNeeded
+#   entra           entraNeeded of plan or entra_plan  app registrations entra-{slug}-{env} (Graph Bicep) and Easy Auth
+#                                                      secrets (a new password handed to the kvset job, which writes the
+#                                                      environment vault, ADR-0035) with the Entra provisioning identity;
+#                                                      only on a planned change; sc-platform-entra carries the Approval
+#                                                      check only with approvals.entraChanges separate (ADR-0023); with
+#                                                      pullRequest, the default, the reviewed pull request was the
+#                                                      approval and the stage doesn't wait (ADR-0033, ADR-0051)
+#   azure_post_<E>  post_<E>                           per app whose lz, frontdoor or release runs: landing zone second
+#                                                      pass and dbinit (lz), custom domain (frontdoor), bootstrap or
+#                                                      re-applied release and smoke test, Easy Auth restart (release); in
+#                                                      hostEnvironment's stage the portal-side private endpoints (pep) of
+#                                                      every environment (ADR-0025), elsewhere the approval of pending
+#                                                      portal-side connections on the environment's own vaults
+#   ado_pipelines   ado                                per app whose ado runs: \apps\delivery-{slug} and its permissions
+#   registry_<B>    registry_<B>                       build environments only (ADR-0059): inside the maintenance
+#                                                      window, per app whose last purge is 7 days old (at most 100):
+#                                                      old images of its registry that run in no environment of the
+#                                                      app, aren't among its newest builds and are older than
+#                                                      maintenance.registryRetention.days, deleted by digest (dryRun:
+#                                                      reported only); the tag saf-registry-purge
+#   report          validate succeeded                 the units that ran and why, the stages skipped, the statuses of
+#                                                      the apps with something to say (the others counted); one line when
+#                                                      nothing ran; fails when any app failed, is invalid or could not be
+#                                                      planned
+#   record_<E>      record_<E>                         the tags saf-u-<unit> of the units that ran in E: the new value
+#                                                      when the unit finished, deleted when it didn't; the rebased tags
+#                                                      of held units; saf-u-files with them (ADR-0049); beside report
+#
+# Targeted runs (ADR-0048): a unit runs when it has no tag (new), its inputs changed (i, rendered from
+# app.yaml and instance.yaml), another fact needs it (a new landing zone, an absent or due Easy Auth
+# secret, a pending restart, no Entra record, changed Front Door ranges, ...), its last check is
+# maintenance.driftCheckDays old (drift; the maintenance run of the window, ADR-0048 section 7), or
+# the run checks every app (scope all). A run with nothing to do runs validate, plan and report
+# only.
+#
+# Controlled upgrades (ADR-0049): a unit whose tag's core version is older than its `since` in core's
+# infra/app/units.json is outdated, and waits for its upgrade ("held", the report says "behind
+# (upgrade available)"). It runs only when the app is in the parameter `upgrade` (or it is `all`),
+# when it was applied by a version older than infra/app/upgrades.yaml minAppVersion, or when it runs
+# anyway (new, inputs, dependency): then with this core's template, together with the units its
+# upgrade notes `requires`. Drift checks and scope all skip held units; `ado` is never held. An
+# outdated unit whose i changed while the app's files did not (tag saf-u-files) only rendered
+# differently under this core: record_<E> writes its new i and keeps the tag's version and date
+# (rebase), nothing is deployed. The apps of one Azure stage run up to 6 at the same time (scripts/provisioning/prov-lib.sh
+# PROV_PARALLEL_MAX); the Azure DevOps stages and entra one at a time.
+#
+# Per-app isolation (ADR-0032 decision 6): each stage loops over the apps at run time and writes a
+# status per app (ok | failed | waiting) into its artifact; a later stage takes only the apps that
+# are ok upstream (a unit the plan sent to a stage without an ok status there is not ok). A stage
+# with a failed app fails at its end, and the stages after it still run for the other apps
+# (`condition: and(not(canceled()), <validate succeeded>, <its output>)`). The artifact of a stage
+# that may be skipped is downloaded only when its job ran (steps/download.yml optional, mapped
+# stageDependencies.<stage>.<job>.result); such jobs create it first and publish it with always().
+# Approvals, Branch control, Required template and Exclusive lock are checks on the platform
+# service connections, created by `platform ado bootstrap` (sc-platform-entra's Approval check only with
+# approvals.entraChanges separate, ADR-0051); the templates never implement them.
+
+parameters:
+  - name: environments
+    type: object
+  - name: hostEnvironment
+    type: string
+  - name: scope
+    type: string
+    values:
+      - changed
+      - all
+  # ADR-0049: none | all | up to 50 slugs separated by commas (validate-run fails any other shape and
+  # a slug without apps/<slug>/app.yaml). It only widens a run: the named apps' outdated units run.
+  - name: upgrade
+    type: string
+
+stages:
+  # -------------------------------------------------------------------------------------------
+  # Compile-time guards (same mechanism as app-delivery.yml: an entry that is not a stage makes
+  # Azure Pipelines reject the run before anything is queued). `platform provisioning
+  # validate-run` repeats the checks at runtime against instance.yaml.
+  # The list of names is rendered as `|<a>,<b>|`; split() by `<name>` then gives 2 parts when the
+  # name is unique, and its first part holds exactly the names listed before it.
+  # TODO(verify): split() with a multi-character delimiter and an index on its result compile as
+  # expected (Preview API with tests/scenarios/provisioning/invalid-*.json).
+  # -------------------------------------------------------------------------------------------
+  - ${{ if eq(length(parameters.environments), 0) }}:
+    - 'SAF template error: parameters.environments lists no environment': fail
+  - ${{ each env in parameters.environments }}:
+    - ${{ if eq(format('{0}', env.name), '') }}:
+      - 'SAF template error: an environment has no name': fail
+    - ${{ if notIn(env.kind, 'prod', 'nonprod') }}:
+      - 'SAF template error: an environment kind is not prod or nonprod': ${{ env.name }}
+    - ${{ if eq(format('{0}', env.promoteFrom), format('{0}', env.name)) }}:
+      - 'SAF template error: an environment cannot promote from itself': ${{ env.name }}
+    - ${{ if gt(length(split(format('|<{0}>|', join('>,<', parameters.environments.*.name)), format('<{0}>', env.name))), 2) }}:
+      - 'SAF template error: environment names must be unique': ${{ env.name }}
+    - ${{ if and(ne(format('{0}', env.promoteFrom), ''), not(containsValue(parameters.environments.*.name, env.promoteFrom))) }}:
+      - 'SAF template error: promoteFrom must name an environment of the list': ${{ env.name }}
+    - ${{ if and(ne(format('{0}', env.promoteFrom), ''), not(contains(split(format('|<{0}>|', join('>,<', parameters.environments.*.name)), format('<{0}>', env.name))[0], format('<{0}>', env.promoteFrom)))) }}:
+      - 'SAF template error: promoteFrom must name an environment listed earlier': ${{ env.name }}
+  - ${{ if not(containsValue(parameters.environments.*.name, parameters.hostEnvironment)) }}:
+    - 'SAF template error: hostEnvironment must name an environment of the list': fail
+
+  - template: templates/provisioning/stages/validate.yml
+    parameters:
+      environments: ${{ parameters.environments }}
+      hostEnvironment: ${{ parameters.hostEnvironment }}
+      scope: ${{ parameters.scope }}
+      upgrade: ${{ parameters.upgrade }}
+
+  # Which units of which apps run (ADR-0048): read only, then the decision.
+  - template: templates/provisioning/stages/plan.yml
+    parameters:
+      environments: ${{ parameters.environments }}
+      hostEnvironment: ${{ parameters.hostEnvironment }}
+
+  # Landing zones, first pass, in list order (a promotion environment after its source).
+  - ${{ each env in parameters.environments }}:
+    - template: templates/provisioning/stages/azure.yml
+      parameters:
+        environment: ${{ env }}
+
+  - template: templates/provisioning/stages/ado.yml
+    parameters:
+      phase: resources
+      environments: ${{ parameters.environments }}
+
+  # Entra registrations: the plan when an entra unit runs, the deployment only on a change (with its
+  # approval when approvals.entraChanges is separate, ADR-0051).
+  - template: templates/provisioning/stages/entra-plan.yml
+    parameters:
+      environments: ${{ parameters.environments }}
+      hostEnvironment: ${{ parameters.hostEnvironment }}
+
+  - template: templates/provisioning/stages/entra.yml
+    parameters:
+      hostEnvironment: ${{ parameters.hostEnvironment }}
+
+  # Landing zones, second pass, and releases; in the host's stage also the portal-side endpoints
+  # of app vaults (ADR-0025).
+  - ${{ each env in parameters.environments }}:
+    - template: templates/provisioning/stages/azure-post.yml
+      parameters:
+        environment: ${{ env }}
+        environments: ${{ parameters.environments }}
+        hostEnvironment: ${{ parameters.hostEnvironment }}
+
+  - template: templates/provisioning/stages/ado.yml
+    parameters:
+      phase: pipelines
+      environments: ${{ parameters.environments }}
+
+  # The registry image purge of each build environment, after its releases (ADR-0059): only inside
+  # the maintenance window, only for the apps the plan names.
+  - ${{ each env in parameters.environments }}:
+    - ${{ if eq(format('{0}', env.promoteFrom), '') }}:
+      - template: templates/provisioning/stages/registry.yml
+        parameters:
+          environment: ${{ env }}
+
+  - template: templates/provisioning/stages/report.yml
+    parameters:
+      environments: ${{ parameters.environments }}
+
+  # The unit tags of the units this run finished (ADR-0048), beside report.
+  - ${{ each env in parameters.environments }}:
+    - template: templates/provisioning/stages/record.yml
+      parameters:
+        environment: ${{ env }}
+        environments: ${{ parameters.environments }}
+        hostEnvironment: ${{ parameters.hostEnvironment }}

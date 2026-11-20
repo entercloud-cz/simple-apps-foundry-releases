@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "prov_env_guard also refuses NODE_OPTIONS (code injection into the CLI, which holds the tokens and the secret).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "BASH_XTRACEFD NODE_OPTIONS; do",
+      "replace": "BASH_XTRACEFD; do"
+    }
+  ]
+}

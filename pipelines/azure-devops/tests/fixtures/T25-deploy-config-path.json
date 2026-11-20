@@ -1,0 +1,11 @@
+{
+  "rule": "T25",
+  "description": "deploy.sh must run from the core checkout (pinned tag), not from platform-config (s/config).",
+  "patches": [
+    {
+      "file": "templates/stages/deploy.yml",
+      "find": "                    scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/deploy.sh\n",
+      "replace": "                    scriptPath: $(Pipeline.Workspace)/s/config/pipelines/azure-devops/scripts/deploy.sh\n"
+    }
+  ]
+}

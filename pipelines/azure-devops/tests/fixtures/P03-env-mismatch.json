@@ -1,0 +1,11 @@
+{
+  "rule": "P03",
+  "description": "SAF_SERVICE_CONNECTION must name the step's service connection.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/ado.yml",
+      "find": "              SAF_SERVICE_CONNECTION: sc-platform-ado\n",
+      "replace": "              SAF_SERVICE_CONNECTION: sc-platform-other\n"
+    }
+  ]
+}

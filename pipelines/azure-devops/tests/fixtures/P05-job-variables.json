@@ -1,0 +1,11 @@
+{
+  "rule": "P05",
+  "description": "Job variables outside validate.plan are rejected.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure.yml",
+      "find": "        timeoutInMinutes: 180\n",
+      "replace": "        timeoutInMinutes: 180\n        variables:\n          - name: saf.debug\n            value: 'true'\n"
+    }
+  ]
+}

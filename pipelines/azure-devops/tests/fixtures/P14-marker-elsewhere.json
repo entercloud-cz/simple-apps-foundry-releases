@@ -1,0 +1,11 @@
+{
+  "rule": "P14",
+  "description": "Only the jobs whose artifact a later job reads after a failure create their folder up front.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/record.yml",
+      "find": "              tools: [node]\n              cli: artifact\n",
+      "replace": "              tools: [node]\n              cli: artifact\n              artifact: record_${{ parameters.environment.name }}\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P02",
+  "description": "The compile-time guard for duplicate environment names is required.",
+  "patches": [
+    {
+      "file": "app-provisioning.yml",
+      "find": "'SAF template error: environment names must be unique'",
+      "replace": "'SAF template error: duplicate'"
+    }
+  ]
+}

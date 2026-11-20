@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The custom domain's deployment PUTs DNS record sets: it needs the DNS guard (GET before PUT) before it.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "    fd_dns_guard \"$dir\"\n",
+      "replace": ""
+    }
+  ]
+}

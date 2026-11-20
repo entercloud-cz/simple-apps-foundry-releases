@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "An artifact that is always there is downloaded unconditionally: a missing one fails the job.",
+  "patches": [
+    {
+      "file": "templates/provisioning/steps/download.yml",
+      "find": "      displayName: Download ${{ name }}\n",
+      "replace": "      displayName: Download ${{ name }}\n      condition: succeededOrFailed()\n"
+    }
+  ]
+}

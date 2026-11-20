@@ -1,0 +1,11 @@
+{
+  "rule": "T03",
+  "description": "A boolean parameter (skip switch) in a step template is rejected.",
+  "patches": [
+    {
+      "file": "templates/steps/install-tools.yml",
+      "find": "  - name: tools\n    type: object\n",
+      "replace": "  - name: tools\n    type: object\n  - name: verify\n    type: boolean\n    default: true\n"
+    }
+  ]
+}

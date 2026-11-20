@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "After a restart, the tag saf-easyauth waits until the settle time since the version has passed.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  if [ \"$(date -u +%s)\" -ge $((created + PROV_EASYAUTH_SETTLE_S)) ]; then\n",
+      "replace": "  if true; then\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "V06",
+  "description": "The Entra effect prints text from the pull request (display names): only through saf_neutralise.",
+  "patches": [
+    {
+      "file": "scripts/platform-validation.sh",
+      "find": "    if ! saf_cli provisioning entra-effect --base \"$base_file\" --head \"$head_file\" --instance \"$instance\" | saf_neutralise; then\n",
+      "replace": "    if ! saf_cli provisioning entra-effect --base \"$base_file\" --head \"$head_file\" --instance \"$instance\"; then\n"
+    }
+  ]
+}

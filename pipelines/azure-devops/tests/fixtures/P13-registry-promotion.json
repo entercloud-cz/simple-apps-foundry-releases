@@ -1,0 +1,11 @@
+{
+  "rule": "P13",
+  "description": "Only build environments get a registry purge: a promotion environment holds promoted images (ADR-0059).",
+  "patches": [
+    {
+      "file": "app-provisioning.yml",
+      "find": "    - ${{ if eq(format('{0}', env.promoteFrom), '') }}:\n      - template: templates/provisioning/stages/registry.yml",
+      "replace": "    - ${{ if ne(env.name, '') }}:\n      - template: templates/provisioning/stages/registry.yml"
+    }
+  ]
+}

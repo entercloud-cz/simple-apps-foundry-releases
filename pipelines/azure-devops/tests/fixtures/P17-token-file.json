@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "A token is never written to a file.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "  SAF_ARM_TOKEN=\"$token\"\n",
+      "replace": "  SAF_ARM_TOKEN=\"$token\"\n  printf '%s' \"$token\" > \"$PROV_DIR/arm.token\"\n"
+    }
+  ]
+}

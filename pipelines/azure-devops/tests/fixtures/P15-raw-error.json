@@ -1,0 +1,11 @@
+{
+  "rule": "P15",
+  "description": "Azure error text is printed only through saf_neutralise.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "    saf_neutralise < \"$err\" | tail -n 30\n",
+      "replace": "    tail -n 30 \"$err\"\n"
+    }
+  ]
+}

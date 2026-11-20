@@ -1,0 +1,11 @@
+{
+  "rule": "P20",
+  "description": "fd_delete() checks the ID is a Front Door object or DNS record set of this environment's subscription before the DELETE.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  [[ \"${id,,}\" =~ ^/subscriptions/${subscription,,}/",
+      "replace": "  [[ \"${id,,}\" =~ ^/subscriptions/[^/]+/"
+    }
+  ]
+}

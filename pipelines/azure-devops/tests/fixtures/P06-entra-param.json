@@ -1,0 +1,11 @@
+{
+  "rule": "P06",
+  "description": "Entra registrations deploy only through infra/entra/provisioning/app-registration.bicepparam.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "prov_entra_param=\"$SAF_CORE/infra/entra/provisioning/app-registration.bicepparam\"",
+      "replace": "prov_entra_param=\"$SAF_CONFIG/apps/app-registration.bicepparam\""
+    }
+  ]
+}

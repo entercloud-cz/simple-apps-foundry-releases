@@ -1,0 +1,11 @@
+{
+  "rule": "P28",
+  "description": "The app is deleted only after every precondition of the move held (ADR-0060 decision 6.1).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  move_app_read \"$app_id\" \"$dir/app.json\"\n",
+      "replace": "  move_app_delete \"$app_id\"\n  move_app_read \"$app_id\" \"$dir/app.json\"\n"
+    }
+  ]
+}

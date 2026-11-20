@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "azure-post.sh doesn't restart an app whose tag saf-easyauth already names the vault's version.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  if [ \"$tag\" = \"$created\" ]; then\n",
+      "replace": "  if false; then\n"
+    }
+  ]
+}
