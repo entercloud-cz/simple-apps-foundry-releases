@@ -1,0 +1,11 @@
+{
+  "rule": "T06",
+  "description": "An environment (deployment job) in the verify stage is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/verify.yml",
+      "find": "      - job: scan\n        displayName: Scan and release manifest\n",
+      "replace": "      - job: scan\n        environment: demo-nonprod\n        displayName: Scan and release manifest\n"
+    }
+  ]
+}

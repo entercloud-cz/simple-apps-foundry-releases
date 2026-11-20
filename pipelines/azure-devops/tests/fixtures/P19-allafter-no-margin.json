@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "A revision counts as started with a version only when created at least the settle time after it.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": ".created >= ($c | tonumber) + $m",
+      "replace": ".created > ($c | tonumber)"
+    }
+  ]
+}

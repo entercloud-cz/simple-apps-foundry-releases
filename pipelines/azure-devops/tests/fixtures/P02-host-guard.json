@@ -1,0 +1,11 @@
+{
+  "rule": "P02",
+  "description": "The compile-time guard for hostEnvironment not in the list is required.",
+  "patches": [
+    {
+      "file": "app-provisioning.yml",
+      "find": "'SAF template error: hostEnvironment must name an environment of the list'",
+      "replace": "'SAF template error: host'"
+    }
+  ]
+}

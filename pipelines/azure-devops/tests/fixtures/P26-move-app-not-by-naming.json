@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The move deletes only the app's own Container App by naming (ADR-0060).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  [ \"${id,,}\" = \"/subscriptions/${subscription,,}/resourcegroups/${rg,,}/providers/microsoft.app/containerapps/${container_app,,}\" ] \\\n",
+      "replace": "  true \\\n"
+    }
+  ]
+}

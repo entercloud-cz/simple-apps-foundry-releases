@@ -1,0 +1,11 @@
+{
+  "rule": "P01",
+  "description": "A second entry parameter (an app list) is rejected.",
+  "patches": [
+    {
+      "file": "app-provisioning.yml",
+      "find": "  - name: environments\n    type: object\n",
+      "replace": "  - name: environments\n    type: object\n  - name: apps\n    type: object\n    default: []\n"
+    }
+  ]
+}

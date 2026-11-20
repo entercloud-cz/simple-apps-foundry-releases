@@ -1,0 +1,10 @@
+{
+  "rule": "T30",
+  "description": "The deploy event must be the job's last step.",
+  "patches": [
+    {
+      "file": "templates/steps/deployment-finish.yml",
+      "append": "  - bash: echo done\n    displayName: Done\n    target:\n      commands: restricted\n"
+    }
+  ]
+}

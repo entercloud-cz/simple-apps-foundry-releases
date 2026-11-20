@@ -1,0 +1,16 @@
+{
+  "rule": "P21",
+  "description": "portal_endpoints runs once, after the release loop, right before prov_finish.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "prov_join\nportal_endpoints\nprov_finish\n",
+      "replace": "prov_join\nprov_finish\n"
+    },
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "prov_plan_apps \"$env_name\"\nsaf_info \"Releases in",
+      "replace": "portal_endpoints\nprov_plan_apps \"$env_name\"\nsaf_info \"Releases in"
+    }
+  ]
+}

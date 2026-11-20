@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "A job reads an optional artifact's result only from a stage it depends on directly.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure-post.yml",
+      "find": "      - azure_${{ parameters.environment.name }}\n      - ado_resources\n",
+      "replace": "      - ado_resources\n"
+    }
+  ]
+}

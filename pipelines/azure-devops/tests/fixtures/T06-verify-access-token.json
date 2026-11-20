@@ -1,0 +1,11 @@
+{
+  "rule": "T06",
+  "description": "Mapping System.AccessToken into a verify step is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/verify.yml",
+      "find": "              SAF_SLUG: ${{ parameters.app.slug }}\n              RESOURCES_REPOSITORIES_CORE_REF: $(saf.coreRef)\n",
+      "replace": "              SAF_SLUG: ${{ parameters.app.slug }}\n              RESOURCES_REPOSITORIES_CORE_REF: $(saf.coreRef)\n              SYSTEM_ACCESSTOKEN: $(System.AccessToken)\n"
+    }
+  ]
+}

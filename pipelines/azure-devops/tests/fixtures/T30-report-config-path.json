@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "The deploy event must run report.sh from the core checkout, not a copy in platform-config (s/config).",
+  "patches": [
+    {
+      "file": "templates/steps/deployment-finish.yml",
+      "find": "      scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/report.sh\n",
+      "replace": "      scriptPath: $(Pipeline.Workspace)/s/config/pipelines/azure-devops/scripts/report.sh\n"
+    }
+  ]
+}

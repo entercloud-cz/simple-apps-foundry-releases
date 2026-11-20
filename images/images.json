@@ -1,0 +1,31 @@
+{
+  "$comment": "Core images pinned by this core release (ADR-0030, ADR-0065). The registry is instance config (coreImages.registry); the digest is the integrity anchor, and revision the commit core CI built the image from. A release pins the builds of its release branch with tools/scripts/release-images.mjs pin; core-release checks the pins (release-images.mjs check) and copies them to the public packages (docs/runbooks/release-core.md).",
+  "formatVersion": 1,
+  "images": {
+    "saf-placeholder": {
+      "repository": "saf-placeholder",
+      "digest": "sha256:10020716ca0e5510e4f229b9c0187dd827f0c95f0460749936f8fcc8a75b298f",
+      "runtime": {
+        "port": 8080,
+        "livenessPath": "/healthz",
+        "readinessPath": "/readyz"
+      },
+      "revision": "410266a7b5a8ec33cd3e7ff1619e053c9156c862"
+    },
+    "saf-jobs": {
+      "repository": "saf-jobs",
+      "digest": "sha256:3cc262b89072f2cf4be9afc39b2af4569af789a9540fd46db76406ac8cb16985",
+      "revision": "410266a7b5a8ec33cd3e7ff1619e053c9156c862"
+    },
+    "saf-portal": {
+      "repository": "saf-portal",
+      "digest": "sha256:b4c7280dcd4b4e19ddf116a7f7f5f72585f97b14fdce4bcf3f6c8c53545c07a3",
+      "runtime": {
+        "port": 8080,
+        "livenessPath": "/healthz",
+        "readinessPath": "/readyz"
+      },
+      "revision": "d19da7d5f832eef16dc7e6bc10008c4b83c2cb35"
+    }
+  }
+}

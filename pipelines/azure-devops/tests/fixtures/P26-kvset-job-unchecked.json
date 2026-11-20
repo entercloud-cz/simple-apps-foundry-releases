@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The Easy Auth secret write patches a kvset job's secrets: the entry's job must be the app's CAE's kvset job by naming.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "  [ \"$secret_job\" = \"$job_prefix$kvset\" ] \\\n",
+      "replace": "  true \\\n"
+    }
+  ]
+}

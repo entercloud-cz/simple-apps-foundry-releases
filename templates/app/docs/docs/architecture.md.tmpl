@@ -1,0 +1,60 @@
+# Architecture of {{APP_NAME}}
+
+Keep this document true to the code. Update it in the same commit as the change
+(see the `docs-keeping` skill).
+
+## Overview
+
+{{APP_DESCRIPTION}}
+
+```mermaid
+flowchart LR
+  user([User, company account]) -->|HTTPS, platform sign-in| app["The app<br/>(one container)"]
+  app -.->|optional| db[(Database)]
+  app -.->|optional| blob[(Blob Storage)]
+  app -->|telemetry| ai[Application Insights]
+```
+
+The app runs as one container on the platform (Azure Container Apps). The platform signs users
+in (Microsoft Entra ID), injects configuration as environment variables, and deploys every push to
+nonprod and approved releases to prod.
+
+## Components
+
+| Path | Purpose |
+|---|---|
+| _e.g. `src/server/`_ | _API server: routes, auth, data access_ |
+| _e.g. `src/client/`_ | _React user interface_ |
+
+## Roles and permissions
+
+Role values are defined in the portal and checked in code.
+
+| Role | Allowed actions |
+|---|---|
+| _Reader_ | _…_ |
+| _Admin_ | _…_ |
+
+## Data
+
+_No database yet._ <!-- Replace with a table per table/container: purpose, key columns, owner of records. -->
+
+## Configuration
+
+| Variable | Source | Secret | Purpose |
+|---|---|---|---|
+| `PORT` | platform | no | port the app listens on (8080) |
+| `AZURE_CLIENT_ID` | platform | no | client id of the app's managed identity |
+| `APPLICATIONINSIGHTS_CONNECTION_STRING` | platform | no | telemetry to Application Insights |
+| `LOG_LEVEL` | `platform.yaml` | no | `info` (prod), `debug` allowed in nonprod |
+| `DEV_FAKE_USER`, `DEV_FAKE_ROLES` | `.env` (local only) | no | simulated signed-in user on a laptop; refused on Azure |
+
+## Integrations
+
+_None._ <!-- External services: what is sent, how it authenticates (secret name), failure behaviour. -->
+
+## Operations
+
+- Health: `/healthz` (liveness), `/readyz` (readiness).
+- Logs: JSON to stdout, visible in the portal log viewer.
+- Releases: push → nonprod; default branch → prod after approval; rollback in the portal.

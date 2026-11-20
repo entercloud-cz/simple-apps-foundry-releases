@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "A token never reaches easyauth-secret as an argument.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "    --output \"$result\" || rc=$?",
+      "replace": "    --output \"$result\" --graph-token \"$SAF_GRAPH_TOKEN\" || rc=$?"
+    }
+  ]
+}

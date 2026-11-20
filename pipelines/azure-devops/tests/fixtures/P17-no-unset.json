@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "The tokens are unset right after the Easy Auth secret step.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  unset SAF_GRAPH_TOKEN SAF_ARM_TOKEN\n",
+      "replace": ""
+    }
+  ]
+}

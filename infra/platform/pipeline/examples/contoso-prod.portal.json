@@ -1,0 +1,37 @@
+{
+  "prefix": "contoso",
+  "environmentName": "prod",
+  "environmentKind": "prod",
+  "location": "westeurope",
+  "tenantId": "00000000-0000-0000-0000-000000000001",
+  "network": {
+    "vnetAddressSpace": "10.40.0.0/23",
+    "caeSubnetPrefix": "10.40.0.0/25",
+    "privateEndpointSubnetPrefix": "10.40.1.0/24",
+    "approvalReference": "CHG-1001"
+  },
+  "azureDevOps": {
+    "organizationUrl": "https://dev.azure.com/contoso",
+    "platformProject": "Platform",
+    "platformConfigRepo": "platform-config",
+    "platformConfigDefaultBranch": "main"
+  },
+  "database": {
+    "size": {
+      "skuName": "Standard_B1ms",
+      "tier": "Burstable",
+      "storageGb": 32,
+      "version": "16"
+    },
+    "backupRetentionDays": 35,
+    "geoRedundantBackup": true
+  },
+  "portalImageDigest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "portalClientId": "00000000-0000-0000-0000-00000000e101",
+  "vaultGeneration": 0,
+  "environmentVault": "private",
+  "smtpPasswordSecretName": "",
+  "smtpPasswordSecretExists": false,
+  "managedBy": "SAF",
+  "tags": {}
+}

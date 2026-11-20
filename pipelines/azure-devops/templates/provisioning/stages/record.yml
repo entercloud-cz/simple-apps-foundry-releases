@@ -1,0 +1,105 @@
+# Stage `record_<env>`: the unit tags saf-u-<unit> of the apps in ONE environment (ADR-0048 section
+# 3). Runs only when a unit ran in <env> (output record_<env> of stage plan). Service connection
+# sc-platform-provisioning-<env> only, as in azure.yml.
+#
+# scripts/provisioning/record.sh, per app planned in <env>, on its app resource group: each unit the
+# plan ran there (ado in every environment of the app) that finished in this run gets
+# "<core version> <first 12 hex of i> <UTC date>"; one that ran and didn't finish loses its tag; one
+# that didn't run keeps it (prov_unit_finished reads the same statuses as report). The retired tag
+# saf-provisioned (ADR-0046) is deleted. The next run's plan skips a unit whose tag matches. It
+# depends on what report depends on and runs beside it; a failure here fails the run, and the units
+# whose tags it didn't write run again next time.
+# No artifact.
+
+parameters:
+  - name: environment
+    type: object
+  - name: environments
+    type: object
+  - name: hostEnvironment
+    type: string
+
+stages:
+  - stage: record_${{ parameters.environment.name }}
+    displayName: Unit tags ${{ parameters.environment.name }}
+    dependsOn:
+      - validate
+      - plan
+      - ado_resources
+      - entra_plan
+      - entra
+      - ado_pipelines
+      - ${{ each env in parameters.environments }}:
+        - azure_${{ env.name }}
+        - azure_post_${{ env.name }}
+        # Beside report: what report depends on, the registry purges included (ADR-0059); nothing read from them.
+        - ${{ if eq(format('{0}', env.promoteFrom), '') }}:
+          - registry_${{ env.name }}
+    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'), eq(dependencies.plan.outputs['decide.decide.record_${{ parameters.environment.name }}'], 'true'))
+    isSkippable: false
+    lockBehavior: runLatest
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - job: tags
+        displayName: Record the finished units in ${{ parameters.environment.name }}
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 30
+        variables:
+          # Results of the jobs whose artifacts are optional here (steps/download.yml): empty when
+          # their stage was skipped or never started. TODO(verify) UNIT-6 (generalises PROV-3).
+          - name: saf.result.azure_${{ parameters.environment.name }}
+            value: $[ stageDependencies.azure_${{ parameters.environment.name }}.landing_zones.result ]
+          - name: saf.result.ado
+            value: $[ stageDependencies.ado_resources.resources.result ]
+          - name: saf.result.entra_plan
+            value: $[ stageDependencies.entra_plan.plan.result ]
+          - name: saf.result.entra
+            value: $[ stageDependencies.entra.registrations.result ]
+          - name: saf.result.azure_post_${{ parameters.environment.name }}
+            value: $[ stageDependencies.azure_post_${{ parameters.environment.name }}.releases.result ]
+          - name: saf.result.ado_pipelines
+            value: $[ stageDependencies.ado_pipelines.pipelines.result ]
+          - ${{ if ne(parameters.environment.name, parameters.hostEnvironment) }}:
+            - name: saf.result.azure_post_${{ parameters.hostEnvironment }}
+              value: $[ stageDependencies.azure_post_${{ parameters.hostEnvironment }}.releases.result ]
+        steps:
+          - template: ../steps/setup.yml
+            parameters:
+              tools: [node]
+              cli: artifact
+          - template: ../steps/download.yml
+            parameters:
+              artifacts:
+                - units
+              optional:
+                - azure_${{ parameters.environment.name }}
+                - ado
+                - entra_plan
+                - entra
+                - azure_post_${{ parameters.environment.name }}
+                - ado_pipelines
+                # The portal-side endpoint statuses of every environment are in the host's stage.
+                - ${{ if ne(parameters.environment.name, parameters.hostEnvironment) }}:
+                  - azure_post_${{ parameters.hostEnvironment }}
+          - task: AzureCLI@2
+            displayName: Record the finished units
+            inputs:
+              azureSubscription: sc-platform-provisioning-${{ parameters.environment.name }}
+              scriptType: bash
+              scriptLocation: scriptPath
+              scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/provisioning/record.sh
+              addSpnToEnvironment: false
+              useGlobalConfig: false
+              failOnStandardError: false
+              workingDirectory: $(Pipeline.Workspace)
+            env:
+              SAF_ENV_NAME: ${{ parameters.environment.name }}
+              SAF_PROMOTE_FROM: ${{ parameters.environment.promoteFrom }}
+              SAF_SERVICE_CONNECTION: sc-platform-provisioning-${{ parameters.environment.name }}
+            target:
+              commands: restricted
+              settableVariables: none

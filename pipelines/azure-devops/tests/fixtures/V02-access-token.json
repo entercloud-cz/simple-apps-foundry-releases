@@ -1,0 +1,11 @@
+{
+  "rule": "V02",
+  "description": "No System.AccessToken in the validation pipeline.",
+  "patches": [
+    {
+      "file": "platform-validation.yml",
+      "find": "          - bash: bash \"$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/platform-validation.sh\"\n",
+      "replace": "          - bash: bash \"$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/platform-validation.sh\"\n            env:\n              SYSTEM_ACCESSTOKEN: $(System.AccessToken)\n"
+    }
+  ]
+}

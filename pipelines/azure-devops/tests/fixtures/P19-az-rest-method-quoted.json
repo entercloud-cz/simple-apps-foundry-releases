@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "az rest --method \"post\" (quoted) is a write too.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "  prov_write_frontdoor_entry \"$out\"\n",
+      "replace": "  prov_write_frontdoor_entry \"$out\"\n  az rest --method \"post\" --url \"$app_id/stop?api-version=2024-03-01\"\n"
+    }
+  ]
+}

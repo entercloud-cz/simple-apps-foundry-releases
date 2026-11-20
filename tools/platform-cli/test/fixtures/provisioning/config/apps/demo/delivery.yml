@@ -1,0 +1,58 @@
+# Fixture: the hand-written delivery pipeline the generator must reproduce (header aside).
+name: $(Date:yyyyMMdd)$(Rev:.r)
+appendCommitMessageToRunName: false
+
+trigger: none
+pr: none
+
+# Queue-time parameters for the portal and the platform team (Runs API): a push always delivers.
+parameters:
+  - name: action
+    type: string
+    default: deliver
+    values: [deliver, redeploy]
+  - name: targetEnvironment
+    type: string
+    default: none
+    values: [none, nonprod, prod]
+  - name: sourceRunId
+    type: number
+    default: 0
+
+resources:
+  repositories:
+    - repository: app
+      type: git
+      name: Apps/demo
+      ref: refs/heads/main
+      trigger:
+        branches:
+          include:
+            - '*'
+    - repository: core
+      type: git
+      name: Platform/core
+      ref: refs/tags/v0.1.0-rc.3
+
+extends:
+  template: pipelines/azure-devops/app-delivery.yml@core
+  parameters:
+    app:
+      slug: demo
+      defaultBranch: refs/heads/main
+    environments:
+      - name: nonprod
+        kind: nonprod
+        promoteFrom: ''
+        capacity:
+          size: s
+          maxReplicas: 3
+      - name: prod
+        kind: prod
+        promoteFrom: nonprod
+        capacity:
+          size: s
+          maxReplicas: 3
+    action: ${{ parameters.action }}
+    targetEnvironment: ${{ parameters.targetEnvironment }}
+    sourceRunId: ${{ parameters.sourceRunId }}

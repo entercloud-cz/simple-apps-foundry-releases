@@ -1,0 +1,11 @@
+{
+  "rule": "P07",
+  "description": "The report's commands: any step may only upload the summary.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/report.yml",
+      "find": "                echo \"##vso[task.uploadsummary]$summary\"\n",
+      "replace": "                echo \"##vso[task.uploadsummary]$summary\"\n                cat \"$summary\"\n"
+    }
+  ]
+}

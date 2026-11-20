@@ -1,0 +1,31 @@
+{
+  "description": "One build environment.",
+  "entry": "app-provisioning.yml",
+  "parameters": {
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      }
+    ],
+    "hostEnvironment": "nonprod",
+    "scope": "changed",
+    "upgrade": "none"
+  },
+  "expect": {
+    "stages": [
+      "validate",
+      "plan",
+      "azure_nonprod",
+      "ado_resources",
+      "entra_plan",
+      "entra",
+      "azure_post_nonprod",
+      "ado_pipelines",
+      "registry_nonprod",
+      "report",
+      "record_nonprod"
+    ]
+  }
+}

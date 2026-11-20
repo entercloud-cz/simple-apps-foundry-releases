@@ -1,0 +1,11 @@
+{
+  "rule": "P16",
+  "description": "The Entra scripts never get an Azure DevOps token.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "prov_host_environment sc-platform-entra\n",
+      "replace": "prov_host_environment sc-platform-entra\nprov_ado_token\n"
+    }
+  ]
+}

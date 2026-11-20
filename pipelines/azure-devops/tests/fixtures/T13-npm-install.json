@@ -1,0 +1,11 @@
+{
+  "rule": "T13",
+  "description": "npm install (lifecycle scripts) is rejected.",
+  "patches": [
+    {
+      "file": "templates/steps/platform-cli.yml",
+      "find": "npm ci --ignore-scripts --no-audit --no-fund",
+      "replace": "npm install"
+    }
+  ]
+}

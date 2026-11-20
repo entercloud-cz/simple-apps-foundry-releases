@@ -1,0 +1,11 @@
+{
+  "rule": "P28",
+  "description": "A production environment's move outside the maintenance window waits before anything disruptive (product owner, 2026-11-14; ADR-0060).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "    prov_detail move waiting-window\n    prov_wait \"$slug in $env_name: waits for the maintenance window ($window): a production environment moves only inside it; the prepare pass and the Entra step ran, the app is untouched\"\n",
+      "replace": "    prov_detail move waiting-window\n"
+    }
+  ]
+}

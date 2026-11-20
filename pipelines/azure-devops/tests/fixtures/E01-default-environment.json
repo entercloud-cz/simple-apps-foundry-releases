@@ -1,0 +1,11 @@
+{
+  "rule": "E01",
+  "description": "The platform pipeline's parameters have no defaults (a run can't fall back to an environment).",
+  "patches": [
+    {
+      "file": "platform-environment.yml",
+      "find": "  - name: environment\n    type: string\n",
+      "replace": "  - name: environment\n    type: string\n    default: nonprod\n"
+    }
+  ]
+}

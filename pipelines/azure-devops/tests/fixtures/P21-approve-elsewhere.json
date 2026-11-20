@@ -1,0 +1,10 @@
+{
+  "rule": "P21",
+  "description": "Private endpoint connections are approved only in azure-post.sh portal_endpoint_approve().",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "append": "\napprove_all() {\n  az keyvault private-endpoint-connection approve --id \"$1\" --only-show-errors --output none\n}\n"
+    }
+  ]
+}

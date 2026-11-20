@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "The deploy event must use the job's own service connection, not another one.",
+  "patches": [
+    {
+      "file": "templates/steps/deployment-finish.yml",
+      "find": "      azureSubscription: sc-${{ parameters.app.slug }}-${{ parameters.environment.name }}\n      scriptType: bash\n      scriptLocation: scriptPath\n      scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/report.sh\n",
+      "replace": "      azureSubscription: sc-${{ parameters.app.slug }}-${{ parameters.environment.promoteFrom }}\n      scriptType: bash\n      scriptLocation: scriptPath\n      scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/report.sh\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "E16",
+  "description": "deploy.sh deploys the portal outside deploy_portal(), unguarded by the host check.",
+  "patches": [
+    {
+      "file": "scripts/platform/deploy.sh",
+      "find": "  # 4. Pass 2.\n  plat_arm create environment \"$PLAT_DIR/inputs.json\" \"$deployment\" \"$PLAT_DIR/pass2.json\"\n",
+      "replace": "  # 4. Pass 2.\n  plat_arm create environment \"$PLAT_DIR/inputs.json\" \"$deployment\" \"$PLAT_DIR/pass2.json\"\n  plat_arm create portal \"$PLAT_DIR/inputs.json\" \"$deployment\" \"$PLAT_DIR/pass2.json\"\n"
+    }
+  ]
+}

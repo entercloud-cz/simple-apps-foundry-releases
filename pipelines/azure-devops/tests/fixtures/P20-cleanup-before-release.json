@@ -1,0 +1,16 @@
+{
+  "rule": "P20",
+  "description": "A custom domain is removed only after the release of this run succeeded (the ingress open again): the removal before release_step fails.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  # 4. Release.\n  release_step\n",
+      "replace": "  # 4. Release.\n  front_door_cleanup removal\n  release_step\n"
+    },
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  # 6. Remove a custom domain no longer requested, now that the release has opened the ingress.\n  front_door_cleanup removal\n}\n",
+      "replace": "}\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "The Graph resource comes from az cloud show, not a literal.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "token=\"$(az account get-access-token --resource \"$graph\" ",
+      "replace": "token=\"$(az account get-access-token --resource https://graph.microsoft.com/ "
+    }
+  ]
+}

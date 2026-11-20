@@ -1,0 +1,11 @@
+{
+  "rule": "T24",
+  "description": "preview.sh must run from the core checkout, not from platform-config (s/config).",
+  "patches": [
+    {
+      "file": "templates/stages/preview.yml",
+      "find": "              scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/preview.sh\n",
+      "replace": "              scriptPath: $(Pipeline.Workspace)/s/config/pipelines/azure-devops/scripts/preview.sh\n"
+    }
+  ]
+}
