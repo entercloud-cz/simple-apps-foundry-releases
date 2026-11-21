@@ -1,0 +1,11 @@
+{
+  "rule": "T10",
+  "description": "continueOnError is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/verify.yml",
+      "find": "            displayName: Trivy scan (clean directory, platform config) and scan gate\n",
+      "replace": "            displayName: Trivy scan (clean directory, platform config) and scan gate\n            continueOnError: true\n"
+    }
+  ]
+}

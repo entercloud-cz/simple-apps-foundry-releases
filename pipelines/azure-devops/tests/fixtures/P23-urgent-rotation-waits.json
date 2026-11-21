@@ -1,0 +1,11 @@
+{
+  "rule": "P23",
+  "description": "entra_plan leaves an app whose Easy Auth secret expires within 14 days only waiting while the kvset job can't rotate it.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra-plan.sh",
+      "find": "    if [ \"$action\" = rotate ] && prov_secret_urgent; then\n",
+      "replace": "    if false; then\n"
+    }
+  ]
+}

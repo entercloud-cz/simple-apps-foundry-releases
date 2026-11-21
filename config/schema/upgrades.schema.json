@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:simple-apps-foundry:schema:upgrades:1.0-draft",
+  "title": "Upgrade notes of the provisioning units (infra/app/upgrades.yaml)",
+  "description": "What each core version changes in the provisioning units of an app, and how urgent the upgrade is (ADR-0049). Read by the provisioning plan (minAppVersion, requires) and bundled into the portal (levels, deadlines, notes).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["minAppVersion", "versions"],
+  "$defs": {
+    "version": {
+      "type": "string",
+      "pattern": "^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-rc\\.(0|[1-9][0-9]*))?$"
+    },
+    "unit": { "enum": ["lz", "entra", "release", "frontdoor", "pep", "ado"] },
+    "note": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "restart", "entraApproval", "notes"],
+      "properties": {
+        "level": { "enum": ["optional", "recommended", "required"] },
+        "restart": { "type": "boolean" },
+        "entraApproval": { "type": "boolean", "description": "The upgrade redeploys the sign-in registration (unit entra). With approvals.entraChanges separate it waits for the approval of the stage entra; with pullRequest it is informational (ADR-0051)." },
+        "requires": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/unit" } },
+        "deadlineDays": { "type": "integer", "minimum": 1, "maximum": 180 },
+        "notes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["en", "cs"],
+          "properties": {
+            "en": { "type": "string", "minLength": 1, "maxLength": 600 },
+            "cs": { "type": "string", "minLength": 1, "maxLength": 600 }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "minAppVersion": { "$ref": "#/$defs/version" },
+    "versions": {
+      "type": "object",
+      "propertyNames": { "anyOf": [{ "$ref": "#/$defs/version" }, { "const": "unreleased" }] },
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": { "$ref": "#/$defs/unit" },
+        "additionalProperties": { "$ref": "#/$defs/note" }
+      }
+    }
+  }
+}

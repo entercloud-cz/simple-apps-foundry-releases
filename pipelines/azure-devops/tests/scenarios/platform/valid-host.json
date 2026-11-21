@@ -1,0 +1,11 @@
+{
+  "description": "The platform pipeline of the portal host environment.",
+  "entry": "platform-environment.yml",
+  "parameters": {
+    "environment": "prod",
+    "hostEnvironment": "prod"
+  },
+  "expect": {
+    "stages": ["validate", "plan", "deploy"]
+  }
+}

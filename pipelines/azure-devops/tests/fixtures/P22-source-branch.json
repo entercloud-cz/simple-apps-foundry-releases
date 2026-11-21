@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "validate.sh checks that the run is on the default branch.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/validate.sh",
+      "find": " \\\n  --source-branch \"$SAF_SOURCE_BRANCH\"",
+      "replace": ""
+    }
+  ]
+}

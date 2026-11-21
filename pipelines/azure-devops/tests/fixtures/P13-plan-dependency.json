@@ -1,0 +1,11 @@
+{
+  "rule": "P13",
+  "description": "Every stage after plan depends on plan (its condition reads plan's outputs).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/report.yml",
+      "find": "      - validate\n      - plan\n",
+      "replace": "      - validate\n"
+    }
+  ]
+}

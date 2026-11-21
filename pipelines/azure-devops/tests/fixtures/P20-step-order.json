@@ -1,0 +1,11 @@
+{
+  "rule": "P20",
+  "description": "release_app() calls front_door_step before release_step, which reads its deployment.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  # 3. The custom domain through Front Door.\n  front_door_step\n  # 4. Release.\n  release_step\n",
+      "replace": "  # 4. Release.\n  release_step\n  front_door_step\n"
+    }
+  ]
+}

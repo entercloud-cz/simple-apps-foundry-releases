@@ -1,0 +1,11 @@
+{
+  "rule": "T23",
+  "description": "Prod without the preview stage is rejected.",
+  "patches": [
+    {
+      "file": "app-delivery.yml",
+      "find": "        - ${{ if eq(env.kind, 'prod') }}:\n          - template: templates/stages/preview.yml\n",
+      "replace": "        - ${{ if eq(env.kind, 'never') }}:\n          - template: templates/stages/preview.yml\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "prov_env_guard refuses to run (exit 1), not only warns.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "refusing to run (pipeline variables must not set it)\"\n      exit 1\n",
+      "replace": "refusing to run (pipeline variables must not set it)\"\n"
+    }
+  ]
+}

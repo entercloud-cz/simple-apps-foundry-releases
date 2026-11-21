@@ -1,0 +1,11 @@
+{
+  "rule": "P07",
+  "description": "The decide step keeps commands: restricted.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra-plan.yml",
+      "find": "              commands: restricted\n              settableVariables:\n                - entraNeeded\n",
+      "replace": "              commands: any\n              settableVariables:\n                - entraNeeded\n"
+    }
+  ]
+}

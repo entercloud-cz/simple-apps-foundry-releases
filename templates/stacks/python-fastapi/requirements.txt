@@ -1,0 +1,4 @@
+# Runtime dependencies, pinned to exact versions. Update deliberately, then run the tests.
+fastapi==0.162.0
+uvicorn==0.54.0
+azure-monitor-opentelemetry==1.8.11

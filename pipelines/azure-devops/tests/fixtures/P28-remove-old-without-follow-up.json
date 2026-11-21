@@ -1,0 +1,11 @@
+{
+  "rule": "P28",
+  "description": "The stage entra removes the previous variant's secret only for the plan's follow-up (ADR-0060 decision 8).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "    prov_follow_up \"$slug\" \"$app_env\" || saf_die \"the Entra plan of $slug in $app_env removes the old secret, but the plan has no follow-up\"\n",
+      "replace": ""
+    }
+  ]
+}

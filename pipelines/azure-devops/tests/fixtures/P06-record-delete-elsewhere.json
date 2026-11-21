@@ -1,0 +1,11 @@
+{
+  "rule": "P06",
+  "description": "The only deployment record provisioning deletes is fd-{slug}-{env} in front_door_cleanup().",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "      prov_detail frontDoor removing\n",
+      "replace": "      prov_detail frontDoor removing\n      az deployment group delete --name \"$name\" --resource-group \"$platform_rg\" --only-show-errors --output none\n"
+    }
+  ]
+}

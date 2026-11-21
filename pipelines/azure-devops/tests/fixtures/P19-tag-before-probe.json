@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "After a restart, the tag saf-easyauth is set only once the sign-in probe passed.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  bash \"$SAF_DELIVERY/scripts/smoke.sh\" \"$rg\" \"$container_app\" \"$image\" required \"$liveness\" \"$client\" \"$public_host\"\n",
+      "replace": "  az tag update --resource-id \"$app_id\" --operation merge --tags \"saf-easyauth=$created\" --only-show-errors --output none\n  bash \"$SAF_DELIVERY/scripts/smoke.sh\" \"$rg\" \"$container_app\" \"$image\" required \"$liveness\" \"$client\" \"$public_host\"\n"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "description": "The same name twice.",
+  "entry": "app-provisioning.yml",
+  "parameters": {
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      },
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      }
+    ],
+    "hostEnvironment": "nonprod",
+    "scope": "changed",
+    "upgrade": "none"
+  },
+  "expect": {
+    "errors": [
+      "environment names must be unique"
+    ]
+  }
+}

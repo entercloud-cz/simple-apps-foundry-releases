@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The stage entra deploys a registration's record only into one of the two groups names.bicep names (the environment's records group or rg-{prefix}-entra), never into a group the plan's artifact names (ADR-0063).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "    environment) entra_rg=\"$(prov_name \"$names\" entraEnvironmentResourceGroup)\" ;;\n",
+      "replace": "    environment) entra_rg=\"$(jq -r '.detail.entraGroupName' \"$PROV_DIR/planned.json\")\" ;;\n"
+    }
+  ]
+}

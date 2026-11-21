@@ -1,0 +1,78 @@
+# Stage `validate` of the provisioning pipeline: no service connection, no Azure or ADO call.
+#
+#   1. `platform provisioning validate-run`: the template's `environments` and `hostEnvironment`
+#      equal what `platform generate` renders from instance.yaml, core resolved to
+#      refs/tags/<coreVersion>, and the run is on platform-config's default branch (ADR-0046);
+#   2. `platform validate instance`, `platform generate --check` (generated files up to date);
+#   3. `platform provisioning apps`: every apps/*/app.yaml validated against the instance;
+#   4. `platform provisioning units`: i of every unit of every valid app (ADR-0048);
+#   5. the platform CLI, built here once from the core checkout (steps/setup.yml cli: build), packed
+#      for every later job of this run (ADR-0048 section 6).
+#
+# Steps 1 and 2 fail the stage, and then nothing else runs. An invalid app definition does not:
+# that app gets status `failed` here, the other apps go on, and stage `report` fails the run.
+# Artifact `plan`: apps.json (the apps, their environments, sign-in mode and custom hosts; whether
+# the run checks every app, parameter scope, ADR-0046; which apps it upgrades, parameter upgrade,
+# ADR-0049), unit-inputs.json, status/{slug}.json and cli.tgz. Core's infra/app/units.json and
+# infra/app/upgrades.yaml must exist and name released versions only (validate-run); the parameter
+# upgrade must be none, all or up to 50 slugs that have an app definition.
+
+parameters:
+  - name: environments
+    type: object
+  - name: hostEnvironment
+    type: string
+  - name: scope
+    type: string
+    values:
+      - changed
+      - all
+  - name: upgrade
+    type: string
+
+stages:
+  - stage: validate
+    displayName: Validate instance and app definitions
+    dependsOn: []
+    isSkippable: false
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - job: plan
+        displayName: Validate run, instance and apps
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 20
+        variables:
+          # The core ref as a runtime expression (the documented form, as in the delivery verify
+          # stage), mapped into the step environment below; never a macro in script text.
+          - name: saf.coreRef
+            value: $[ resources.repositories.core.ref ]
+        steps:
+          - template: ../steps/setup.yml
+            parameters:
+              tools: [node]
+              cli: build
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/provisioning/validate.sh"
+            displayName: Validate run, instance.yaml and apps/*/app.yaml
+            env:
+              SAF_ENVIRONMENTS_JSON: ${{ convertToJson(parameters.environments) }}
+              SAF_HOST_ENVIRONMENT: ${{ parameters.hostEnvironment }}
+              SAF_SCOPE: ${{ parameters.scope }}
+              SAF_UPGRADE: ${{ parameters.upgrade }}
+              SAF_CORE_REF: $(saf.coreRef)
+              SAF_SOURCE_BRANCH: $(Build.SourceBranch)
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: PublishPipelineArtifact@1
+            displayName: Publish plan
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/plan
+              artifact: plan
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none

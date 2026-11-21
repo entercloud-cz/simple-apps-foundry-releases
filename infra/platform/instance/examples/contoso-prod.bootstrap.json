@@ -1,0 +1,27 @@
+{
+  "prefix": "contoso",
+  "environmentName": "prod",
+  "location": "westeurope",
+  "instanceIdentities": true,
+  "entraEnvironments": [
+    "nonprod",
+    "prod"
+  ],
+  "federation": {
+    "provisioning": {
+      "issuer": "https://login.microsoftonline.com/00000000-0000-0000-0000-000000000001/v2.0",
+      "subject": "/eid1/c/pub/t/00000000-0000-0000-0000-00000000d001/a/00000000-0000-0000-0000-00000000d002/sc/00000000-0000-0000-0000-00000000d003/00000000-0000-0000-0000-00000000d004"
+    },
+    "adoAutomation": {
+      "issuer": "https://login.microsoftonline.com/00000000-0000-0000-0000-000000000001/v2.0",
+      "subject": "/eid1/c/pub/t/00000000-0000-0000-0000-00000000d001/a/00000000-0000-0000-0000-00000000d002/sc/00000000-0000-0000-0000-00000000d003/00000000-0000-0000-0000-00000000d005"
+    },
+    "entra": {
+      "issuer": "https://login.microsoftonline.com/00000000-0000-0000-0000-000000000001/v2.0",
+      "subject": "/eid1/c/pub/t/00000000-0000-0000-0000-00000000d001/a/00000000-0000-0000-0000-00000000d002/sc/00000000-0000-0000-0000-00000000d003/00000000-0000-0000-0000-00000000d006"
+    }
+  },
+  "instancePrincipals": {},
+  "managedBy": "SAF",
+  "tags": {}
+}

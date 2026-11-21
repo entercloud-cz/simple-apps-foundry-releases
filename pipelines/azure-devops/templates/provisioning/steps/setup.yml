@@ -1,0 +1,103 @@
+# First steps of every provisioning job: core and platform-config (self) checkouts, pinned tools
+# (scripts/install-tool.sh) and the platform CLI. No app repo is ever checked out by provisioning.
+# All provisioning jobs are normal jobs, so every step sets
+# `target: { commands: restricted, settableVariables: none }`.
+#
+# `tools` is a list of tool names from tools/tools.json, set by the core templates only.
+#
+# `cli` (ADR-0048 section 6): `build` (the default; in provisioning stage validate only, and the
+# platform pipeline, ADR-0043) builds the platform CLI from the core checkout (steps/platform-cli.yml);
+# provisioning's validate.sh packs it into its artifact `plan` (cli.tgz). `artifact` (every other
+# provisioning job) downloads that artifact of THIS run (buildType current, rule P14) and
+# unpacks the CLI into the core checkout's tools/platform-cli, where the build would have put it:
+# the same code, built once per run from the same core checkout, in about 3 s instead of 10 to 12.
+# The download of `plan` is therefore part of this template, not of steps/download.yml.
+#
+# `artifact` (the jobs whose artifact a later job may read when they fail, ADR-0033, ADR-0048):
+# before anything else, create the folder this job publishes, $(Pipeline.Workspace)/saf-out/<artifact>,
+# with the marker stage.json ({stage, runId}). The artifact then exists even when the job fails
+# before its script runs (a checkout, a tool or the AzureCLI login), so the stages that read it go
+# on with what they know: an artifact without status files means "not ok" for every app. Set by the
+# core templates only; the step checks its shape anyway. `alsoArtifact`: a second artifact the same
+# job publishes (the job decide of stage plan publishes units and plan_<hostEnvironment>, ADR-0050).
+
+parameters:
+  - name: tools
+    type: object
+  - name: artifact
+    type: string
+    default: ''
+  - name: alsoArtifact
+    type: string
+    default: ''
+  - name: cli
+    type: string
+    default: build
+    values:
+      - build
+      - artifact
+
+steps:
+  - ${{ if ne(parameters.artifact, '') }}:
+    - bash: |
+        set -euo pipefail
+        for a in "$SAF_ARTIFACT" ${SAF_ALSO_ARTIFACT:+"$SAF_ALSO_ARTIFACT"}; do
+          [[ "$a" =~ ^[a-z][a-z0-9_]{1,40}$ ]] || { echo "SAF_ARTIFACT has an invalid shape" >&2; exit 1; }
+          out="$PIPELINE_WORKSPACE/saf-out/$a"
+          mkdir -p "$out"
+          jq -n --arg s "$a" --arg r "$BUILD_BUILDID" '{stage: $s, runId: $r}' > "$out/stage.json"
+        done
+      displayName: Create the artifact folder ${{ parameters.artifact }}
+      env:
+        SAF_ARTIFACT: ${{ parameters.artifact }}
+        SAF_ALSO_ARTIFACT: ${{ parameters.alsoArtifact }}
+      target:
+        commands: restricted
+        settableVariables: none
+  - checkout: core
+    path: s/core
+    fetchDepth: 1
+    fetchTags: false
+    submodules: false
+    lfs: false
+    persistCredentials: false
+    target:
+      commands: restricted
+      settableVariables: none
+  - checkout: self
+    path: s/config
+    fetchDepth: 1
+    fetchTags: false
+    submodules: false
+    lfs: false
+    persistCredentials: false
+    target:
+      commands: restricted
+      settableVariables: none
+  - template: ../../steps/install-tools.yml
+    parameters:
+      tools: ${{ parameters.tools }}
+  - ${{ if eq(parameters.cli, 'build') }}:
+    - template: ../../steps/platform-cli.yml
+  - ${{ else }}:
+    - task: DownloadPipelineArtifact@2
+      displayName: Download plan
+      inputs:
+        buildType: current
+        artifactName: plan
+        targetPath: $(Pipeline.Workspace)/in/plan
+      target:
+        commands: restricted
+        settableVariables: none
+    - bash: |
+        set -euo pipefail
+        export PATH="$AGENT_TOOLSDIRECTORY/saf/bin:$PATH"
+        cli="$PIPELINE_WORKSPACE/s/core/tools/platform-cli"
+        pack="$PIPELINE_WORKSPACE/in/plan/cli.tgz"
+        [ -f "$pack" ] || { echo "artifact plan has no cli.tgz (stage validate)" >&2; exit 1; }
+        tar -xzf "$pack" -C "$cli" --no-same-owner --no-same-permissions
+        node "$cli/dist/src/cli.js" --version
+      displayName: Install the platform CLI of this run (built by validate)
+      target:
+        commands: restricted
+        settableVariables: none

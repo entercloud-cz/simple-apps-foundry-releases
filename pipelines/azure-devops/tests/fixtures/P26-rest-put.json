@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "An az rest PUT in the plan (a job that only reads) is on no allow-list entry.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/plan.sh",
+      "find": "saf_cli provisioning plan-names --instance \"$SAF_INSTANCE\" --env \"$env_name\" --apps \"$SAF_APPS_JSON\" --output \"$SAF_WORK/plan-names.json\" > /dev/null\n",
+      "replace": "saf_cli provisioning plan-names --instance \"$SAF_INSTANCE\" --env \"$env_name\" --apps \"$SAF_APPS_JSON\" --output \"$SAF_WORK/plan-names.json\" > /dev/null\naz rest --method put --url \"/subscriptions/$subscription/resourcegroups/x?api-version=2021-04-01\" --body '{}' > /dev/null\n"
+    }
+  ]
+}

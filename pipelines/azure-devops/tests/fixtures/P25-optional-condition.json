@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "An optional artifact is read only when its job ran (Succeeded, SucceededWithIssues, Failed).",
+  "patches": [
+    {
+      "file": "templates/provisioning/steps/download.yml",
+      "find": "'Succeeded', 'SucceededWithIssues', 'Failed'))",
+      "replace": "'Succeeded', 'SucceededWithIssues', 'Failed', 'Skipped'))"
+    }
+  ]
+}

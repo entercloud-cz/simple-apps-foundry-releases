@@ -1,0 +1,358 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:simple-apps-foundry:schema:app:1.0-draft",
+  "title": "App definition (apps/{slug}/app.yaml) — DRAFT",
+  "description": "What an app is ALLOWED to have and who owns it: owners, repository, sign-in, data services, network mode and budget per environment. Lives in the instance's platform-config repo at apps/{slug}/app.yaml and changes only through a reviewed pull request (portal request + approval, ADR-0008). Provisioning generates the app's landing zone, Entra registration and pipelines from it. The app's own runtime settings (port, size, env, secrets) are in platform.yaml in the app repo (app-manifest.schema.json). Validated by `platform validate app` (schema, checks against instance.yaml, and immutability against the base branch).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "slug", "title", "owner", "deputy", "repository", "authentication", "environments"],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0-draft"
+    },
+    "slug": {
+      "description": "App slug (ADR-0020): 3-20 lowercase letters, digits and single hyphens, starts with a letter, ends with a letter or digit. Equals the directory name apps/{slug}/ and the `app` in the app's platform.yaml. Immutable.",
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 20,
+      "pattern": "^[a-z](-?[a-z0-9])+$",
+      "not": { "enum": ["platform", "portal"] }
+    },
+    "title": {
+      "description": "Display name in the portal and of the Entra app registration.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "generation": {
+      "description": "Seed of the names that must change when the app is re-created (registry, app vault; ADR-0020). Never lowered. Raising it re-creates those resources (destructive). A new app that uses a deleted app's slug needs a generation above every archived one in apps-deleted/{slug}/ (ADR-0061, check slug-reuse-generation).",
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "incarnation": {
+      "description": "The app's place among the apps that have had its slug (ADR-0061): 0 for the first. A new app with a deleted app's slug gets one above every archived app's incarnation in apps-deleted/{slug}/ (archived definitions without it count as 0; the portal's reuse request writes it; check slug-reuse-incarnation). Never changes (check incarnation-fixed). It seeds only the Entra registration's uniqueName ({prefix}-{slug}-{env}, with --i{incarnation} above 0; ADR-0020), so an app keeps one registration for its whole life, while generation may be raised on a live app.",
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "costCenter": {
+      "description": "Optional cost center, written as a tag on the app's resource groups.",
+      "type": "string",
+      "maxLength": 80
+    },
+    "decommission": {
+      "description": "The app is being decommissioned (ADR-0056): provisioning stops it in every environment and disables its delivery pipeline; on or after deleteAfter, at least instance.yaml decommission.graceDays after it stopped and inside the maintenance window, it deletes what belongs only to the app. Removing the block before the delete phase starts (Cancel) starts the app again; from deleteAfter on, the block is never removed or changed (check decommission-tombstone). When nothing of the app is left in Azure, provisioning finds that out by itself (phase deleted) and the portal shows the app as deleted. The definition stays in apps/{slug}/ until a new app asks for the slug; that request moves it unchanged to apps-deleted/{slug}/{requestedOn}/app.yaml, which is never provisioned (ADR-0061, check deleted-archive). Written by the portal's request; changed through a reviewed pull request.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requestedOn", "deleteAfter", "reason", "requestedBy"],
+      "properties": {
+        "requestedOn": {
+          "description": "The day the decommissioning was requested (UTC, YYYY-MM-DD). Never changes once merged.",
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+        },
+        "deleteAfter": {
+          "description": "The first day of the delete phase (UTC, YYYY-MM-DD): at least instance.yaml decommission.graceDays after requestedOn (check decommission-grace); with immediate, requestedOn itself (check decommission-immediate).",
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+        },
+        "reason": {
+          "description": "Why the app is no longer needed (shown in the pull request, the portal and the mails). One line, no markup.",
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 500
+        },
+        "requestedBy": {
+          "description": "Who asked (owner, deputy or a platform admin).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["objectId", "displayName"],
+          "properties": {
+            "objectId": { "$ref": "#/$defs/guid" },
+            "displayName": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        },
+        "immediate": {
+          "description": "Immediate deletion (ADR-0056 amendment 2026-11-12), only for an app with no environment of kind prod (check decommission-immediate): deleteAfter equals requestedOn, and provisioning deletes without the grace period and without waiting for the maintenance window. The order stays: the first run after the merge stops the app and deletes what lies outside its resource groups, a later run deletes the resource groups and their data. Nothing can be cancelled once merged. Set only in the request; never added or removed afterwards.",
+          "const": true
+        }
+      }
+    },
+    "owner": {
+      "$ref": "#/$defs/person"
+    },
+    "deputy": {
+      "description": "Second accountable person; must differ from the owner.",
+      "$ref": "#/$defs/person"
+    },
+    "developers": {
+      "description": "Users and groups that work on the app (repo access, nonprod read access).",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/principal" },
+      "default": []
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "project", "name"],
+      "properties": {
+        "provider": {
+          "description": "Azure DevOps first; GitHub later.",
+          "enum": ["azureDevOps"]
+        },
+        "project": {
+          "description": "Azure DevOps project of the app repo: scm.azureDevOps.appsProject or one of allowedProjects.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "name": {
+          "description": "Repository name.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+        },
+        "defaultBranch": {
+          "description": "Short branch name (the generator writes refs/heads/<name>). Prod receives only builds of this branch.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "pattern": "^(?!refs/)(?!/)(?!.*//)(?!.*/$)[A-Za-z0-9._/-]+$",
+          "default": "main"
+        },
+        "template": {
+          "description": "How the platform treats the app repository (ADR-0039): node-ts, python-fastapi or dotnet (a starter stack), or byo (bring your own). Absent = unmanaged: the platform doesn't create, seed or onboard the repository (app definitions from before ADR-0039). For a stack, provisioning creates the repository if it is missing and seeds an empty one with the stack and the agent files (`platform repo render`). For byo it never pushes to the default branch; it proposes the agent files and platform.yaml in a pull request. No effect on a repository that already has content.",
+          "enum": ["node-ts", "python-fastapi", "dotnet", "byo"]
+        }
+      }
+    },
+    "authentication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "description": "required = Entra sign-in for every request (Easy Auth, ADR-0009). anonymous = public app, allowed only when the instance's authentication.enforcement is ownerChoice.",
+          "enum": ["required", "anonymous"]
+        },
+        "roles": {
+          "description": "App roles of the Entra registration. Default: the instance's authentication.defaultAppRoles.",
+          "type": "array",
+          "maxItems": 20,
+          "items": { "$ref": "#/$defs/appRole" }
+        },
+        "assignments": {
+          "description": "Who gets which app role (Entra app role assignments).",
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/roleAssignment" },
+          "default": []
+        }
+      }
+    },
+    "ui": {
+      "description": "The app's look (brand). Chosen in the portal's new-app wizard; provisioning writes the chosen theme into the repository it seeds (theme/theme.json, theme/theme.css). A later change is the app team's own edit in the repository.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["theme"],
+      "properties": {
+        "theme": {
+          "description": "An app theme the instance offers (branding.appThemes, else the core's built-in themes), `none` (the starter's neutral look) or `custom` (the team brings its own brand; the repository gets a theme file to fill in).",
+          "type": "string",
+          "pattern": "^(none|custom|[a-z][a-z0-9-]{1,30})$"
+        }
+      }
+    },
+    "data": {
+      "description": "Data services the app's code depends on, the same in every environment it runs in.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "database": {
+          "description": "One relational database (ADR-0011). The engine never changes.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["engine", "size"],
+          "properties": {
+            "engine": { "enum": ["postgres", "azureSql"] },
+            "size": { "$ref": "#/$defs/size" }
+          }
+        },
+        "storage": {
+          "description": "A storage account for blobs.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "vaultedBackup": {
+              "description": "Azure Backup vaulted backup in prod (only when the instance offers it).",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    "environments": {
+      "description": "The instance environments this app runs in, keyed by environment name. A promotion environment needs its promoteFrom environment too.",
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9]{1,7}$" },
+      "additionalProperties": { "$ref": "#/$defs/environment" }
+    }
+  },
+  "$defs": {
+    "guid": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    },
+    "person": {
+      "description": "An accountable person (Entra user): receives alerts and budget notifications.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objectId", "principalType", "email"],
+      "properties": {
+        "objectId": { "$ref": "#/$defs/guid" },
+        "principalType": { "const": "User" },
+        "email": { "type": "string", "format": "email", "maxLength": 254 },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "principal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objectId", "principalType"],
+      "properties": {
+        "objectId": { "$ref": "#/$defs/guid" },
+        "principalType": { "enum": ["User", "Group"] },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "appRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "displayName"],
+      "properties": {
+        "value": {
+          "description": "Role value in the token's roles claim, at most 20 characters (ADR-0020).",
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9.]{0,19}$"
+        },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 250 }
+      }
+    },
+    "roleAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "principalType", "objectId"],
+      "properties": {
+        "role": {
+          "description": "A role value from authentication.roles (or the instance default roles).",
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9.]{0,19}$"
+        },
+        "principalType": { "enum": ["User", "Group"] },
+        "objectId": { "$ref": "#/$defs/guid" },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "size": {
+      "description": "T-shirt size, mapped by the instance (data.postgres.sizes / data.azureSql.sizes).",
+      "enum": ["S", "M", "L"]
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["networkMode"],
+      "properties": {
+        "networkMode": {
+          "description": "Network mode in this environment (ADR-0003). It must be enabled in the instance environment. Changing it re-creates the app there (destructive). internalOnly comes in a later iteration.",
+          "enum": ["externalOnly", "externalHybrid"]
+        },
+        "databaseSize": {
+          "description": "Overrides data.database.size in this environment.",
+          "$ref": "#/$defs/size"
+        },
+        "cell": {
+          "description": "Capacity cell the app runs in here (ADR-0053): two digits, default 01. It must be a cell of the app's network mode in instance.yaml. The portal places a new app in the cell with the most free capacity. Moving an app to another cell isn't supported yet.",
+          "type": "string",
+          "pattern": "^(0[1-9]|[1-9][0-9])$",
+          "default": "01"
+        },
+        "capacity": {
+          "description": "Capacity reservation in this environment (ADR-0053): the largest size and the most replicas the app's platform.yaml may set here. Absent = instance.yaml newApps.capacity (default size s, maxReplicas 3). Reserved cores (the size's vCPU x maxReplicas) count against the cell's budget, and delivery refuses a platform.yaml above the reservation. Changed by a pull request the platform team reviews (in the portal: More capacity).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["size", "maxReplicas"],
+          "properties": {
+            "size": {
+              "description": "Largest container size: xs = 0.25 vCPU / 0.5 GiB, s = 0.5 / 1, m = 1 / 2, l = 2 / 4.",
+              "enum": ["xs", "s", "m", "l"]
+            },
+            "maxReplicas": {
+              "description": "Most replicas (1 to 10).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            }
+          }
+        },
+        "budget": {
+          "description": "Monthly budget in this environment (ADR-0017). null = no budget (not allowed when the instance's budgets.mode is required). Absent = the instance default.",
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["monthlyAmount"],
+              "properties": {
+                "monthlyAmount": {
+                  "description": "Whole units of the instance currency.",
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            { "type": "null" }
+          ]
+        },
+        "frontDoor": {
+          "description": "The app on its own custom domain through Front Door in this environment (ADR-0010, amended 2026-11-01 and 2026-11-11). Instance frontDoor.mode managed: through the environment's managed profile; provisioning deploys fd-{slug}-{env}, and removes it when this key is removed. Instance frontDoor.mode external: behind a profile another team runs (profile names it); provisioning prepares the app (FRONT_DOOR_ID, Easy Auth forwardProxy, redirect URI) and deploys nothing in Front Door.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["hostName"],
+          "properties": {
+            "hostName": {
+              "type": "string",
+              "minLength": 4,
+              "maxLength": 244,
+              "pattern": "^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.){2,}[a-z]{2,63}$",
+              "description": "Lower-case host name with at least three labels inside one of instance.yaml dns.zones allowed for this environment, e.g. hotel-inventory-test.contoso.com."
+            },
+            "profile": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+              "description": "External mode only (instance frontDoor.mode external): the name of the profile in instance.yaml frontDoor.external.profiles that serves the app here. Required there, not allowed in managed mode."
+            },
+            "frontDoorId": {
+              "$ref": "#/$defs/guid",
+              "description": "External mode only: the expected X-Azure-FDID of that profile, when instance.yaml doesn't define it for the profile (then it is required here; when the profile defines it, leave this out)."
+            }
+          }
+        },
+        "internalSystems": {
+          "description": "Reserved. An app's access to an internal system is not recorded in app.yaml: its owner asks for it with a ready-to-send text from the portal, and the catalogue's firewall rule state (instance.yaml network.internalSystems) says whether it is open (ADR-0027, amended 2026-11-12).",
+          "not": { "description": "Reserved: internal systems are asked for with a text from the portal, not in app.yaml." }
+        }
+      }
+    }
+  }
+}

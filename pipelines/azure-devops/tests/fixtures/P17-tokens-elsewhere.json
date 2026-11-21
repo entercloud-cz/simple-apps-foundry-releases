@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "prov_secret_tokens is called only by entra.sh.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  prov_detail placeholder imported\n",
+      "replace": "  prov_detail placeholder imported\n  prov_secret_tokens\n"
+    }
+  ]
+}

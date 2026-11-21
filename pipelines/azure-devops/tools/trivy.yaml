@@ -1,0 +1,28 @@
+# Platform-owned Trivy configuration for the app delivery scan job (ADR-0016, ADR-0024).
+# scan.sh passes it with --config from a clean working directory, so a trivy.yaml in the app repo
+# is never read. Flags that make the scan offline and reproducible are also passed on the command
+# line by scan.sh (--skip-db-update, --skip-java-db-update, --offline-scan, ...); this file holds
+# what the report contains. Changing it is a core release with a CHANGELOG entry.
+scan:
+  scanners:
+    - vuln
+  disable-telemetry: true
+  skip-version-check: true
+pkg:
+  types:
+    - os
+    - library
+severity:
+  - UNKNOWN
+  - LOW
+  - MEDIUM
+  - HIGH
+  - CRITICAL
+# Report every package so `trivy convert --format cyclonedx` yields a complete SBOM.
+list-all-pkgs: true
+vulnerability:
+  # The gate (platform pipeline scan-gate) decides about unfixed findings; the report keeps them.
+  ignore-unfixed: false
+db:
+  no-progress: true
+exit-code: 0

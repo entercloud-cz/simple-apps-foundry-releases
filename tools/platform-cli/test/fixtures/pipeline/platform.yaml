@@ -1,0 +1,30 @@
+schemaVersion: "1.0-draft"
+app: demo
+build:
+  dockerfile: docker/Dockerfile
+  context: .
+runtime:
+  port: 3000
+  size: m
+  scale:
+    minReplicas: 1
+  health:
+    liveness: /live
+  env:
+    - name: LOG_LEVEL
+      value: info
+    - name: API_KEY
+      secret: api-key
+secrets:
+  - api-key
+environments:
+  nonprod:
+    scale:
+      maxReplicas: 4
+    health:
+      readiness: /ready
+    env:
+      - name: LOG_LEVEL
+        value: debug
+deploy:
+  branches: ["main", "release/*", "feat-?"]

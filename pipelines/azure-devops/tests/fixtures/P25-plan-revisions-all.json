@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "plan.sh reads the revisions only of the apps plan-facts names (lazy.json), never every app.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/plan.sh",
+      "find": "  if prov_arm_list \"$id/revisions?api-version=$API_APPS\" \"$bulk/revisions.raw\"; then\n",
+      "replace": "  if prov_arm_list \"$id/revisions?api-version=2024-03-01\" \"$bulk/revisions.raw\"; then\n"
+    }
+  ]
+}

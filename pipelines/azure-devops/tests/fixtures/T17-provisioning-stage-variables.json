@@ -1,0 +1,11 @@
+{
+  "rule": "T17",
+  "description": "Stage variables in provisioning are rejected.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/validate.yml",
+      "find": "    dependsOn: []\n",
+      "replace": "    dependsOn: []\n    variables:\n      - name: x\n        value: y\n"
+    }
+  ]
+}

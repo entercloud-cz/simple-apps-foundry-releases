@@ -1,0 +1,11 @@
+{
+  "rule": "P13",
+  "description": "azure_post_<env> depends on ado_resources.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure-post.yml",
+      "find": "      - ado_resources\n",
+      "replace": ""
+    }
+  ]
+}

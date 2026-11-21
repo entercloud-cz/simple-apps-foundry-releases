@@ -1,0 +1,45 @@
+{
+  "prefix": "contoso",
+  "environmentName": "nonprod",
+  "slug": "hotel-inventory",
+  "generation": 0,
+  "vaultGeneration": 0,
+  "location": "westeurope",
+  "networkMode": "externalOnly",
+  "cell": "01",
+  "externalOnlyNetwork": "managed",
+  "image": {
+    "bootstrapImage": "mcr.microsoft.com/dotnet/samples:aspnetapp@sha256:ef878229733b4c99b2e54a58002df96cfe00ae47288a817a8d8867cbf43a96a0"
+  },
+  "runtime": {
+    "port": 8080,
+    "size": "xs",
+    "minReplicas": 0,
+    "maxReplicas": 1,
+    "livenessPath": "/",
+    "readinessPath": "/"
+  },
+  "env": [],
+  "secrets": [],
+  "landingZone": {
+    "runtimeIdentityClientId": "00000000-0000-0000-0000-00000000d101",
+    "database": {
+      "host": "pgsql-contoso-hotel-inventory-nonprod.postgres.database.azure.com",
+      "name": "hotel-inventory",
+      "user": "id-contoso-hotel-inventory-run-nonprod"
+    },
+    "storageBlobEndpoint": "https://stcontosohotelinvnp0000.blob.core.windows.net/"
+  },
+  "frontDoor": {
+    "mode": "none",
+    "backendIpRanges": []
+  },
+  "customDomains": [],
+  "authentication": {
+    "mode": "required",
+    "clientId": "00000000-0000-0000-0000-00000000d201"
+  },
+  "alertsEnabled": true,
+  "run": null,
+  "coreVersion": "v0.1.0"
+}

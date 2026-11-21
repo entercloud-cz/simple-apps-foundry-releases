@@ -1,0 +1,37 @@
+{
+  "description": "Build environment and prod promoted from it, each with its capacity reservation (ADR-0053: data, the stage list doesn't change).",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": "",
+        "capacity": {
+          "size": "s",
+          "maxReplicas": 3
+        }
+      },
+      {
+        "name": "prod",
+        "kind": "prod",
+        "promoteFrom": "nonprod",
+        "capacity": {
+          "size": "m",
+          "maxReplicas": 4
+        }
+      }
+    ]
+  },
+  "expect": {
+    "stages": [
+      "verify",
+      "deploy_nonprod",
+      "preview_prod",
+      "deploy_prod"
+    ]
+  }
+}

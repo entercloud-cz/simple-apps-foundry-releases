@@ -1,0 +1,21 @@
+{
+  "description": "Prod must be a promotion environment.",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "prod",
+        "kind": "prod",
+        "promoteFrom": ""
+      }
+    ]
+  },
+  "expect": {
+    "errors": [
+      "a prod environment must set promoteFrom"
+    ]
+  }
+}
