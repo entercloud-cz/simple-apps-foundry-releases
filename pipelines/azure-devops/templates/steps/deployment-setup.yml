@@ -1,0 +1,55 @@
+# Common first steps of the deployment jobs (deploy.yml, promote.yml): core and platform-config
+# checkouts, pinned tools (scripts/install-tool.sh) and the platform CLI from the core checkout.
+#
+# Same work as install-tools.yml + platform-cli.yml, but every step sets only
+# `target.commands: restricted`, never `settableVariables`: inside a deployment job Azure
+# Pipelines fails to load the pipeline when any step sets it ("Cannot deserialize ...
+# TaskVariableRestrictions", seen 2026-10-29 with both `none` and a list; rule T22). No app code
+# runs in these jobs and the scripts neutralise untrusted text, so `commands: restricted` is the
+# remaining guard. The app repo is never checked out here.
+#
+# `tools` is a list of tool names from tools/tools.json, set by the core templates only.
+
+parameters:
+  - name: tools
+    type: object
+
+steps:
+  - checkout: core
+    path: s/core
+    fetchDepth: 1
+    fetchTags: false
+    submodules: false
+    lfs: false
+    persistCredentials: false
+    target:
+      commands: restricted
+  - checkout: self
+    path: s/config
+    fetchDepth: 1
+    fetchTags: false
+    submodules: false
+    lfs: false
+    persistCredentials: false
+    target:
+      commands: restricted
+  - bash: |
+      set -euo pipefail
+      read -r -a tools <<<"$SAF_TOOLS"
+      bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/install-tool.sh" "${tools[@]}"
+    displayName: Install pinned tools (${{ join(', ', parameters.tools) }})
+    env:
+      SAF_TOOLS: ${{ join(' ', parameters.tools) }}
+    target:
+      commands: restricted
+  - bash: |
+      set -euo pipefail
+      export PATH="$AGENT_TOOLSDIRECTORY/saf/bin:$PATH"
+      cd "$PIPELINE_WORKSPACE/s/core/tools/platform-cli"
+      node --version
+      npm ci --ignore-scripts --no-audit --no-fund
+      npm run build
+      node dist/src/cli.js --version
+    displayName: Build platform CLI from the core checkout
+    target:
+      commands: restricted

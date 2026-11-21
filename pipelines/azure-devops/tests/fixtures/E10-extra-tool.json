@@ -1,0 +1,11 @@
+{
+  "rule": "E10",
+  "description": "The plan job installs a tool the platform pipeline doesn't need.",
+  "patches": [
+    {
+      "file": "templates/platform/stages/plan.yml",
+      "find": "              tools: [node, bicep]\n",
+      "replace": "              tools: [node, bicep, oras]\n"
+    }
+  ]
+}

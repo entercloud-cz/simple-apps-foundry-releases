@@ -1,0 +1,42 @@
+# Negative fixture: schema-valid, but breaks the app-internal and instance rules of
+# `platform validate app` (checked with the Contoso example instance).
+schemaVersion: "1.0-draft"
+slug: demo-app
+title: Demo app
+owner:
+  objectId: 00000000-0000-0000-0000-00000000e001
+  principalType: User
+  email: same@contoso.com
+deputy:
+  objectId: 00000000-0000-0000-0000-00000000E001
+  principalType: User
+  email: same@contoso.com
+developers:
+  - objectId: 00000000-0000-0000-0000-00000000e003
+    principalType: Group
+  - objectId: 00000000-0000-0000-0000-00000000e003
+    principalType: User
+repository:
+  provider: azureDevOps
+  project: Marketing
+  name: demo-app
+authentication:
+  mode: anonymous
+  roles:
+    - value: Reader
+      displayName: Reader
+    - value: Reader
+      displayName: Reader again
+  assignments:
+    - role: Owner
+      principalType: Group
+      objectId: 00000000-0000-0000-0000-00000000c101
+data:
+  storage:
+    vaultedBackup: true
+environments:
+  prod:
+    networkMode: externalOnly
+    databaseSize: M
+  qa:
+    networkMode: externalOnly

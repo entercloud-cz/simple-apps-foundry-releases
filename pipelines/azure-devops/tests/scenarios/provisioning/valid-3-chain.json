@@ -1,0 +1,47 @@
+{
+  "description": "dev -> test -> prod.",
+  "entry": "app-provisioning.yml",
+  "parameters": {
+    "environments": [
+      {
+        "name": "dev",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      },
+      {
+        "name": "test",
+        "kind": "nonprod",
+        "promoteFrom": "dev"
+      },
+      {
+        "name": "prod",
+        "kind": "prod",
+        "promoteFrom": "test"
+      }
+    ],
+    "hostEnvironment": "prod",
+    "scope": "all",
+    "upgrade": "none"
+  },
+  "expect": {
+    "stages": [
+      "validate",
+      "plan",
+      "azure_dev",
+      "azure_test",
+      "azure_prod",
+      "ado_resources",
+      "entra_plan",
+      "entra",
+      "azure_post_dev",
+      "azure_post_test",
+      "azure_post_prod",
+      "ado_pipelines",
+      "registry_dev",
+      "report",
+      "record_dev",
+      "record_test",
+      "record_prod"
+    ]
+  }
+}

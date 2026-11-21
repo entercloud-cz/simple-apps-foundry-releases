@@ -1,0 +1,11 @@
+{
+  "rule": "T28",
+  "description": "A redeploy that leases this run instead of the source run is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/deploy.yml",
+      "find": "                SAF_RETAIN_RUN_ID: ${{ parameters.sourceRunId }}\n",
+      "replace": "                SAF_RETAIN_RUN_ID: $(Build.BuildId)\n"
+    }
+  ]
+}

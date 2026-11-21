@@ -1,0 +1,11 @@
+{
+  "rule": "P11",
+  "description": "Stage entra deploys Bicep and installs the pinned bicep.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra.yml",
+      "find": "              tools: [node, bicep]\n",
+      "replace": "              tools: [node]\n"
+    }
+  ]
+}

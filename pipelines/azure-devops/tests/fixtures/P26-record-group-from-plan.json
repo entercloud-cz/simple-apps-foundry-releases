@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "record_<env> writes tags only on the resource group naming gives, never on one taken from an artifact alone.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/record.sh",
+      "find": "  rg=\"$(jq -r --arg s \"$slug\" '.appResourceGroups[$s] // \"\"' \"$app_names\")\"\n",
+      "replace": "  rg=\"$(jq -r --arg s \"$slug\" --arg e \"$env_name\" '.apps[$s].environments[$e].resourceGroup // \"\"' \"$SAF_UNITS_JSON\")\"\n"
+    }
+  ]
+}

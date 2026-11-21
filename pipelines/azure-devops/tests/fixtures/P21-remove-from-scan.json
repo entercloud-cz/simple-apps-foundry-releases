@@ -1,0 +1,11 @@
+{
+  "rule": "P21",
+  "description": "Portal-side endpoints are removed only by step P of a decommissioning, for a previous vault generation or a vault no longer VNet-based; the scan for apps gone without a decommissioning only warns.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "    printf '##vso[task.logissue type=warning]%s\\n' \"$slug in $e: the app or environment is gone, but its portal-side endpoint in $portal_rg is still there; delete it by hand (infra/README.md)\"\n",
+      "replace": "    portal_endpoint_remove \"$slug\" \"$e\" \"$id\"\n"
+    }
+  ]
+}

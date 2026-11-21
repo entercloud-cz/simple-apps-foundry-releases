@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "The upgrade parameter only reaches validate.sh, as SAF_UPGRADE.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/validate.yml",
+      "find": "              SAF_UPGRADE: ${{ parameters.upgrade }}\n",
+      "replace": "              SAF_UPGRADE: ${{ parameters.upgrade }}\n              SAF_SKIP: ${{ parameters.upgrade }}\n"
+    }
+  ]
+}

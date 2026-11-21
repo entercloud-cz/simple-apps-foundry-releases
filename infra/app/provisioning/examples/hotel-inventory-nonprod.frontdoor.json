@@ -1,0 +1,13 @@
+{
+  "prefix": "contoso",
+  "environmentName": "nonprod",
+  "slug": "hotel-inventory",
+  "networkMode": "externalOnly",
+  "cell": "01",
+  "hostName": "hotel-inventory-test.contoso.com",
+  "dnsZoneId": "",
+  "retainedHostName": "",
+  "retainedDnsZoneId": "",
+  "dnsZone": "contoso.com",
+  "dnsProvider": "azureDns"
+}

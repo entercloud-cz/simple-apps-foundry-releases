@@ -1,0 +1,132 @@
+# Stage `entra_plan`: decides whether the `entra` stage runs (ADR-0033). No approval or check of its
+# own: it only reads.
+# Runs only when the plan runs the unit `entra` of an app together with its landing zone (a new app,
+# a new environment, scope all: output entraPlan of stage plan), after the landing zones, and plans
+# exactly those apps and environments (phase landing). Every other entra unit that runs is compared
+# by the same script in the job decide of stage plan (phase plan, units/entra; ADR-0050), so an
+# entra-only change skips this stage.
+#
+# Service connection sc-platform-provisioning-<hostEnvironment> (Azure provisioning identity of
+# the environment whose subscription holds the Entra groups, ADR-0031, ADR-0063), nothing else. It has no
+# Microsoft Graph permission and deploys nothing here.
+#
+# scripts/provisioning/entra-plan.sh, per app that requires sign-in, per environment of the app in
+# which its entra runs and its landing zone is ok (azure_<E> when its lz ran there, else plan_<E>,
+# which also hold its entries): `inputs --step entra` (redirect host from the
+# landing-zone outputs), the record entra-{slug}-{env} in the group the plan listed it in
+# (rg-{prefix}-entra-{env}, or rg-{prefix}-entra for a record deployed before ADR-0063), the parameters of
+# infra/entra/provisioning/app-registration.bicepparam (`az bicep build-params`) and the template
+# hash from ARM's calculateTemplateHash, then `compare`. No preflight: it would call Microsoft
+# Graph, which this identity may not (ENT-12). Then the Easy Auth secret (ADR-0035): plan_<E> or
+# azure_<E> recorded whether it exists, the vault and the kvset job (secret/{slug}.{E}.json); an absent
+# secret is planned for the stage `entra` (secret-plan/). For a registration to deploy that has a
+# record: what the record's deployment assigned or defined and app.yaml no longer lists
+# (`platform provisioning entra-removals`, ADR-0033 amended 2026-11-11): entra-removals/, one
+# warning per removal ("will remove ..."), so the run shows them before the stage `entra` applies
+# them (its approver sees them with approvals.entraChanges separate; with pullRequest the reviewed
+# pull request approved them, ADR-0051).
+# The step `decide` then sets the output variable entraNeeded (true when any registration is not
+# up to date or any secret is to be written); the stage `entra` runs only then, so a run without an
+# Entra change never reaches sc-platform-entra (nor, with separate, its Approval check).
+# Artifact entra_plan: status/{slug}.{env}.json (detail entra: up-to-date | deploy, and secret: write
+# | job-missing for an absent secret), entra-inputs/{slug}.{env}.json (what `entra` deploys),
+# entra-outputs/{slug}.{env}.json (client ID from an up-to-date record only),
+# entra-removals/{slug}.{env}.json (assignments to delete, app roles to retire) and
+# entra-inputs/{slug}.{env}.disable.json (first deployment of a retired role),
+# secret-plan/{slug}.{env}.json ({state, vault, job, jobReady, secretName}: what `entra` writes),
+# entra-needed.txt. Its folder (with the marker stage.json) is created by steps/setup.yml before
+# the checkouts, and `decide` and the publish run with always(), so entra_plan is published even
+# when the job fails before entra-plan.sh runs or times out: azure_post_*, report and record_*
+# download it whenever this job ran (steps/download.yml optional). They then find no status for the apps not planned
+# (not ok), entraNeeded is false unless planned apps need a change, and apps whose client ID is
+# known still get their release.
+
+parameters:
+  - name: environments
+    type: object
+  - name: hostEnvironment
+    type: string
+
+stages:
+  - stage: entra_plan
+    displayName: Entra plan
+    dependsOn:
+      - validate
+      - plan
+      - ${{ each env in parameters.environments }}:
+        - azure_${{ env.name }}
+    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'), eq(dependencies.plan.outputs['decide.decide.entraPlan'], 'true'))
+    isSkippable: false
+    lockBehavior: runLatest
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - job: plan
+        displayName: Compare the Entra registrations with their records
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 60
+        variables:
+          # Results of the jobs whose artifacts are optional here (steps/download.yml): empty when
+          # their stage was skipped or never started.
+          - ${{ each env in parameters.environments }}:
+            - name: saf.result.azure_${{ env.name }}
+              value: $[ stageDependencies.azure_${{ env.name }}.landing_zones.result ]
+        steps:
+          - template: ../steps/setup.yml
+            parameters:
+              tools: [node, bicep]
+              cli: artifact
+              artifact: entra_plan
+          - template: ../steps/download.yml
+            parameters:
+              artifacts:
+                - units
+                - ${{ each env in parameters.environments }}:
+                  - plan_${{ env.name }}
+              optional:
+                - ${{ each env in parameters.environments }}:
+                  - azure_${{ env.name }}
+          - task: AzureCLI@2
+            displayName: Entra plan
+            inputs:
+              azureSubscription: sc-platform-provisioning-${{ parameters.hostEnvironment }}
+              scriptType: bash
+              scriptLocation: scriptPath
+              scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/provisioning/entra-plan.sh
+              addSpnToEnvironment: false
+              useGlobalConfig: false
+              failOnStandardError: false
+              workingDirectory: $(Pipeline.Workspace)
+            env:
+              SAF_ENV_NAME: ${{ parameters.hostEnvironment }}
+              SAF_ENVIRONMENTS_JSON: ${{ convertToJson(parameters.environments) }}
+              SAF_SERVICE_CONNECTION: sc-platform-provisioning-${{ parameters.hostEnvironment }}
+              SAF_ENTRA_PHASE: landing
+            target:
+              commands: restricted
+              settableVariables: none
+          # Runs after a failed or timed-out plan too: entra-needed.txt then lists only the apps
+          # that were planned, or is missing (false), so nothing unplanned is ever deployed.
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/provisioning/entra-decide.sh"
+            name: decide
+            displayName: Decide whether the Entra stage runs
+            condition: always()
+            env:
+              SAF_ENTRA_PHASE: landing
+            target:
+              commands: restricted
+              settableVariables:
+                - entraNeeded
+          - task: PublishPipelineArtifact@1
+            displayName: Publish entra_plan
+            condition: always()
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/entra_plan
+              artifact: entra_plan
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none

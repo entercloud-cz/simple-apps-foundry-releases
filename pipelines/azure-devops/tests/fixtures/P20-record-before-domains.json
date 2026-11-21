@@ -1,0 +1,11 @@
+{
+  "rule": "P20",
+  "description": "The record fd-{slug}-{env} goes last, so a failure part-way is repeated by the next run.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  if [ \"$remove_route\" = true ]; then\n    saf_info \"  Removing the route of $slug from Front Door\"\n",
+      "replace": "  if [ \"$remove_route\" = true ]; then\n    az deployment group delete --name \"$(jq -r '.deployment' \"$plan\")\" --resource-group \"$(jq -r '.resourceGroup' \"$plan\")\" --only-show-errors --output none\n    saf_info \"  Removing the route of $slug from Front Door\"\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "T07",
+  "description": "A build-job step without restricted logging commands is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/verify.yml",
+      "find": "            displayName: platform check --strict (image smoke test)\n            target:\n              commands: restricted\n",
+      "replace": "            displayName: platform check --strict (image smoke test)\n            target:\n              commands: any\n"
+    }
+  ]
+}

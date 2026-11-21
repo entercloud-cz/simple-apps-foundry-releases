@@ -1,0 +1,11 @@
+{
+  "rule": "P07",
+  "description": "Only entra_plan's decide step may set a variable.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra.yml",
+      "find": "              SAF_SERVICE_CONNECTION: sc-platform-entra\n            target:\n              commands: restricted\n              settableVariables: none\n",
+      "replace": "              SAF_SERVICE_CONNECTION: sc-platform-entra\n            target:\n              commands: restricted\n              settableVariables:\n                - entraNeeded\n"
+    }
+  ]
+}

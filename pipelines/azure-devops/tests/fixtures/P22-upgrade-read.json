@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "No provisioning script reads the parsed parameter upgrade: the plan does.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "prov_units_check\n",
+      "replace": "prov_units_check\njq -r '.upgrade.apps[]' \"$SAF_APPS_JSON\"\n"
+    }
+  ]
+}

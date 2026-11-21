@@ -1,0 +1,11 @@
+{
+  "description": "No host environment.",
+  "entry": "platform-environment.yml",
+  "parameters": {
+    "environment": "nonprod",
+    "hostEnvironment": ""
+  },
+  "expect": {
+    "errors": ["parameters.hostEnvironment is empty"]
+  }
+}

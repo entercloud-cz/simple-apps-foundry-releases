@@ -1,0 +1,21 @@
+{
+  "description": "Unknown kind.",
+  "entry": "app-provisioning.yml",
+  "parameters": {
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "test",
+        "promoteFrom": ""
+      }
+    ],
+    "hostEnvironment": "nonprod",
+    "scope": "changed",
+    "upgrade": "none"
+  },
+  "expect": {
+    "errors": [
+      "an environment kind is not prod or nonprod"
+    ]
+  }
+}

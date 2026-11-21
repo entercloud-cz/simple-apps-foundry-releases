@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "A stage processes exactly the units the plan gives it.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "  if ! prov_unit_runs \"$slug\" \"$env_name\" lz; then\n    prov_pass \"$slug\" \"$env_name\"\n    continue\n  fi\n",
+      "replace": ""
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P10",
+  "description": "Stages with a service connection need lockBehavior runLatest.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure-post.yml",
+      "find": "    lockBehavior: runLatest\n",
+      "replace": ""
+    }
+  ]
+}

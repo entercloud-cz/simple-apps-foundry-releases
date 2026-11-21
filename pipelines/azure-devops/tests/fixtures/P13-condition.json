@@ -1,0 +1,11 @@
+{
+  "rule": "P13",
+  "description": "A stage runs only when the plan runs one of its units (ADR-0048).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure.yml",
+      "find": "    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'), eq(dependencies.plan.outputs['decide.decide.lz_${{ parameters.environment.name }}'], 'true'))\n",
+      "replace": "    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'))\n"
+    }
+  ]
+}

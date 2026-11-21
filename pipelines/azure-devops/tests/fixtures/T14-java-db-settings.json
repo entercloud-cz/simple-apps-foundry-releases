@@ -1,0 +1,11 @@
+{
+  "rule": "T14",
+  "description": "A Trivy Java DB without a max age is rejected.",
+  "patches": [
+    {
+      "file": "tools/tools.json",
+      "find": "    \"layerMediaType\": \"application/vnd.aquasec.trivy.javadb.layer.v1.tar+gzip\",\n    \"maxAgeHours\": 168\n",
+      "replace": "    \"layerMediaType\": \"application/vnd.aquasec.trivy.javadb.layer.v1.tar+gzip\"\n"
+    }
+  ]
+}

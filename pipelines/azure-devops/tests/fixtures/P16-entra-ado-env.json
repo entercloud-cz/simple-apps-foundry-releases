@@ -1,0 +1,11 @@
+{
+  "rule": "P16",
+  "description": "Stage entra gets no Azure DevOps credential.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra.yml",
+      "find": "              SAF_SERVICE_CONNECTION: sc-platform-entra\n",
+      "replace": "              SAF_SERVICE_CONNECTION: sc-platform-entra\n              AZURE_DEVOPS_EXT_PAT: $(saf.adoToken)\n"
+    }
+  ]
+}

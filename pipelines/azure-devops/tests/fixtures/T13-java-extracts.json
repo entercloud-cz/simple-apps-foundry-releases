@@ -1,0 +1,11 @@
+{
+  "rule": "T13",
+  "description": "Extracting image layers to look for Java archives is rejected (app files must not land on the agent).",
+  "patches": [
+    {
+      "file": "scripts/java-archives.sh",
+      "find": "      list=(tar --list --gzip --file \"$file\") ;;",
+      "replace": "      list=(tar --extract --gzip --file \"$file\" --directory \"$SAF_WORK/x\") ;;"
+    }
+  ]
+}

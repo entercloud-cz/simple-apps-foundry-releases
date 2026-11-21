@@ -1,0 +1,11 @@
+{
+  "rule": "E17",
+  "description": "A CAE the plan can't read counts as missing, so an existing CAE whose network would change passes as new.",
+  "patches": [
+    {
+      "file": "scripts/platform/plat-lib.sh",
+      "find": "    echo \"could not read the CAE $cae\" >&2\n    return 1\n",
+      "replace": "    printf null\n    return 0\n"
+    }
+  ]
+}

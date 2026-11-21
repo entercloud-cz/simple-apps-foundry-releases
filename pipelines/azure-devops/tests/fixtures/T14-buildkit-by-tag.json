@@ -1,0 +1,11 @@
+{
+  "rule": "T14",
+  "description": "A BuildKit image without a digest is rejected.",
+  "patches": [
+    {
+      "file": "tools/tools.json",
+      "find": "@sha256:aa632b921ef07411d2cb77292cd34213d4f7b384001d6fceef1e1f25bf9752bb",
+      "replace": ""
+    }
+  ]
+}

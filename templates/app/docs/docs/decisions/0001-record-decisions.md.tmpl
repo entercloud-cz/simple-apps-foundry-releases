@@ -1,0 +1,30 @@
+# 0001: Record decisions
+
+- **Status:** Accepted
+- **Date:** {{CREATED_DATE}}
+- **Decided by:** app owner (template default)
+
+## Context
+
+People and AI agents change this app over time. Without a record, the reasons behind choices
+(a library, a data model, a trade-off) get lost, and the next change undoes them by accident.
+
+## Decision
+
+We record decisions that have alternatives in `docs/decisions/NNNN-short-title.md`: context,
+decision, consequences, alternatives. Numbers increase and are never reused. A replaced decision
+gets `Status: Superseded by NNNN` and stays in place.
+
+Recorded from the start:
+
+- Stack: {{STACK_LABEL}}, from the platform template {{TEMPLATE_VERSION}}.
+- Sign-in and roles come from the platform (Microsoft Entra ID); the app has no own login.
+
+## Consequences
+
+- Each significant change may add one short file. AI agents read these before changing the app.
+
+## Alternatives considered
+
+- **No records:** faster now, costly later.
+- **Decisions in the README:** the README is for users; it would grow and mix audiences.

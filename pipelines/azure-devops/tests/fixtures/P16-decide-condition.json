@@ -1,0 +1,11 @@
+{
+  "rule": "P16",
+  "description": "decide runs after a failed or timed-out plan too (entraNeeded is then false or lists only planned apps).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra-plan.yml",
+      "find": "            name: decide\n            displayName: Decide whether the Entra stage runs\n            condition: always()\n",
+      "replace": "            name: decide\n            displayName: Decide whether the Entra stage runs\n            condition: succeededOrFailed()\n"
+    }
+  ]
+}
