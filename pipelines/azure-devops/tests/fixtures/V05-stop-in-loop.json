@@ -1,0 +1,11 @@
+{
+  "rule": "V05",
+  "description": "One invalid app doesn't hide the others.",
+  "patches": [
+    {
+      "file": "scripts/platform-validation.sh",
+      "find": "    failed=1\n  fi\ndone\n",
+      "replace": "    saf_die \"invalid app\"\n  fi\ndone\n"
+    }
+  ]
+}

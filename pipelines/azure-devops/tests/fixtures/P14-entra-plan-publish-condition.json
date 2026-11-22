@@ -1,0 +1,11 @@
+{
+  "rule": "P14",
+  "description": "Stage entra_plan publishes with always(): every azure_post_* and report read it, so a timed-out plan must still publish.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra-plan.yml",
+      "find": "            displayName: Publish entra_plan\n            condition: always()\n",
+      "replace": "            displayName: Publish entra_plan\n            condition: succeededOrFailed()\n"
+    }
+  ]
+}

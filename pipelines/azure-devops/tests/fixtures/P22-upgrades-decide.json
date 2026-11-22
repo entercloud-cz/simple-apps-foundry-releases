@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "decide.sh hands core's upgrade notes to plan-units.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/decide.sh",
+      "find": " --upgrades \"$SAF_CORE/infra/app/upgrades.yaml\"",
+      "replace": ""
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "decide runs after every plan_<env>, also when one failed.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/plan.yml",
+      "find": "        condition: not(canceled())\n",
+      "replace": "        condition: succeeded()\n"
+    }
+  ]
+}

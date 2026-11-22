@@ -1,0 +1,11 @@
+{
+  "rule": "P20",
+  "description": "Front Door objects are deleted only by fd_delete() (ADR-0010, amended 2026-11-11): no az afd delete.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "      prov_detail frontDoor removing\n",
+      "replace": "      prov_detail frontDoor removing\n      az afd route delete --resource-group \"$platform_rg\" --profile-name p --endpoint-name e --route-name r --yes\n"
+    }
+  ]
+}

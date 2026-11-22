@@ -1,0 +1,57 @@
+{
+  "adoAutomationIdentity": {
+    "type": "Object",
+    "value": {
+      "name": "id-contoso-ado-automation",
+      "clientId": "00000000-0000-0000-0000-00000000f021",
+      "principalId": "00000000-0000-0000-0000-00000000f022"
+    }
+  },
+  "entraEnvironmentResourceGroups": {
+    "type": "Object",
+    "value": {
+      "nonprod": "rg-contoso-entra-nonprod",
+      "prod": "rg-contoso-entra-prod"
+    }
+  },
+  "entraProvisioningIdentity": {
+    "type": "Object",
+    "value": {
+      "name": "id-contoso-entra-provisioning",
+      "clientId": "00000000-0000-0000-0000-00000000f031",
+      "principalId": "00000000-0000-0000-0000-00000000d101"
+    }
+  },
+  "entraResourceGroup": {
+    "type": "String",
+    "value": "rg-contoso-entra"
+  },
+  "identitiesResourceGroup": {
+    "type": "String",
+    "value": "rg-contoso-identities-prod"
+  },
+  "portalIdentity": {
+    "type": "Object",
+    "value": {
+      "name": "id-contoso-portal",
+      "clientId": "00000000-0000-0000-0000-00000000f041",
+      "principalId": "00000000-0000-0000-0000-00000000e102"
+    }
+  },
+  "provisioningIdentity": {
+    "type": "Object",
+    "value": {
+      "name": "id-contoso-provisioning-prod",
+      "clientId": "00000000-0000-0000-0000-00000000f011",
+      "principalId": "00000000-0000-0000-0000-00000000f012"
+    }
+  },
+  "subscriptionId": {
+    "type": "String",
+    "value": "00000000-0000-0000-0000-00000000b001"
+  },
+  "tenantId": {
+    "type": "String",
+    "value": "00000000-0000-0000-0000-000000000001"
+  }
+}

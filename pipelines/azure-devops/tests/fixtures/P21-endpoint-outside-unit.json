@@ -1,0 +1,11 @@
+{
+  "rule": "P21",
+  "description": "The deployment of the portal-side endpoint runs inside portal_endpoint(), a prov_run_app unit, never at the top level.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "prov_join\nportal_endpoints\nprov_finish\n",
+      "replace": "prov_join\nprov_arm create portal-endpoint \"$SAF_WORK/pe.json\" pep-portal-x-y rg-x \"$SAF_WORK/d.json\"\nportal_endpoints\nprov_finish\n"
+    }
+  ]
+}

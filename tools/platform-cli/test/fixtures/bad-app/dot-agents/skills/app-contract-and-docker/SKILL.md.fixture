@@ -1,0 +1,10 @@
+---
+name: wrong-name
+description: How the app talks to the platform (PORT, health endpoints, non-root Dockerfile). Use when editing the Dockerfile or platform.yaml.
+---
+
+# App contract and Docker
+
+- Listen on `$PORT` (0.0.0.0).
+- Answer `/healthz` and `/readyz` with 200.
+- Pin the base image, run as a non-root `USER`.

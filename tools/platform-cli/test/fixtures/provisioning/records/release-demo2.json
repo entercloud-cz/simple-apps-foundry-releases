@@ -1,0 +1,277 @@
+{
+  "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-app-demo2-nonprod/providers/Microsoft.Resources/deployments/release-demo2",
+  "location": null,
+  "name": "release-demo2",
+  "properties": {
+    "correlationId": "00000000-0000-0000-0000-0000000b0020",
+    "debugSetting": null,
+    "dependencies": [
+      {
+        "dependsOn": [
+          {
+            "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-app-demo2-nonprod/providers/Microsoft.Insights/components/appi-demo2-nonprod",
+            "resourceGroup": "rg-contoso-app-demo2-nonprod",
+            "resourceName": "appi-demo2-nonprod",
+            "resourceType": "Microsoft.Insights/components"
+          },
+          {
+            "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-platform-nonprod/providers/Microsoft.App/managedEnvironments/cae-contoso-ext-nonprod",
+            "resourceGroup": "rg-contoso-platform-nonprod",
+            "resourceName": "cae-contoso-ext-nonprod",
+            "resourceType": "Microsoft.App/managedEnvironments"
+          },
+          {
+            "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-app-demo2-nonprod/providers/Microsoft.ContainerRegistry/registries/crcontosodemo2nonprodabc123",
+            "resourceGroup": "rg-contoso-app-demo2-nonprod",
+            "resourceName": "crcontosodemo2nonprodabc123",
+            "resourceType": "Microsoft.ContainerRegistry/registries"
+          },
+          {
+            "apiVersion": "2025-01-01",
+            "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-platform-nonprod/providers/Microsoft.App/managedEnvironments/cae-contoso-ext-nonprod",
+            "resourceGroup": "rg-contoso-platform-nonprod",
+            "resourceName": "cae-contoso-ext-nonprod",
+            "resourceType": "Microsoft.App/managedEnvironments"
+          }
+        ],
+        "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-app-demo2-nonprod/providers/Microsoft.App/containerApps/ca-demo2",
+        "resourceGroup": "rg-contoso-app-demo2-nonprod",
+        "resourceName": "ca-demo2",
+        "resourceType": "Microsoft.App/containerApps"
+      }
+    ],
+    "diagnostics": null,
+    "duration": "PT23.1491421S",
+    "error": null,
+    "extensions": [],
+    "mode": "Incremental",
+    "onErrorDeployment": null,
+    "outputResources": [
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-app-demo2-nonprod/providers/Microsoft.App/containerApps/ca-demo2",
+        "identifiers": null,
+        "resourceGroup": "rg-contoso-app-demo2-nonprod",
+        "resourceType": "Microsoft.App/containerApps"
+      }
+    ],
+    "outputs": {
+      "containerAppName": {
+        "type": "String",
+        "value": "ca-demo2"
+      },
+      "fqdn": {
+        "type": "String",
+        "value": "ca-demo2.happyfield-00000000.westeurope.azurecontainerapps.io"
+      },
+      "image": {
+        "type": "String",
+        "value": "crcontosodemo2nonprodabc123-aaaaaaaaaaaaaaaa.azurecr.io/demo2@sha256:43dc119821346f2393f335183d903ae3336262ea2ab9cc74f1b8db825a1a5970"
+      },
+      "latestRevisionName": {
+        "type": "String",
+        "value": "ca-demo2--0000001"
+      }
+    },
+    "parameters": {
+      "alertsEnabled": {
+        "type": "Bool",
+        "value": false
+      },
+      "authentication": {
+        "type": "Object",
+        "value": {
+          "clientId": "00000000-0000-0000-0000-0000000b0021",
+          "mode": "required"
+        }
+      },
+      "customDomains": {
+        "type": "Array",
+        "value": []
+      },
+      "deployedBy": {
+        "type": "String",
+        "value": "delivery"
+      },
+      "env": {
+        "type": "Array",
+        "value": [
+          {
+            "name": "LOG_LEVEL",
+            "secret": null,
+            "value": "info"
+          }
+        ]
+      },
+      "environmentName": {
+        "type": "String",
+        "value": "nonprod"
+      },
+      "externalOnlyNetwork": {
+        "type": "String",
+        "value": "managed"
+      },
+      "frontDoor": {
+        "type": "Object",
+        "value": {
+          "backendIpRanges": [],
+          "mode": "none"
+        }
+      },
+      "generation": {
+        "type": "Int",
+        "value": 0
+      },
+      "image": {
+        "type": "Object",
+        "value": {
+          "digest": "sha256:43dc119821346f2393f335183d903ae3336262ea2ab9cc74f1b8db825a1a5970"
+        }
+      },
+      "landingZone": {
+        "type": "Object",
+        "value": {
+          "runtimeIdentityClientId": "00000000-0000-0000-0000-0000000b0019"
+        }
+      },
+      "location": {
+        "type": "String",
+        "value": "westeurope"
+      },
+      "networkMode": {
+        "type": "String",
+        "value": "externalOnly"
+      },
+      "prefix": {
+        "type": "String",
+        "value": "contoso"
+      },
+      "run": {
+        "type": "Object",
+        "value": {
+          "commit": "ac02c06ed3f62f8578b2ffaa95cfa0830dd698b5",
+          "id": "2885"
+        }
+      },
+      "runtime": {
+        "type": "Object",
+        "value": {
+          "livenessPath": "/healthz",
+          "maxReplicas": 1,
+          "minReplicas": 0,
+          "port": 8080,
+          "readinessPath": "/readyz",
+          "size": "xs"
+        }
+      },
+      "secrets": {
+        "type": "Array",
+        "value": []
+      },
+      "slug": {
+        "type": "String",
+        "value": "demo2"
+      },
+      "vaultGeneration": {
+        "type": "Int",
+        "value": 0
+      }
+    },
+    "parametersLink": null,
+    "providers": [
+      {
+        "id": null,
+        "namespace": "Microsoft.App",
+        "providerAuthorizationConsentState": null,
+        "registrationPolicy": null,
+        "registrationState": null,
+        "resourceTypes": [
+          {
+            "aliases": null,
+            "apiProfiles": null,
+            "apiVersions": null,
+            "capabilities": null,
+            "defaultApiVersion": null,
+            "locationMappings": null,
+            "locations": [
+              null
+            ],
+            "properties": null,
+            "resourceType": "managedEnvironments",
+            "zoneMappings": null
+          },
+          {
+            "aliases": null,
+            "apiProfiles": null,
+            "apiVersions": null,
+            "capabilities": null,
+            "defaultApiVersion": null,
+            "locationMappings": null,
+            "locations": [
+              "westeurope"
+            ],
+            "properties": null,
+            "resourceType": "containerApps",
+            "zoneMappings": null
+          }
+        ]
+      },
+      {
+        "id": null,
+        "namespace": "Microsoft.ContainerRegistry",
+        "providerAuthorizationConsentState": null,
+        "registrationPolicy": null,
+        "registrationState": null,
+        "resourceTypes": [
+          {
+            "aliases": null,
+            "apiProfiles": null,
+            "apiVersions": null,
+            "capabilities": null,
+            "defaultApiVersion": null,
+            "locationMappings": null,
+            "locations": [
+              null
+            ],
+            "properties": null,
+            "resourceType": "registries",
+            "zoneMappings": null
+          }
+        ]
+      },
+      {
+        "id": null,
+        "namespace": "Microsoft.Insights",
+        "providerAuthorizationConsentState": null,
+        "registrationPolicy": null,
+        "registrationState": null,
+        "resourceTypes": [
+          {
+            "aliases": null,
+            "apiProfiles": null,
+            "apiVersions": null,
+            "capabilities": null,
+            "defaultApiVersion": null,
+            "locationMappings": null,
+            "locations": [
+              null
+            ],
+            "properties": null,
+            "resourceType": "components",
+            "zoneMappings": null
+          }
+        ]
+      }
+    ],
+    "provisioningState": "Succeeded",
+    "templateHash": "6012987737055835208",
+    "templateLink": null,
+    "timestamp": "2026-10-29T10:33:04.916806+00:00",
+    "validatedResources": null,
+    "validationLevel": null
+  },
+  "resourceGroup": "rg-contoso-app-demo2-nonprod",
+  "tags": null,
+  "type": "Microsoft.Resources/deployments"
+}

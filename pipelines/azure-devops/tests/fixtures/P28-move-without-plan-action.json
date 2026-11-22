@@ -1,0 +1,11 @@
+{
+  "rule": "P28",
+  "description": "The move runs only for a release whose plan action is move (ADR-0060).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  if [ \"$(prov_unit_action \"$slug\" \"$env_name\" release)\" = move ]; then\n",
+      "replace": "  if true; then\n"
+    }
+  ]
+}

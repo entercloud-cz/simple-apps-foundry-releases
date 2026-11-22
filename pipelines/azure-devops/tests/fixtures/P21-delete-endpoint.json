@@ -1,0 +1,11 @@
+{
+  "rule": "P21",
+  "description": "Provisioning deletes a portal-side endpoint only in portal_endpoint_remove(); a kept leftover is reported, never deleted elsewhere.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "      prov_detail portalEndpoint leftover\n",
+      "replace": "      az network private-endpoint delete --ids \"$old\" --only-show-errors\n      prov_detail portalEndpoint leftover\n"
+    }
+  ]
+}

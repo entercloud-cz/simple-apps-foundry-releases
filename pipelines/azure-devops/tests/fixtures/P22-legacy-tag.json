@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "The retired tag saf-provisioned is never written again, only deleted by record.sh.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "prov_units_check\n",
+      "replace": "prov_units_check\naz tag update --resource-id x --operation merge --tags saf-provisioned=stale\n"
+    }
+  ]
+}

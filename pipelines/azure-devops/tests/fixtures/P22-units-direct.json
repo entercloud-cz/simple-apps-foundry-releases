@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "Stage scripts read the plan through the prov-lib.sh helpers.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/ado.sh",
+      "find": "prov_units_check\n",
+      "replace": "prov_units_check\njq -r '.stages.ado' \"$SAF_UNITS_JSON\"\n"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "rule": "T05",
+  "description": "Including a template from the app repo is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/verify.yml",
+      "find": "          - template: ../steps/platform-cli.yml\n",
+      "replace": "          - template: build-steps.yml@app\n          - template: ../steps/platform-cli.yml\n",
+      "count": 1
+    }
+  ]
+}

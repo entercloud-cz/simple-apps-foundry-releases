@@ -1,0 +1,11 @@
+{
+  "rule": "V05",
+  "description": "The validation pipeline installs only node.",
+  "patches": [
+    {
+      "file": "platform-validation.yml",
+      "find": "              tools: [node]\n",
+      "replace": "              tools: [node, bicep]\n"
+    }
+  ]
+}

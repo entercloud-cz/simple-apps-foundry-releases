@@ -1,0 +1,4 @@
+# AGENTS.md (fixture)
+
+Instructions for AI agents. Skills live in `.agents/skills/`; `.claude/skills/` is generated,
+run `platform sync-agent-files` after editing a skill. Run `platform check` before pushing.

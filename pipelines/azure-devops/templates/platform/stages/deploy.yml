@@ -1,0 +1,83 @@
+# Stage `deploy` of the platform pipeline (ADR-0043). Runs only when the plan found a change
+# (output plan.decide.changed).
+#
+# Deployment job on the environment platform-<env>: its Approval (approvals.platformTeam), Branch
+# control, Required template and Exclusive lock gate every platform deployment (`platform ado
+# bootstrap`). Service connection sc-platform-provisioning-<env>, nothing else.
+# scripts/platform/deploy.sh: the inputs must equal the approved plan's; when the environment
+# changed: pass 1 for a new environment, saf-jobs imported by digest, pass 2, every job runs the
+# pinned digest; then, in the portal host when the portal changed (ADR-0043 decision 10): pass 1 for
+# a new portal, saf-portal imported by digest and pass 2 once portal.clientId is set, the Container
+# App on the pinned digest with a ready revision.
+# Steps set only `target.commands: restricted`: a deployment job can't load with settableVariables
+# (rule T22). Artifact platform_deploy: result.json.
+
+parameters:
+  - name: environment
+    type: string
+  - name: hostEnvironment
+    type: string
+
+stages:
+  - stage: deploy
+    displayName: Deploy ${{ parameters.environment }}
+    dependsOn:
+      - validate
+      - plan
+    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'), eq(dependencies.plan.result, 'Succeeded'), eq(dependencies.plan.outputs['plan.decide.changed'], 'true'))
+    isSkippable: false
+    lockBehavior: runLatest
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - deployment: deploy
+        displayName: Deploy the platform environment ${{ parameters.environment }}
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        environment: platform-${{ parameters.environment }}
+        timeoutInMinutes: 180
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Deployment jobs download every artifact of the run unless told otherwise.
+                - download: none
+                - template: ../../steps/deployment-setup.yml
+                  parameters:
+                    tools: [node, bicep]
+                - task: DownloadPipelineArtifact@2
+                  displayName: Download platform_plan
+                  inputs:
+                    buildType: current
+                    artifactName: platform_plan
+                    targetPath: $(Pipeline.Workspace)/in/platform_plan
+                  target:
+                    commands: restricted
+                - task: AzureCLI@2
+                  displayName: Environment (pass 1 when new, saf-jobs, pass 2, jobs), then the portal in its host
+                  inputs:
+                    azureSubscription: sc-platform-provisioning-${{ parameters.environment }}
+                    scriptType: bash
+                    scriptLocation: scriptPath
+                    scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/platform/deploy.sh
+                    addSpnToEnvironment: false
+                    useGlobalConfig: false
+                    failOnStandardError: false
+                    workingDirectory: $(Pipeline.Workspace)
+                  env:
+                    SAF_ENV_NAME: ${{ parameters.environment }}
+                    SAF_HOST_ENVIRONMENT: ${{ parameters.hostEnvironment }}
+                    SAF_SERVICE_CONNECTION: sc-platform-provisioning-${{ parameters.environment }}
+                  target:
+                    commands: restricted
+                - task: PublishPipelineArtifact@1
+                  displayName: Publish platform_deploy
+                  condition: succeededOrFailed()
+                  inputs:
+                    targetPath: $(Pipeline.Workspace)/saf-out/platform_deploy
+                    artifact: platform_deploy
+                    publishLocation: pipeline
+                  target:
+                    commands: restricted

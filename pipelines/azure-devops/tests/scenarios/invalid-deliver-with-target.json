@@ -1,0 +1,24 @@
+{
+  "description": "deliver with a target or a source run.",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      }
+    ],
+    "action": "deliver",
+    "targetEnvironment": "nonprod",
+    "sourceRunId": 12
+  },
+  "expect": {
+    "errors": [
+      "action deliver takes targetEnvironment none and sourceRunId 0"
+    ]
+  }
+}

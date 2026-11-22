@@ -1,0 +1,11 @@
+{
+  "rule": "T02",
+  "description": "Entry parameters must be objects.",
+  "patches": [
+    {
+      "file": "app-delivery.yml",
+      "find": "  - name: app\n    type: object\n",
+      "replace": "  - name: app\n    type: string\n"
+    }
+  ]
+}

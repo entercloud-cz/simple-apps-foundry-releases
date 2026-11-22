@@ -1,0 +1,36 @@
+{
+  "description": "Provisioning units of an app (ADR-0048 section 2). Generated: python3 infra/tests/check-infra.py --update-units (core CI fails when stale). fingerprint = sha256 of the unit's compiled templates (_generator metadata removed, canonical JSON), its .bicepparam files and its revision, each part length-prefixed. Edit only `revision`, by hand, when a script changes what the unit does in Azure while its template and inputs stay the same. since = the core version since which the fingerprint is unchanged; `unreleased` until tools/scripts/release-units.mjs <version> at release time.",
+  "schemaVersion": 1,
+  "units": {
+    "lz": {
+      "revision": 1,
+      "fingerprint": "13d5ce49e4fcc57078454262eea56a8b912b8cc3e5339fc8e53531f8e6d3b7f5",
+      "since": "v0.1.0-rc.50"
+    },
+    "entra": {
+      "revision": 1,
+      "fingerprint": "18c810db73c13c4a10c84ca3c27423ff965ebc17c355752832a426215ffb7ddd",
+      "since": "v0.1.0-rc.48"
+    },
+    "release": {
+      "revision": 1,
+      "fingerprint": "8d5c77370ee2903e9ba39c7d84ab6bbdc59362a917f5f888d88d8a134b6006da",
+      "since": "v0.1.0-rc.50"
+    },
+    "frontdoor": {
+      "revision": 1,
+      "fingerprint": "f4bffff432c012bb186efc8c4398807873e3aef2fb3aa49d2fa8fbe1a3b85674",
+      "since": "v0.1.0-rc.50"
+    },
+    "pep": {
+      "revision": 1,
+      "fingerprint": "e7c08608372b7ec6c9ec547e1fc18a9df95b5044a2dd90bd95101f48f9bd88d5",
+      "since": "v0.1.0-rc.32"
+    },
+    "ado": {
+      "revision": 2,
+      "fingerprint": "673aeeb08cfbb00b91e5e3c60b5ba31896d55b522b1be2dccb0645a59bae8775",
+      "since": "v0.1.0-rc.36"
+    }
+  }
+}

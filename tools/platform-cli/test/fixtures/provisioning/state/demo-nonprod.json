@@ -1,0 +1,111 @@
+{
+  "ado": {
+    "issuer": "https://login.microsoftonline.com/00000000-0000-0000-0000-000000000001/v2.0",
+    "subject": "/eid1/c/pub/t/AAAAAAAAAAAAAAAAAAAAAA/a/BBBBBBBBBBBBBBBBBBBBBB/sc/00000000-0000-0000-0000-0000000000c1/00000000-0000-0000-0000-0000000000d1"
+  },
+  "easyAuthSecretExists": true,
+  "budgetStartDate": "2026-10-01",
+  "containerAppFqdn": "ca-demo.happyfield-00000000.westeurope.azurecontainerapps.io",
+  "landingZone": {
+    "runtimeIdentityClientId": "00000000-0000-0000-0000-000000000f01"
+  },
+  "entra": {
+    "clientId": "00000000-0000-0000-0000-00000000d201"
+  },
+  "releaseRecord": {
+    "prefix": {
+      "type": "Object",
+      "value": "contoso"
+    },
+    "environmentName": {
+      "type": "Object",
+      "value": "nonprod"
+    },
+    "slug": {
+      "type": "Object",
+      "value": "demo"
+    },
+    "generation": {
+      "type": "Object",
+      "value": 0
+    },
+    "vaultGeneration": {
+      "type": "Object",
+      "value": 0
+    },
+    "location": {
+      "type": "Object",
+      "value": "westeurope"
+    },
+    "networkMode": {
+      "type": "Object",
+      "value": "externalOnly"
+    },
+    "externalOnlyNetwork": {
+      "type": "Object",
+      "value": "managed"
+    },
+    "deployedBy": {
+      "type": "Object",
+      "value": "provisioning"
+    },
+    "image": {
+      "type": "Object",
+      "value": {
+        "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      }
+    },
+    "runtime": {
+      "type": "Object",
+      "value": {
+        "port": 8080,
+        "size": "xs",
+        "minReplicas": 0,
+        "maxReplicas": 1,
+        "livenessPath": "/healthz",
+        "readinessPath": "/readyz"
+      }
+    },
+    "env": {
+      "type": "Object",
+      "value": [
+        {
+          "name": "LOG_LEVEL",
+          "value": "info"
+        }
+      ]
+    },
+    "secrets": {
+      "type": "Object",
+      "value": []
+    },
+    "landingZone": {
+      "type": "Object",
+      "value": {
+        "runtimeIdentityClientId": "00000000-0000-0000-0000-000000000f01"
+      }
+    },
+    "frontDoor": {
+      "type": "Object",
+      "value": {
+        "mode": "none",
+        "backendIpRanges": []
+      }
+    },
+    "customDomains": {
+      "type": "Object",
+      "value": []
+    },
+    "authentication": {
+      "type": "Object",
+      "value": {
+        "mode": "required",
+        "clientId": "00000000-0000-0000-0000-00000000d201"
+      }
+    },
+    "alertsEnabled": {
+      "type": "Object",
+      "value": false
+    }
+  }
+}

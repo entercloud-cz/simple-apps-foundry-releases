@@ -1,0 +1,11 @@
+{
+  "rule": "P16",
+  "description": "entra-decide.sh runs no logging command other than setting entraNeeded.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra-decide.sh",
+      "find": "echo \"##vso[task.setvariable variable=entraNeeded;isOutput=true]$needed\"",
+      "replace": "echo \"##vso[task.setvariable variable=entraNeeded;isOutput=true]$needed\"\necho \"##vso[task.setvariable variable=saf.entraResult]Succeeded\""
+    }
+  ]
+}

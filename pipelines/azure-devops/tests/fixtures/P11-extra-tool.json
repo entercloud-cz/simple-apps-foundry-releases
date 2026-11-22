@@ -1,0 +1,11 @@
+{
+  "rule": "P11",
+  "description": "Provisioning installs only node and bicep.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure.yml",
+      "find": "              tools: [node, bicep]\n",
+      "replace": "              tools: [node, bicep, trivy]\n"
+    }
+  ]
+}

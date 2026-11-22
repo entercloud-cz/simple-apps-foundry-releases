@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "Deployments into the one Front Door profile run one at a time.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "    prov_lock frontdoor\n",
+      "replace": ""
+    }
+  ]
+}

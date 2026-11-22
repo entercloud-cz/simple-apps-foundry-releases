@@ -1,0 +1,117 @@
+# Stage `report`: the run summary (ADR-0048 section 8). No service connection, no Azure or ADO call.
+# Runs in every run (after validate): the units that ran per app and why, which are recorded and
+# which run again next time, the stages the run skipped and one table of every app's status per
+# stage; a run with nothing to do says so in one line. Fails the run when any app definition was
+# invalid, an app could not be planned or any app failed in any stage, so a broken app is never
+# hidden behind a green run. `waiting` apps (blocked on something outside this run, e.g. an Entra
+# registration) are warnings. The artifacts of stages that may be skipped are downloaded only when
+# their job ran (steps/download.yml optional). The registry image purge (ADR-0059) of each build
+# environment has its own section, from units/registry.json and the statuses of registry_<env>.
+# Artifact `report` (ADR-0064): summary.md and failures.json, the failed app steps with their failure
+# codes, published with always(); the portal reads failures.json for the app's page (View builds on
+# \platform, as for the stage artifacts it reads already).
+
+parameters:
+  - name: environments
+    type: object
+
+stages:
+  - stage: report
+    displayName: Report
+    dependsOn:
+      - validate
+      - plan
+      - ado_resources
+      - entra_plan
+      - entra
+      - ado_pipelines
+      - ${{ each env in parameters.environments }}:
+        - azure_${{ env.name }}
+        - azure_post_${{ env.name }}
+        - ${{ if eq(format('{0}', env.promoteFrom), '') }}:
+          - registry_${{ env.name }}
+    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'))
+    isSkippable: false
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - job: report
+        displayName: Status of every app
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 15
+        variables:
+          # Results of the jobs whose artifacts are optional here (steps/download.yml): empty when
+          # their stage was skipped or never started. TODO(verify) UNIT-6 (generalises PROV-3).
+          - name: saf.result.ado
+            value: $[ stageDependencies.ado_resources.resources.result ]
+          - name: saf.result.entra_plan
+            value: $[ stageDependencies.entra_plan.plan.result ]
+          - name: saf.result.entra
+            value: $[ stageDependencies.entra.registrations.result ]
+          - name: saf.result.ado_pipelines
+            value: $[ stageDependencies.ado_pipelines.pipelines.result ]
+          - ${{ each env in parameters.environments }}:
+            - name: saf.result.azure_${{ env.name }}
+              value: $[ stageDependencies.azure_${{ env.name }}.landing_zones.result ]
+            - name: saf.result.azure_post_${{ env.name }}
+              value: $[ stageDependencies.azure_post_${{ env.name }}.releases.result ]
+            - ${{ if eq(format('{0}', env.promoteFrom), '') }}:
+              - name: saf.result.registry_${{ env.name }}
+                value: $[ stageDependencies.registry_${{ env.name }}.purge.result ]
+        steps:
+          - template: ../steps/setup.yml
+            parameters:
+              tools: [node]
+              cli: artifact
+              artifact: report
+          - template: ../steps/download.yml
+            parameters:
+              artifacts:
+                - units
+                - ${{ each env in parameters.environments }}:
+                  - plan_${{ env.name }}
+              optional:
+                - ado
+                - entra_plan
+                - entra
+                - ado_pipelines
+                - ${{ each env in parameters.environments }}:
+                  - azure_${{ env.name }}
+                  - azure_post_${{ env.name }}
+                  - ${{ if eq(format('{0}', env.promoteFrom), '') }}:
+                    - registry_${{ env.name }}
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/provisioning/report.sh"
+            displayName: Status of every app
+            env:
+              SAF_ENVIRONMENTS_JSON: ${{ convertToJson(parameters.environments) }}
+            target:
+              commands: restricted
+              settableVariables: none
+          # ADR-0064: the summary and failures.json (every failed app step with its failure code), which
+          # the portal reads for the app's page. With always(): the job fails when an app failed.
+          - task: PublishPipelineArtifact@1
+            displayName: Publish report
+            condition: always()
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/report
+              artifact: report
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none
+          # task.uploadsummary is not allowed in restricted mode; this step prints only the fixed
+          # command line below (same as the delivery templates).
+          - bash: |
+              set -euo pipefail
+              summary="$PIPELINE_WORKSPACE/saf-out/report/summary.md"
+              if [ -f "$summary" ]; then
+                echo "##vso[task.uploadsummary]$summary"
+              fi
+            displayName: Upload run summary
+            condition: succeededOrFailed()
+            target:
+              commands: any
+              settableVariables: none

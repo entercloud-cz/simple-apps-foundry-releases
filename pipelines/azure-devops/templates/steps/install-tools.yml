@@ -1,0 +1,23 @@
+# Installs pinned tools from tools/tools.json with scripts/install-tool.sh (the only downloader:
+# HTTPS only, SHA-256 pinned, Sigstore-verified where published, denylist; ADR-0024) into
+# $(Agent.ToolsDirectory)/saf/bin. Later steps put that directory first on PATH themselves
+# (scripts/lib.sh), because `task.prependpath` is blocked with `settableVariables: none`.
+#
+# `tools` is a list of tool names from tools.json, set by the core templates only (it is not a
+# parameter of app-delivery.yml).
+
+parameters:
+  - name: tools
+    type: object
+
+steps:
+  - bash: |
+      set -euo pipefail
+      read -r -a tools <<<"$SAF_TOOLS"
+      bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/install-tool.sh" "${tools[@]}"
+    displayName: Install pinned tools (${{ join(', ', parameters.tools) }})
+    env:
+      SAF_TOOLS: ${{ join(' ', parameters.tools) }}
+    target:
+      commands: restricted
+      settableVariables: none

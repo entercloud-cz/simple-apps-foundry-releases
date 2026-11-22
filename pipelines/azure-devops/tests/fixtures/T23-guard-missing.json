@@ -1,0 +1,11 @@
+{
+  "rule": "T23",
+  "description": "Without the unknown-source guard the invalid scenario compiles (to a dangling dependsOn).",
+  "patches": [
+    {
+      "file": "app-delivery.yml",
+      "find": "    - ${{ if and(ne(format('{0}', env.promoteFrom), ''), not(containsValue(parameters.environments.*.name, env.promoteFrom))) }}:\n",
+      "replace": "    - ${{ if false }}:\n"
+    }
+  ]
+}

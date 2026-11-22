@@ -1,0 +1,11 @@
+{
+  "rule": "P05",
+  "description": "Old-style result variables are gone: only saf.result.<artifact>.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra.yml",
+      "find": "          - name: saf.result.entra_plan\n            value: $[ stageDependencies.entra_plan.plan.result ]\n        steps:\n",
+      "replace": "          - name: saf.result.entra_plan\n            value: $[ stageDependencies.entra_plan.plan.result ]\n          - name: saf.entraResult\n            value: $[ stageDependencies.entra.registrations.result ]\n        steps:\n"
+    }
+  ]
+}

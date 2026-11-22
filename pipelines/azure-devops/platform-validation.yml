@@ -1,0 +1,90 @@
+# Pull request validation of platform-config: the ONLY entry point the instance's
+# `\platform\validation` pipeline extends (ADR-0040 decision 3, ADR-0006).
+#
+# platform-config's pipelines/validation.yml (written by `platform generate`) declares the core
+# repository resource `core` pinned to refs/tags/<coreVersion> and extends this file, with no
+# parameters:
+#
+#   trigger: none
+#   pr: none                      # Azure Repos ignores it; the build validation policy queues the runs
+#   extends:
+#     template: pipelines/azure-devops/platform-validation.yml@core
+#
+# `platform ado bootstrap --phase policies` makes it a required build validation of the default
+# branch of platform-config, so no pull request (a portal request or an operator's change) merges
+# unless it passes:
+#   - `platform validate instance --base HEAD^1` on instance.yaml (the network of an environment with
+#     apps doesn't change; ADR-0027 amendment 2026-11-12);
+#   - `platform validate app --instance` on every apps/*/app.yaml, with `--base HEAD^1` (the target
+#     branch: the first parent of the pull request's merge commit) for the immutability checks;
+#   - `platform validate archive` with the same base: the archive of deleted apps, apps-deleted/
+#     (ADR-0061; never provisioned), added only by a move and never changed or removed (except an
+#     unchanged move back while no app has the slug);
+#   - `platform generate --check`: apps/*/delivery.yml, pipelines/provisioning.yml,
+#     pipelines/validation.yml, pipelines/platform-<env>.yml and the AI guide (AGENTS.md, the skill
+#     onboard-instance; ADR-0072) equal what core renders; a missing guide names the command.
+# For every apps/*/app.yaml the pull request changes, a section of the log prints `platform
+# provisioning entra-effect` (ADR-0051): what merging it changes in Entra (sign-in, registrations,
+# role assignments, app roles, redirect URIs), against the target branch's file (HEAD^1, which the
+# depth-2 checkout holds; none for a new app). Offline and informational; with approvals.entraChanges
+# pullRequest the reviewers approve those changes with the pull request.
+#
+# Rules this file follows (tests/check-templates.py, rules V01-V06 and the generic T rules):
+#   - no parameters, no root variables, resources, triggers or pool; one stage, one job;
+#   - no credentials: no service connection, no Azure or Azure DevOps task, no environment, no
+#     System.AccessToken; checkouts without persisted credentials;
+#   - every step `target: { commands: restricted, settableVariables: none }`;
+#   - tools only from tools/tools.json through install-tool.sh (node), the CLI built from the core
+#     checkout, the one script from the core checkout.
+#
+# The pull request's own pipelines/validation.yml runs (Azure Pipelines takes the YAML of the
+# merge commit). A pull request that changes it skips nothing silently: `generate --check` of the
+# provisioning pipeline after the merge fails on a hand-edited file, and the reviewers see the
+# change. The review is the control; this pipeline catches mistakes before it.
+
+stages:
+  - stage: validate
+    displayName: Validate platform-config
+    dependsOn: []
+    isSkippable: false
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - job: validate
+        displayName: Validate instance.yaml, apps/*/app.yaml and generated files
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 20
+        steps:
+          - checkout: core
+            path: s/core
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+            lfs: false
+            persistCredentials: false
+            target:
+              commands: restricted
+              settableVariables: none
+          # Depth 2: the merge commit and its parents, so `--base HEAD^1` finds the target branch.
+          - checkout: self
+            path: s/config
+            fetchDepth: 2
+            fetchTags: false
+            submodules: false
+            lfs: false
+            persistCredentials: false
+            target:
+              commands: restricted
+              settableVariables: none
+          - template: templates/steps/install-tools.yml
+            parameters:
+              tools: [node]
+          - template: templates/steps/platform-cli.yml
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/platform-validation.sh"
+            displayName: Validate instance.yaml, apps/*/app.yaml and generated files
+            target:
+              commands: restricted
+              settableVariables: none

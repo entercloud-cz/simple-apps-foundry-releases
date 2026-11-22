@@ -1,0 +1,177 @@
+# Stage `deploy_<env>` for a PROMOTION environment (promoteFrom = S): import this run's image by
+# digest from S's registry and release it (ADR-0007, ADR-0029).
+#
+# Runs after verify and deploy_S (and preview_<env> for kind prod), only when the scan job's
+# `decide` step found the run's app ref to be the app's default branch (output `promote`). A
+# skipped deploy_S (branch not in deploy.branches) skips this stage too (succeeded()).
+# Approval, Branch control, Required template and Exclusive lock are checks on the environment
+# {slug}-{env} and the service connection sc-{slug}-{env}, created by provisioning.
+#
+# Inputs: artifacts `release-manifest` (this run), `release-result-S` (where deploy_S put the
+# image) and, for kind prod, `scan` (Trivy JSON of this run). No image artifact and no app checkout:
+# the image only moves registry to registry (`az acr import`), never through this agent.
+# For kind prod the scan gate is enforced against today's instance.yaml before any Azure call.
+# The job's last step reports the deploy to the portal (steps/deployment-finish.yml, ADR-0037).
+#
+# action redeploy: after stage `source` (+ preview for prod), condition succeeded(); the artifacts
+# are the earlier run's, republished by `source`. deploy.sh rolls back when the digest is in this
+# environment's registry, otherwise imports it from S's (promotion of an earlier build). Both
+# actions end with job `retain`.
+
+parameters:
+  - name: app
+    type: object
+  - name: environment
+    type: object
+  - name: action
+    type: string
+    default: deliver
+    values:
+      - deliver
+      - redeploy
+  - name: sourceRunId
+    type: number
+    default: 0
+
+stages:
+  - stage: deploy_${{ parameters.environment.name }}
+    displayName: Promote to ${{ parameters.environment.name }}
+    ${{ if eq(parameters.action, 'redeploy') }}:
+      dependsOn:
+        - source
+        - ${{ if eq(parameters.environment.kind, 'prod') }}:
+          - preview_${{ parameters.environment.name }}
+      condition: succeeded()
+    ${{ else }}:
+      dependsOn:
+        - verify
+        - deploy_${{ parameters.environment.promoteFrom }}
+        - ${{ if eq(parameters.environment.kind, 'prod') }}:
+          - preview_${{ parameters.environment.name }}
+      # `dependencies.verify.outputs[...]` works in a stage with several dependsOn (Preview API and
+      # sandbox run 2874, 2026-10-29).
+      condition: and(succeeded(), eq(dependencies.verify.outputs['scan.decide.promote'], 'true'))
+    isSkippable: false
+    # A newer run waiting for the environment lock cancels an older waiting one.
+    lockBehavior: runLatest
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - deployment: release
+        displayName: Promote from ${{ parameters.environment.promoteFrom }} to ${{ parameters.environment.name }}
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        environment: ${{ parameters.app.slug }}-${{ parameters.environment.name }}
+        timeoutInMinutes: 60
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Deployment jobs download every artifact of the run unless told otherwise.
+                - download: none
+                - template: ../steps/deployment-setup.yml
+                  parameters:
+                    tools: [node, oras, bicep]
+                - task: DownloadPipelineArtifact@2
+                  displayName: Download release-manifest
+                  inputs:
+                    buildType: current
+                    artifactName: release-manifest
+                    targetPath: $(Pipeline.Workspace)/release-manifest
+                  target:
+                    commands: restricted
+                - task: DownloadPipelineArtifact@2
+                  displayName: Download release-result-${{ parameters.environment.promoteFrom }}
+                  inputs:
+                    buildType: current
+                    artifactName: release-result-${{ parameters.environment.promoteFrom }}
+                    targetPath: $(Pipeline.Workspace)/release-result-${{ parameters.environment.promoteFrom }}
+                  target:
+                    commands: restricted
+                - ${{ if eq(parameters.environment.kind, 'prod') }}:
+                  - task: DownloadPipelineArtifact@2
+                    displayName: Download scan
+                    inputs:
+                      buildType: current
+                      artifactName: scan
+                      targetPath: $(Pipeline.Workspace)/scan
+                    target:
+                      commands: restricted
+                  # The prod scan gate, re-evaluated against today's instance.yaml: exit 1 when a
+                  # blocking finding remains or the provider is defender (not supported yet).
+                  - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/gate.sh"
+                    displayName: Prod scan gate (instance.yaml scanning)
+                    target:
+                      commands: restricted
+                - task: AzureCLI@2
+                  displayName: Import by digest, deploy release.bicep, smoke test
+                  inputs:
+                    azureSubscription: sc-${{ parameters.app.slug }}-${{ parameters.environment.name }}
+                    scriptType: bash
+                    scriptLocation: scriptPath
+                    scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/deploy.sh
+                    addSpnToEnvironment: false
+                    useGlobalConfig: false
+                    failOnStandardError: false
+                    workingDirectory: $(Pipeline.Workspace)
+                  env:
+                    SAF_SLUG: ${{ parameters.app.slug }}
+                    SAF_ENV_NAME: ${{ parameters.environment.name }}
+                    SAF_PROMOTE_FROM: ${{ parameters.environment.promoteFrom }}
+                    SAF_ACTION: ${{ parameters.action }}
+                    SAF_SERVICE_CONNECTION: sc-${{ parameters.app.slug }}-${{ parameters.environment.name }}
+                    SAF_ADO_ENVIRONMENT: ${{ parameters.app.slug }}-${{ parameters.environment.name }}
+                  target:
+                    commands: restricted
+                - template: ../steps/deployment-finish.yml
+                  parameters:
+                    app: ${{ parameters.app }}
+                    environment: ${{ parameters.environment }}
+
+      # Retention lease on the run whose artifacts were deployed (deliver: this run; redeploy: the
+      # source run), so a later redeploy or rollback can still read them. Normal job: no app code,
+      # no Azure credentials, no artifact download; the job token only in the lease step.
+      # TODO(verify) ADO-22: the job token may create retention leases (POST _apis/build/retention/leases).
+      - job: retain
+        displayName: Retain the artifacts of the deployed run
+        dependsOn: release
+        condition: succeeded()
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 10
+        steps:
+          - checkout: core
+            path: s/core
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+            lfs: false
+            persistCredentials: false
+            target:
+              commands: restricted
+              settableVariables: none
+          - template: ../steps/install-tools.yml
+            parameters:
+              tools: [node]
+          - template: ../steps/platform-cli.yml
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/retain.sh"
+            displayName: Retention lease (${{ parameters.environment.name }})
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              SAF_SLUG: ${{ parameters.app.slug }}
+              SAF_ENV_NAME: ${{ parameters.environment.name }}
+              # Two separate if/if pairs: one mapping can't hold two `${{ else }}` keys.
+              ${{ if eq(parameters.action, 'redeploy') }}:
+                SAF_RETAIN_RUN_ID: ${{ parameters.sourceRunId }}
+              ${{ if ne(parameters.action, 'redeploy') }}:
+                SAF_RETAIN_RUN_ID: $(Build.BuildId)
+              ${{ if eq(parameters.environment.kind, 'prod') }}:
+                SAF_RETAIN_DAYS: 365
+              ${{ if ne(parameters.environment.kind, 'prod') }}:
+                SAF_RETAIN_DAYS: 90
+            target:
+              commands: restricted
+              settableVariables: none
