@@ -1,0 +1,16 @@
+{
+  "rule": "P20",
+  "description": "front_door_step after restart_stale (its old place) no longer passes: the release would not see the domain.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  # 3. The custom domain through Front Door.\n  front_door_step\n",
+      "replace": ""
+    },
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  front_door_cleanup removal\n}\n",
+      "replace": "  front_door_cleanup removal\n  front_door_step\n}\n"
+    }
+  ]
+}

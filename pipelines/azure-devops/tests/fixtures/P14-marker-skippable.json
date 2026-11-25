@@ -1,0 +1,11 @@
+{
+  "rule": "P14",
+  "description": "A stage that may be skipped creates its artifact folder first, so a failed job still publishes it (ADR-0048).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure.yml",
+      "find": "              artifact: azure_${{ parameters.environment.name }}\n",
+      "replace": ""
+    }
+  ]
+}

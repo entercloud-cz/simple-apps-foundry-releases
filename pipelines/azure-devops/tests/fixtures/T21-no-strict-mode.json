@@ -1,0 +1,11 @@
+{
+  "rule": "T21",
+  "description": "A script without set -euo pipefail is rejected.",
+  "patches": [
+    {
+      "file": "scripts/smoke.sh",
+      "find": "set -euo pipefail\n",
+      "replace": "set -e\n"
+    }
+  ]
+}

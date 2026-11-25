@@ -1,0 +1,11 @@
+{
+  "rule": "P14",
+  "description": "The artifact folder step writes only stage.json.",
+  "patches": [
+    {
+      "file": "templates/provisioning/steps/setup.yml",
+      "find": "'{stage: $s, runId: $r}' > \"$out/stage.json\"\n",
+      "replace": "'{stage: $s, runId: $r}' > \"$out/stage.json\"\n        env > \"$out/env.txt\"\n"
+    }
+  ]
+}

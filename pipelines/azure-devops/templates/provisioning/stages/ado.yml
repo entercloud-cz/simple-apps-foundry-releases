@@ -1,0 +1,133 @@
+# Stages `ado_resources` and `ado_pipelines`: the Azure DevOps objects of the apps whose unit `ado`
+# the plan runs (ADR-0032, ADR-0022, ADR-0048: output ado of stage plan; both stages run only then),
+# through `platform ado apply` (GET, compare, then create or update; never deletes).
+#
+# Service connection sc-platform-ado (ADO automation identity, naming.bicep
+# instanceServiceConnection('ado')), nothing else. The ADO token is that identity's Entra token
+# for Azure DevOps (`az account get-access-token --resource 499b84ac-...`), registered with
+# task.setsecret and passed to the CLI as AZURE_DEVOPS_TOKEN; System.AccessToken is never used.
+# TODO(verify): task.setsecret is accepted with `settableVariables: none` in a normal job (it is
+# with `commands: restricted` in a deployment job, sandbox 2026-10-29).
+#
+#   phase resources  after every azure_<env>; per app whose ado runs and whose landing zone is ok in
+#                    all its environments (azure_<env> when its lz ran there, else plan_<env>):
+#                    service connections (with the delivery identity from the lz outputs),
+#                    environments, checks, repo rights. Artifact `ado`: status/{slug}.json,
+#                    ado-outputs/{slug}.json (issuer and subject read back from ADO).
+#   phase pipelines  after every azure_post_<env>; per app whose ado runs and that is ok in all its
+#                    environments (release exists): \apps\delivery-{slug} and its permissions.
+#                    Artifact `ado_pipelines`: status/{slug}.json, ado-outputs/{slug}.json.
+# Both artifacts are created by the job's first step and published with always(): a stage that
+# downloads them finds them whenever the job ran.
+
+parameters:
+  - name: phase
+    type: string
+    values:
+      - resources
+      - pipelines
+  - name: environments
+    type: object
+
+stages:
+  - stage: ado_${{ parameters.phase }}
+    ${{ if eq(parameters.phase, 'resources') }}:
+      displayName: Azure DevOps service connections and environments
+      dependsOn:
+        - validate
+        - plan
+        - ${{ each env in parameters.environments }}:
+          - azure_${{ env.name }}
+    ${{ else }}:
+      displayName: Azure DevOps delivery pipelines
+      dependsOn:
+        - validate
+        - plan
+        - ado_resources
+        - ${{ each env in parameters.environments }}:
+          - azure_post_${{ env.name }}
+    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'), eq(dependencies.plan.outputs['decide.decide.ado'], 'true'))
+    isSkippable: false
+    lockBehavior: runLatest
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - job: ${{ parameters.phase }}
+        displayName: Azure DevOps ${{ parameters.phase }}
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 120
+        variables:
+          # Results of the jobs whose artifacts are optional here (steps/download.yml): empty when
+          # their stage was skipped or never started.
+          - ${{ each env in parameters.environments }}:
+            - ${{ if eq(parameters.phase, 'resources') }}:
+              - name: saf.result.azure_${{ env.name }}
+                value: $[ stageDependencies.azure_${{ env.name }}.landing_zones.result ]
+            - ${{ else }}:
+              - name: saf.result.azure_post_${{ env.name }}
+                value: $[ stageDependencies.azure_post_${{ env.name }}.releases.result ]
+        steps:
+          - template: ../steps/setup.yml
+            parameters:
+              tools: [node]
+              cli: artifact
+              ${{ if eq(parameters.phase, 'resources') }}:
+                artifact: ado
+              ${{ else }}:
+                artifact: ado_pipelines
+          - ${{ if eq(parameters.phase, 'resources') }}:
+            - template: ../steps/download.yml
+              parameters:
+                artifacts:
+                  - units
+                  - ${{ each env in parameters.environments }}:
+                    - plan_${{ env.name }}
+                optional:
+                  - ${{ each env in parameters.environments }}:
+                    - azure_${{ env.name }}
+          - ${{ else }}:
+            - template: ../steps/download.yml
+              parameters:
+                artifacts:
+                  - units
+                  - ado
+                optional:
+                  - ${{ each env in parameters.environments }}:
+                    - azure_post_${{ env.name }}
+          - task: AzureCLI@2
+            displayName: platform ado apply --phase ${{ parameters.phase }}
+            inputs:
+              azureSubscription: sc-platform-ado
+              scriptType: bash
+              scriptLocation: scriptPath
+              scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/provisioning/ado.sh
+              addSpnToEnvironment: false
+              useGlobalConfig: false
+              failOnStandardError: false
+              workingDirectory: $(Pipeline.Workspace)
+            env:
+              SAF_ADO_PHASE: ${{ parameters.phase }}
+              SAF_SERVICE_CONNECTION: sc-platform-ado
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: PublishPipelineArtifact@1
+            ${{ if eq(parameters.phase, 'resources') }}:
+              displayName: Publish ado
+            ${{ else }}:
+              displayName: Publish ado_pipelines
+            condition: always()
+            inputs:
+              ${{ if eq(parameters.phase, 'resources') }}:
+                targetPath: $(Pipeline.Workspace)/saf-out/ado
+                artifact: ado
+              ${{ else }}:
+                targetPath: $(Pipeline.Workspace)/saf-out/ado_pipelines
+                artifact: ado_pipelines
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none

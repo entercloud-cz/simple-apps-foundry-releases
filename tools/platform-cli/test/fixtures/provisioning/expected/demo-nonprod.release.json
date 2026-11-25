@@ -1,0 +1,44 @@
+{
+  "prefix": "contoso",
+  "environmentName": "nonprod",
+  "slug": "demo",
+  "generation": 0,
+  "vaultGeneration": 0,
+  "location": "westeurope",
+  "networkMode": "externalOnly",
+  "cell": "01",
+  "externalOnlyNetwork": "managed",
+  "deployedBy": "provisioning",
+  "image": {
+    "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "runtime": {
+    "port": 8080,
+    "size": "xs",
+    "minReplicas": 0,
+    "maxReplicas": 1,
+    "livenessPath": "/healthz",
+    "readinessPath": "/readyz"
+  },
+  "env": [
+    {
+      "name": "LOG_LEVEL",
+      "value": "info"
+    }
+  ],
+  "secrets": [],
+  "landingZone": {
+    "runtimeIdentityClientId": "00000000-0000-0000-0000-000000000f01"
+  },
+  "frontDoor": {
+    "mode": "none",
+    "backendIpRanges": []
+  },
+  "customDomains": [],
+  "authentication": {
+    "mode": "required",
+    "clientId": "00000000-0000-0000-0000-00000000d201"
+  },
+  "alertsEnabled": false,
+  "coreVersion": "v0.1.0-rc.3"
+}

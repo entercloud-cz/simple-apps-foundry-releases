@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "The deploy event must never get the job token.",
+  "patches": [
+    {
+      "file": "templates/steps/deployment-finish.yml",
+      "find": "      SAF_JOB_STATUS: $(Agent.JobStatus)\n",
+      "replace": "      SAF_JOB_STATUS: $(Agent.JobStatus)\n      SYSTEM_ACCESSTOKEN: $(System.AccessToken)\n"
+    }
+  ]
+}

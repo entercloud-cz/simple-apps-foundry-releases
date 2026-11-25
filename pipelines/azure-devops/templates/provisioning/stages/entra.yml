@@ -1,0 +1,108 @@
+# Stage `entra`: Entra app registrations and Easy Auth secrets (ADR-0023, ADR-0033, ADR-0035). Runs
+# only when an Entra plan found a registration that is not up to date or an Easy Auth secret to
+# write: the job decide of stage plan (output decide.entraDecide.entraNeeded, the units whose landing
+# zone doesn't run) or the stage entra_plan (plan.decide.entraNeeded, the units whose landing zone runs
+# too; ADR-0050). An entra-only change goes from plan straight to this stage.
+#
+# Service connection sc-platform-entra (Entra provisioning identity: Microsoft Graph application
+# permissions, and on Azure only deployments in rg-{prefix}-entra and each environment's Entra records
+# group rg-{prefix}-entra-{env} (ADR-0063), and Platform Job Secret Writer on
+# each kvset job, ADR-0035), nothing else. Its checks sit on the service connection (`platform ado
+# bootstrap`), not in this template, and depend on instance.yaml approvals.entraChanges (ADR-0051):
+#   pullRequest (default)  Required template, Branch control and Exclusive lock, and no Approval
+#                          check: the reviewed platform-config pull request (the branch policy
+#                          bootstrap requires) is the approval, so this stage doesn't wait;
+#   separate               the same plus the Approval check (platform team; the requester can't
+#                          approve unless approvals.allowSelfApproval): the stage waits for it
+#                          before its job starts (ADR-0023).
+# Pipeline permission: \platform\provisioning only.
+#
+# scripts/provisioning/entra.sh deploys every registration its Entra plan marked `deploy`, with the
+# inputs that plan rendered (units/entra or entra_plan: prov_entra_dir), as entra-{slug}-{env} in rg-{prefix}-entra-{env}
+# (rg-{prefix}-entra while that group doesn't exist yet; the old record there is deleted after a move, ADR-0063)
+# through infra/entra/provisioning/app-registration.bicepparam; bounded retry on the intermittent
+# Authorization_RequestDenied at service principal creation. Before a deployment, the role
+# assignments entra_plan planned to remove (entra_plan/entra-removals): `platform provisioning
+# entra-reconcile` deletes them from the app's own service principal with a Microsoft Graph token
+# from prov_graph_token (masked, environment only); a retired app role is first deployed with
+# isEnabled false (entra-inputs/{slug}.{env}.disable.json), then removed by the deployment of the
+# final inputs (ADR-0033 amended 2026-11-11). Then every Easy Auth secret entra_plan
+# planned (entra_plan/secret-plan): `platform provisioning easyauth-secret` adds a password to the
+# registration and hands it to the kvset job of the app's CAE, which writes it into the environment
+# vault (ADR-0035). The Graph and ARM tokens come from prov_secret_tokens (masked, environment
+# only); the value exists only inside that CLI process. The step's env is exactly SAF_ENV_NAME and
+# SAF_SERVICE_CONNECTION (rule P17: nothing that could switch on xtrace).
+# Artifact entra: status/{slug}.{env}.json, entra-outputs/{slug}.{env}.json (client ID). Its folder
+# (with the marker stage.json) is created by steps/setup.yml before the checkouts, so the artifact
+# exists whenever the job ran, even if it failed before entra.sh (e.g. the AzureCLI login): the
+# conditional download in azure_post_* and report never fails on it, and an artifact without
+# status files means no registration was deployed.
+
+parameters:
+  - name: hostEnvironment
+    type: string
+
+stages:
+  - stage: entra
+    displayName: Entra registrations
+    dependsOn:
+      - validate
+      - plan
+      - entra_plan
+    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'), or(eq(dependencies.plan.outputs['decide.entraDecide.entraNeeded'], 'true'), eq(dependencies.entra_plan.outputs['plan.decide.entraNeeded'], 'true')))
+    isSkippable: false
+    lockBehavior: runLatest
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - job: registrations
+        displayName: Entra app registrations
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 60
+        variables:
+          # The result of the job whose artifact is optional here (steps/download.yml): empty when
+          # the stage entra_plan was skipped (no entra unit ran with its landing zone).
+          - name: saf.result.entra_plan
+            value: $[ stageDependencies.entra_plan.plan.result ]
+        steps:
+          - template: ../steps/setup.yml
+            parameters:
+              tools: [node, bicep]
+              cli: artifact
+              artifact: entra
+          - template: ../steps/download.yml
+            parameters:
+              artifacts:
+                - units
+              optional:
+                - entra_plan
+          - task: AzureCLI@2
+            displayName: Entra app registrations
+            inputs:
+              azureSubscription: sc-platform-entra
+              scriptType: bash
+              scriptLocation: scriptPath
+              scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/provisioning/entra.sh
+              addSpnToEnvironment: false
+              useGlobalConfig: false
+              failOnStandardError: false
+              workingDirectory: $(Pipeline.Workspace)
+            env:
+              SAF_ENV_NAME: ${{ parameters.hostEnvironment }}
+              SAF_SERVICE_CONNECTION: sc-platform-entra
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: PublishPipelineArtifact@1
+            displayName: Publish entra
+            condition: always()
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/entra
+              artifact: entra
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none

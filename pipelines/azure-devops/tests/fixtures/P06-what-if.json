@@ -1,0 +1,11 @@
+{
+  "rule": "P06",
+  "description": "what-if is not part of provisioning (decisions come from records).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "prov_finish\n",
+      "replace": "az deployment sub what-if --name x --location y --parameters \"$prov_lz_param\"\nprov_finish\n"
+    }
+  ]
+}

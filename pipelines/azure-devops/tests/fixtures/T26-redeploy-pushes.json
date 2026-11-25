@@ -1,0 +1,11 @@
+{
+  "rule": "T26",
+  "description": "A redeploy that pushes a missing image is rejected (no image archive of the source run).",
+  "patches": [
+    {
+      "file": "scripts/deploy.sh",
+      "find": "  if [ \"$mode\" = push ]; then\n    saf_die \"the image of run $image_run_id is no longer in the registry\"\n  fi\n",
+      "replace": "  if [ \"$mode\" = push ]; then\n    publish_push\n    return 0\n  fi\n"
+    }
+  ]
+}

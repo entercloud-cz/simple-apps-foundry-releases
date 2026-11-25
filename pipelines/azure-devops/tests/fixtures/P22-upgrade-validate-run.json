@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "validate.sh hands the parameter upgrade to validate-run, which checks it.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/validate.sh",
+      "find": "  --upgrade \"$SAF_UPGRADE\" --apps-dir \"$SAF_CONFIG/apps\"",
+      "replace": "  --apps-dir \"$SAF_CONFIG/apps\""
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P06",
+  "description": "The Entra registration has no validate arm in prov_arm(): its preflight calls Microsoft Graph (ADR-0033).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "      create/entra)\n",
+      "replace": "      validate/entra)\n        SAF_ENTRA_JSON=\"$(cat \"$inputs\")\" az deployment group validate --resource-group \"$where\" --name \"$name\" \\\n          --parameters \"$prov_entra_param\" --only-show-errors --output json > \"$out\" 2> \"$err\"\n        ;;\n      create/entra)\n"
+    }
+  ]
+}

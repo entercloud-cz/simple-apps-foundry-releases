@@ -1,0 +1,11 @@
+{
+  "rule": "T28",
+  "description": "A retain job that downloads artifacts is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/promote.yml",
+      "find": "          - bash: bash \"$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/retain.sh\"\n",
+      "replace": "          - task: DownloadPipelineArtifact@2\n            inputs:\n              buildType: current\n              artifactName: release-manifest\n              targetPath: $(Pipeline.Workspace)/release-manifest\n            target:\n              commands: restricted\n              settableVariables: none\n          - bash: bash \"$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/retain.sh\"\n"
+    }
+  ]
+}

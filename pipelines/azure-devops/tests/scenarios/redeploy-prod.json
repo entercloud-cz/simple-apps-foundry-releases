@@ -1,0 +1,31 @@
+{
+  "description": "Redeploy to prod (rollback or promotion of an earlier build): preview, approval, deploy.",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      },
+      {
+        "name": "prod",
+        "kind": "prod",
+        "promoteFrom": "nonprod"
+      }
+    ],
+    "action": "redeploy",
+    "targetEnvironment": "prod",
+    "sourceRunId": 2874
+  },
+  "expect": {
+    "stages": [
+      "source",
+      "preview_prod",
+      "deploy_prod"
+    ]
+  }
+}

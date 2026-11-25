@@ -1,0 +1,11 @@
+{
+  "rule": "P24",
+  "description": "entra-reconcile takes no token argument and exactly its four options.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "--unique-name \"$unique_name\" --output \"$result\"",
+      "replace": "--unique-name \"$unique_name\" --output \"$result\" --token-file \"$PROV_DIR/t\""
+    }
+  ]
+}

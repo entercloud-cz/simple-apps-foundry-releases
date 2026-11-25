@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "No template passes the schedule that started the run to a script.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure-post.yml",
+      "find": "              SAF_ENV_NAME: ${{ parameters.environment.name }}\n              SAF_PROMOTE_FROM: ${{ parameters.environment.promoteFrom }}\n",
+      "replace": "              SAF_ENV_NAME: ${{ parameters.environment.name }}\n              SAF_PROMOTE_FROM: ${{ parameters.environment.promoteFrom }}\n              SAF_SCHEDULE: $(Build.CronSchedule.DisplayName)\n"
+    }
+  ]
+}

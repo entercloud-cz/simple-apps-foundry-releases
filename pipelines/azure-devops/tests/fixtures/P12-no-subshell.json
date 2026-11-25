@@ -1,0 +1,11 @@
+{
+  "rule": "P12",
+  "description": "prov_run_app must isolate the app in a subshell with errexit.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "  (\n    set -e\n    \"$@\"\n  )\n",
+      "replace": "  \"$@\"\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "deployment-finish.yml takes app and environment only: no parameter could switch the deploy event off.",
+  "patches": [
+    {
+      "file": "templates/steps/deployment-finish.yml",
+      "find": "  - name: environment\n    type: object\n",
+      "replace": "  - name: environment\n    type: object\n  - name: report\n    type: string\n    default: 'yes'\n"
+    }
+  ]
+}

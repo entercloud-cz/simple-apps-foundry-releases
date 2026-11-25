@@ -1,0 +1,11 @@
+{
+  "rule": "P06",
+  "description": "prov_entra_expected() builds only app-registration.bicepparam.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "az bicep build-params --file \"$prov_entra_param\" --stdout",
+      "replace": "az bicep build-params --file \"$prov_release_param\" --stdout"
+    }
+  ]
+}

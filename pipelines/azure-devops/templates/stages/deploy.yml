@@ -1,0 +1,156 @@
+# Stage `deploy_<env>`: release this run's image to ONE build environment (promoteFrom == '').
+#
+# Runs after `verify` only when the scan job's `decide` step said the triggering branch may deploy
+# (platform.yaml deploy.branches). The deployment job is the only place with Azure credentials:
+# the app's own service connection sc-{slug}-{env} and ADO environment {slug}-{env} (names from
+# naming.bicep adoServiceConnection / adoEnvironment, ADR-0020; both protected by pipeline
+# permissions and the Required template check, ADR-0021). All steps are fixed here.
+#
+# Inputs are the artifacts `release-manifest` and `image` of this run; the app repo is not
+# checked out. deploy.sh pushes by digest (unless a newer run is already deployed), deploys
+# release.bicep through infra/app/delivery/release.bicepparam (deployedBy = delivery) and runs the
+# smoke test. Its release-result-<env> artifact tells promotion stages where the image is. The
+# job's last step reports the deploy to the portal (steps/deployment-finish.yml, ADR-0037).
+# Promotion environments use promote.yml instead.
+#
+# action redeploy: after stage `source` (which republished the earlier run's release manifest);
+# no image artifact, no push: deploy.sh redeploys the digest that must still be in the registry.
+# Both actions end with job `retain` (retention lease on the deployed run).
+
+parameters:
+  - name: app
+    type: object
+  - name: environment
+    type: object
+  - name: action
+    type: string
+    default: deliver
+    values:
+      - deliver
+      - redeploy
+  - name: sourceRunId
+    type: number
+    default: 0
+
+stages:
+  - stage: deploy_${{ parameters.environment.name }}
+    displayName: Deploy ${{ parameters.environment.name }}
+    ${{ if eq(parameters.action, 'redeploy') }}:
+      dependsOn: source
+      condition: succeeded()
+    ${{ else }}:
+      dependsOn: verify
+      condition: and(succeeded(), eq(dependencies.verify.outputs['scan.decide.deployBuildEnvironments'], 'true'))
+    isSkippable: false
+    # With the Exclusive lock check on the environment, a newer run waiting for the lock cancels
+    # an older waiting one: the last push wins (sandbox ADO-21, 2026-10-29).
+    lockBehavior: runLatest
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - deployment: release
+        displayName: Release to ${{ parameters.environment.name }}
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        environment: ${{ parameters.app.slug }}-${{ parameters.environment.name }}
+        timeoutInMinutes: 60
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Deployment jobs download every artifact of the run unless told otherwise.
+                - download: none
+                - template: ../steps/deployment-setup.yml
+                  parameters:
+                    tools: [node, oras, bicep]
+                - task: DownloadPipelineArtifact@2
+                  displayName: Download release-manifest
+                  inputs:
+                    buildType: current
+                    artifactName: release-manifest
+                    targetPath: $(Pipeline.Workspace)/release-manifest
+                  target:
+                    commands: restricted
+                - ${{ if eq(parameters.action, 'deliver') }}:
+                  - task: DownloadPipelineArtifact@2
+                    displayName: Download image
+                    inputs:
+                      buildType: current
+                      artifactName: image
+                      targetPath: $(Pipeline.Workspace)/image
+                    target:
+                      commands: restricted
+                # AzureCLI@2 logs in with the service connection (workload identity federation) in
+                # its own AZURE_CONFIG_DIR. Restricted: deploy.sh only needs task.setsecret (registry
+                # token) and task.logissue, both allowed in restricted mode; it sets no variables.
+                - task: AzureCLI@2
+                  displayName: Push by digest, deploy release.bicep, smoke test
+                  inputs:
+                    azureSubscription: sc-${{ parameters.app.slug }}-${{ parameters.environment.name }}
+                    scriptType: bash
+                    scriptLocation: scriptPath
+                    scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/deploy.sh
+                    addSpnToEnvironment: false
+                    useGlobalConfig: false
+                    failOnStandardError: false
+                    workingDirectory: $(Pipeline.Workspace)
+                  env:
+                    SAF_SLUG: ${{ parameters.app.slug }}
+                    SAF_ENV_NAME: ${{ parameters.environment.name }}
+                    SAF_ACTION: ${{ parameters.action }}
+                    SAF_SERVICE_CONNECTION: sc-${{ parameters.app.slug }}-${{ parameters.environment.name }}
+                    SAF_ADO_ENVIRONMENT: ${{ parameters.app.slug }}-${{ parameters.environment.name }}
+                  target:
+                    commands: restricted
+                - template: ../steps/deployment-finish.yml
+                  parameters:
+                    app: ${{ parameters.app }}
+                    environment: ${{ parameters.environment }}
+
+      # Retention lease on the run whose artifacts were deployed (deliver: this run; redeploy: the
+      # source run), so a later redeploy or rollback can still read them. Normal job: no app code,
+      # no Azure credentials, no artifact download; the job token only in the lease step.
+      # TODO(verify) ADO-22: the job token may create retention leases (POST _apis/build/retention/leases).
+      - job: retain
+        displayName: Retain the artifacts of the deployed run
+        dependsOn: release
+        condition: succeeded()
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 10
+        steps:
+          - checkout: core
+            path: s/core
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+            lfs: false
+            persistCredentials: false
+            target:
+              commands: restricted
+              settableVariables: none
+          - template: ../steps/install-tools.yml
+            parameters:
+              tools: [node]
+          - template: ../steps/platform-cli.yml
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/retain.sh"
+            displayName: Retention lease (${{ parameters.environment.name }})
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              SAF_SLUG: ${{ parameters.app.slug }}
+              SAF_ENV_NAME: ${{ parameters.environment.name }}
+              # Two separate if/if pairs: one mapping can't hold two `${{ else }}` keys.
+              ${{ if eq(parameters.action, 'redeploy') }}:
+                SAF_RETAIN_RUN_ID: ${{ parameters.sourceRunId }}
+              ${{ if ne(parameters.action, 'redeploy') }}:
+                SAF_RETAIN_RUN_ID: $(Build.BuildId)
+              ${{ if eq(parameters.environment.kind, 'prod') }}:
+                SAF_RETAIN_DAYS: 365
+              ${{ if ne(parameters.environment.kind, 'prod') }}:
+                SAF_RETAIN_DAYS: 90
+            target:
+              commands: restricted
+              settableVariables: none

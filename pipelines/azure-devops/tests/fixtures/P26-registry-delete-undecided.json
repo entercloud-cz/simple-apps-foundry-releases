@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The registry purge deletes only what `platform provisioning registry-purge` decided (ADR-0059).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/registry.sh",
+      "find": "  saf_cli provisioning registry-purge --plan \"$registry_plan\"",
+      "replace": "  saf_cli provisioning registry-purge --manifests-only \"$registry_plan\""
+    }
+  ]
+}

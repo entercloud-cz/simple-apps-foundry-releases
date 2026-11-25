@@ -1,0 +1,38 @@
+{
+  "prefix": "contoso",
+  "environmentName": "prod",
+  "slug": "demo",
+  "generation": 0,
+  "vaultGeneration": 0,
+  "location": "westeurope",
+  "networkMode": "externalOnly",
+  "cell": "01",
+  "externalOnlyNetwork": "vnet",
+  "deployedBy": "provisioning",
+  "image": {
+    "bootstrapImage": "mcr.microsoft.com/dotnet/samples:aspnetapp@sha256:ef878229733b4c99b2e54a58002df96cfe00ae47288a817a8d8867cbf43a96a0"
+  },
+  "runtime": {
+    "port": 8080,
+    "size": "xs",
+    "minReplicas": 0,
+    "maxReplicas": 1,
+    "livenessPath": "/",
+    "readinessPath": "/"
+  },
+  "env": [],
+  "secrets": [],
+  "landingZone": {
+    "runtimeIdentityClientId": "00000000-0000-0000-0000-000000000f02"
+  },
+  "frontDoor": {
+    "mode": "none",
+    "backendIpRanges": []
+  },
+  "customDomains": [],
+  "authentication": {
+    "mode": "anonymous"
+  },
+  "alertsEnabled": false,
+  "coreVersion": "v0.1.0-rc.3"
+}

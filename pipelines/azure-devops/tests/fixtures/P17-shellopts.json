@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "The entra step cannot switch on xtrace through the environment.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra.yml",
+      "find": "              SAF_SERVICE_CONNECTION: sc-platform-entra\n",
+      "replace": "              SAF_SERVICE_CONNECTION: sc-platform-entra\n              SHELLOPTS: xtrace\n"
+    }
+  ]
+}

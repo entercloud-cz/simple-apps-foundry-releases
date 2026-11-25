@@ -1,0 +1,11 @@
+{
+  "rule": "P20",
+  "description": "A removal deletes nothing unless the release's frontDoor.mode is none (the ingress open).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "    [ \"$(jq -r '.frontDoor.mode // \"\"' \"$PROV_DIR/release/release.json\")\" = none ] \\\n",
+      "replace": "    true \\\n"
+    }
+  ]
+}

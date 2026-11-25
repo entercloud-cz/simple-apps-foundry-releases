@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "No script but validate.sh names SAF_UPGRADE.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/decide.sh",
+      "find": "saf_require_env SAF_ENVIRONMENTS_JSON SAF_HOST_ENVIRONMENT\n",
+      "replace": "saf_require_env SAF_ENVIRONMENTS_JSON SAF_HOST_ENVIRONMENT SAF_UPGRADE\n"
+    }
+  ]
+}

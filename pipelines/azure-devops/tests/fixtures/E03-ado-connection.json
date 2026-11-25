@@ -1,0 +1,16 @@
+{
+  "rule": "E03",
+  "description": "The plan stage uses another platform connection than its environment's provisioning connection.",
+  "patches": [
+    {
+      "file": "templates/platform/stages/plan.yml",
+      "find": "              azureSubscription: sc-platform-provisioning-${{ parameters.environment }}\n",
+      "replace": "              azureSubscription: sc-platform-ado\n"
+    },
+    {
+      "file": "templates/platform/stages/plan.yml",
+      "find": "              SAF_SERVICE_CONNECTION: sc-platform-provisioning-${{ parameters.environment }}\n",
+      "replace": "              SAF_SERVICE_CONNECTION: sc-platform-ado\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P20",
+  "description": "DNS records are deleted only by fd_delete(): no az network dns record-set ... delete.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "      fd_delete \"$txt_id\" \"$DNS_API\"\n",
+      "replace": "      az network dns record-set txt delete --ids \"$txt_id\" --yes\n"
+    }
+  ]
+}

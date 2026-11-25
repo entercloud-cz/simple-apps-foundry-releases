@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "Without continueOnError a failed login of the deploy event would fail the job.",
+  "patches": [
+    {
+      "file": "templates/steps/deployment-finish.yml",
+      "find": "    condition: succeededOrFailed()\n    continueOnError: true\n    timeoutInMinutes: 5\n",
+      "replace": "    condition: succeededOrFailed()\n    timeoutInMinutes: 5\n"
+    }
+  ]
+}

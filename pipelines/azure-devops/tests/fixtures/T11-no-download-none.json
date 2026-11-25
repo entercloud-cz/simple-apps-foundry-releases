@@ -1,0 +1,11 @@
+{
+  "rule": "T11",
+  "description": "A deployment job that auto-downloads all artifacts is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/deploy.yml",
+      "find": "                - download: none\n",
+      "replace": ""
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "E16",
+  "description": "The portal deploys without checking that its inputs are the approved plan's.",
+  "patches": [
+    {
+      "file": "scripts/platform/deploy.sh",
+      "find": "  jq -e --slurpfile a \"$approved_portal\" '. == $a[0]' \"$inputs_p\" > /dev/null \\\n    || saf_die \"the portal inputs differ from the approved plan (instance.yaml or core changed since the plan stage): run the pipeline again\"\n",
+      "replace": ""
+    }
+  ]
+}
