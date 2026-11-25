@@ -1,0 +1,35 @@
+{
+  "description": "Redeploy to a nonprod promotion environment in a chain (no preview).",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "dev",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      },
+      {
+        "name": "test",
+        "kind": "nonprod",
+        "promoteFrom": "dev"
+      },
+      {
+        "name": "prod",
+        "kind": "prod",
+        "promoteFrom": "test"
+      }
+    ],
+    "action": "redeploy",
+    "targetEnvironment": "test",
+    "sourceRunId": 41
+  },
+  "expect": {
+    "stages": [
+      "source",
+      "deploy_test"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The follow-up starts only the previous variant's kvset job by naming (ADR-0060 decision 8, ADR-0052).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  [ \"$old_job\" = \"$job_prefix$(prov_name \"$other_names\" kvsetJob)\" ] \\\n",
+      "replace": "  true \\\n"
+    }
+  ]
+}

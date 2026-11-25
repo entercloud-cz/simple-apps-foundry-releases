@@ -1,0 +1,89 @@
+# Platform pipeline of ONE environment: the ONLY entry point the instance's
+# `\platform\platform-<env>` pipelines extend (ADR-0043, ADR-0006).
+#
+# platform-config's pipelines/platform-<env>.yml (written by `platform generate`, one per
+# environment, runs on a merge to the default branch that changes its inputs
+# pipelines/inputs/platform-<env>.json or itself, ADR-0074, and by hand)
+# declares the core repository resource `core` pinned to refs/tags/<coreVersion> and extends this
+# file:
+#
+#   extends:
+#     template: pipelines/azure-devops/platform-environment.yml@core
+#     parameters:
+#       environment: nonprod        # this pipeline's environment
+#       hostEnvironment: prod       # instance portal.hostEnvironment
+#
+# It deploys infra/platform/environment.bicep (CAEs, environment vaults, network, platform registry,
+# kvset and dbinit jobs, managed Front Door) as platform-{prefix}-<env> with that environment's
+# Azure provisioning identity, after an approval, only when the plan finds a change. In the portal
+# host environment (environment = hostEnvironment) it also deploys infra/platform/portal.bicep as
+# portal-{prefix}-<env> the same way (ADR-0043 decision 10). Role definitions (roles.bicep), the
+# platform identities (bootstrap.bicep), Graph permissions and the portal registration stay with a
+# person (ADR-0043).
+#
+# Rules this file and everything it includes follow (tests/check-templates.py, rules E01-E19 and the
+# generic T rules):
+#   - exactly two parameters, `environment` and `hostEnvironment` (strings, no defaults): no
+#     booleans, no step/job/stage lists, nothing that could skip the plan, the approval or a check;
+#   - every stage `isSkippable: false`; no root or stage variables, no variable groups;
+#   - service connection: validate none, plan and deploy only sc-platform-provisioning-<environment>;
+#     no System.AccessToken, no Azure DevOps token;
+#   - every step of a normal job `target: { commands: restricted, settableVariables: none }` (the
+#     step `decide` of the plan job may set exactly its output `changed`); deployment job steps
+#     `commands: restricted` only (rule T22);
+#   - deployments only through infra/platform/pipeline/environment.bicepparam and, in the portal
+#     host, portal.bicepparam (plat_arm in scripts/platform/plat-lib.sh): what-if only in the plan,
+#     create only in the deploy job;
+#   - only built-in tasks; tools from tools/tools.json through install-tool.sh (node, bicep).
+#
+# Stages:
+#
+#   validate ──► plan ──► deploy (only when plan.decide.changed = 'true')
+#
+#   validate  validate-run, instance.yaml, `generate --check`, the inputs resolve; no credentials
+#   plan      sc-platform-provisioning-<env>: roles gate (the custom roles of this core's
+#             roles.bicep exist; otherwise stop before the approval), host identities, the CAE
+#             networks (an existing CAE keeps its network; otherwise stop before what-if, rule
+#             E17), the record vs `az deployment sub validate`, what-if when new or changed (rule
+#             E19); in the portal host the same for the portal (record portal-{prefix}-<env>, the
+#             Container App's digest); artifact platform_plan; output `changed` (the environment or
+#             the portal)
+#   deploy    deployment job on the environment platform-<env>: its Approval (platform team),
+#             Branch control, Required template and Exclusive lock; pass 1 for a new environment,
+#             saf-jobs import by digest, pass 2, the jobs' digest checked; in the portal host then
+#             the portal (pass 1 when new, saf-portal import and pass 2 once portal.clientId is
+#             set); artifact platform_deploy
+# Approvals, Branch control, Required template and Exclusive lock are checks on the service
+# connection and the environment, created by `platform ado bootstrap`; the templates never
+# implement them.
+
+parameters:
+  - name: environment
+    type: string
+  - name: hostEnvironment
+    type: string
+
+stages:
+  # -------------------------------------------------------------------------------------------
+  # Compile-time guards (an entry that is not a stage makes Azure Pipelines reject the run before
+  # anything is queued). `platform environment validate-run` repeats the checks at runtime.
+  # -------------------------------------------------------------------------------------------
+  - ${{ if eq(parameters.environment, '') }}:
+    - 'SAF template error: parameters.environment is empty': fail
+  - ${{ if eq(parameters.hostEnvironment, '') }}:
+    - 'SAF template error: parameters.hostEnvironment is empty': fail
+
+  - template: templates/platform/stages/validate.yml
+    parameters:
+      environment: ${{ parameters.environment }}
+      hostEnvironment: ${{ parameters.hostEnvironment }}
+
+  - template: templates/platform/stages/plan.yml
+    parameters:
+      environment: ${{ parameters.environment }}
+      hostEnvironment: ${{ parameters.hostEnvironment }}
+
+  - template: templates/platform/stages/deploy.yml
+    parameters:
+      environment: ${{ parameters.environment }}
+      hostEnvironment: ${{ parameters.hostEnvironment }}

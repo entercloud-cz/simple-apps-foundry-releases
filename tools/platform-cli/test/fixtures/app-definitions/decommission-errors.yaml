@@ -1,0 +1,29 @@
+# Negative fixture (ADR-0056): schema-valid, but its decommission block breaks the rules of
+# `platform validate app` (checked with the Contoso example instance, graceDays 30).
+schemaVersion: "1.0-draft"
+slug: demo-app
+title: Demo app
+owner:
+  objectId: 00000000-0000-0000-0000-00000000e001
+  principalType: User
+  email: jane.owner@contoso.com
+deputy:
+  objectId: 00000000-0000-0000-0000-00000000e002
+  principalType: User
+  email: john.deputy@contoso.com
+repository:
+  provider: azureDevOps
+  project: Apps
+  name: demo-app
+authentication:
+  mode: required
+decommission:
+  requestedOn: "2026-11-12"
+  deleteAfter: "2026-11-20"      # 8 days: less than the grace period (decommission-grace)
+  reason: "Replaced by <b>v2</b>" # markup is refused
+  requestedBy:
+    objectId: 00000000-0000-0000-0000-00000000e001
+    displayName: Jane Owner
+environments:
+  nonprod:
+    networkMode: externalOnly

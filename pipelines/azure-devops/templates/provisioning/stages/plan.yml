@@ -1,0 +1,224 @@
+# Stage `plan` (ADR-0048 section 4, ADR-0050): which units of which apps this run runs, and the
+# Entra comparisons that need no landing zone of this run. Deploys nothing.
+#
+# The jobs run one after the other on one agent (ADR-0050: nothing relies on parallel jobs), the
+# host's last:
+#
+# Jobs plan_<env>, one per environment except portal.hostEnvironment, each with only
+# sc-platform-provisioning-<env> (Azure provisioning identity of that environment, ADR-0031):
+# scripts/provisioning/plan.sh reads the state of EVERY app of the environment in a constant number of
+# lists (resource group tags, landing-zone and custom-domain records, Container Apps, platform jobs,
+# the environment vaults' secret attributes, Front Door custom domains and backend ranges) and
+# `platform provisioning plan-facts` turns them into each app's facts and entries; only the apps whose
+# Easy Auth restart the lists can't decide get one more read (their revisions). Artifact plan_<env>
+# (its folder exists from the first step, published with always()).
+#
+# Job decide, after them, with only sc-platform-provisioning-<hostEnvironment> (whose subscription
+# holds the Entra groups, ADR-0033, ADR-0063):
+#   1. plan.sh for hostEnvironment (as above, plus one list of the Entra records per Entra group:
+#      rg-{prefix}-entra-{env} of every environment and rg-{prefix}-entra) -> artifact
+#      plan_<hostEnvironment>;
+#   2. step `decide` (bash, no service connection): scripts/provisioning/decide.sh runs `platform
+#      provisioning plan-units` (core code, this run's files only: plan/apps.json,
+#      plan/unit-inputs.json, every plan_<env>, infra/app/units.json, today's date) -> artifact
+#      `units` (units.json: every unit run or unchanged, why, the tags as read and what record_<env>
+#      writes) and units/registry.json (the registry image purge of the build environments, ADR-0059),
+#      and sets exactly the outputs lz_<env>, post_<env>, record_<env> (every environment),
+#      registry_<env> (every build environment), ado and entraPlan (true | false): the conditions of
+#      the stages after it, read as
+#      dependencies.plan.outputs['decide.decide.<name>']. entraPlan: an entra unit runs together with
+#      its landing zone (a new app, scope all), so its comparison waits for azure_<env> in the stage
+#      entra_plan;
+#   3. scripts/provisioning/entra-plan.sh (phase plan): every other entra unit that runs is compared
+#      here with its record (as the stage entra_plan does) -> units/entra/;
+#   4. step `entraDecide` (bash, no service connection): scripts/provisioning/entra-decide.sh sets
+#      exactly entraNeeded (true | false), read as dependencies.plan.outputs['decide.entraDecide.entraNeeded']
+#      by the stage entra.
+# Rule P19: nothing reads what started the run.
+# TODO(verify) UNIT-6: a later stage reads these outputs also when a job plan_<env> failed (the stage
+# plan is then Failed, decide Succeeded), and a list of settableVariables built with ${{ each }}.
+# TODO(verify) UNIT-7: an empty dependsOn (one environment) and the timings with one parallel job.
+
+parameters:
+  - name: environments
+    type: object
+  - name: hostEnvironment
+    type: string
+
+stages:
+  - stage: plan
+    displayName: Plan the units of every app
+    dependsOn:
+      - validate
+    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'))
+    isSkippable: false
+    # Exclusive lock on the service connections: a newer run waiting for the lock cancels an older
+    # waiting one; safe because every run plans from current state (ADR-0032 decision 10).
+    lockBehavior: runLatest
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - ${{ each env in parameters.environments }}:
+        - ${{ if ne(env.name, parameters.hostEnvironment) }}:
+          - job: plan_${{ env.name }}
+            displayName: Read the state of the apps in ${{ env.name }}
+            pool:
+              name: Azure Pipelines
+              vmImage: ubuntu-24.04
+            timeoutInMinutes: 60
+            steps:
+              - template: ../steps/setup.yml
+                parameters:
+                  tools: [node]
+                  cli: artifact
+                  artifact: plan_${{ env.name }}
+              - task: AzureCLI@2
+                displayName: Read the state of the apps (lists, ADR-0050)
+                inputs:
+                  azureSubscription: sc-platform-provisioning-${{ env.name }}
+                  scriptType: bash
+                  scriptLocation: scriptPath
+                  scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/provisioning/plan.sh
+                  addSpnToEnvironment: false
+                  useGlobalConfig: false
+                  failOnStandardError: false
+                  workingDirectory: $(Pipeline.Workspace)
+                env:
+                  SAF_ENV_NAME: ${{ env.name }}
+                  SAF_PROMOTE_FROM: ${{ env.promoteFrom }}
+                  SAF_SERVICE_CONNECTION: sc-platform-provisioning-${{ env.name }}
+                target:
+                  commands: restricted
+                  settableVariables: none
+              - task: PublishPipelineArtifact@1
+                displayName: Publish plan_${{ env.name }}
+                condition: always()
+                inputs:
+                  targetPath: $(Pipeline.Workspace)/saf-out/plan_${{ env.name }}
+                  artifact: plan_${{ env.name }}
+                  publishLocation: pipeline
+                target:
+                  commands: restricted
+                  settableVariables: none
+      - job: decide
+        displayName: Read ${{ parameters.hostEnvironment }}, decide which units run, compare the Entra registrations
+        dependsOn:
+          - ${{ each env in parameters.environments }}:
+            - ${{ if ne(env.name, parameters.hostEnvironment) }}:
+              - plan_${{ env.name }}
+        # After a failed plan_<env> too: its apps are then not planned there (nothing runs for them,
+        # report fails the run), the other environments go on.
+        condition: not(canceled())
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 60
+        steps:
+          - template: ../steps/setup.yml
+            parameters:
+              tools: [node, bicep]
+              cli: artifact
+              artifact: units
+              alsoArtifact: plan_${{ parameters.hostEnvironment }}
+          - template: ../steps/download.yml
+            parameters:
+              artifacts:
+                - ${{ each env in parameters.environments }}:
+                  - ${{ if ne(env.name, parameters.hostEnvironment) }}:
+                    - plan_${{ env.name }}
+          - ${{ each env in parameters.environments }}:
+            - ${{ if eq(env.name, parameters.hostEnvironment) }}:
+              - task: AzureCLI@2
+                displayName: Read the state of the apps in ${{ parameters.hostEnvironment }} (lists, ADR-0050)
+                inputs:
+                  azureSubscription: sc-platform-provisioning-${{ parameters.hostEnvironment }}
+                  scriptType: bash
+                  scriptLocation: scriptPath
+                  scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/provisioning/plan.sh
+                  addSpnToEnvironment: false
+                  useGlobalConfig: false
+                  failOnStandardError: false
+                  workingDirectory: $(Pipeline.Workspace)
+                env:
+                  SAF_ENV_NAME: ${{ parameters.hostEnvironment }}
+                  SAF_PROMOTE_FROM: ${{ env.promoteFrom }}
+                  SAF_SERVICE_CONNECTION: sc-platform-provisioning-${{ parameters.hostEnvironment }}
+                target:
+                  commands: restricted
+                  settableVariables: none
+          # After a failed read too (an app that could not be planned fails plan.sh at its end): its
+          # apps are then not planned there, the others go on.
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/provisioning/decide.sh"
+            name: decide
+            displayName: Decide which units run
+            condition: succeededOrFailed()
+            env:
+              SAF_ENVIRONMENTS_JSON: ${{ convertToJson(parameters.environments) }}
+              SAF_HOST_ENVIRONMENT: ${{ parameters.hostEnvironment }}
+            target:
+              commands: restricted
+              settableVariables:
+                - ado
+                - entraPlan
+                - ${{ each env in parameters.environments }}:
+                  - lz_${{ env.name }}
+                  - post_${{ env.name }}
+                  - record_${{ env.name }}
+                  # The registry image purge of a build environment (ADR-0059).
+                  - ${{ if eq(format('{0}', env.promoteFrom), '') }}:
+                    - registry_${{ env.name }}
+          # The Entra comparisons of the entra units whose landing zone doesn't run in this run
+          # (ADR-0050); nothing to do -> it ends before any Bicep or Azure call.
+          - task: AzureCLI@2
+            displayName: Compare the Entra registrations with their records
+            condition: succeededOrFailed()
+            inputs:
+              azureSubscription: sc-platform-provisioning-${{ parameters.hostEnvironment }}
+              scriptType: bash
+              scriptLocation: scriptPath
+              scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/provisioning/entra-plan.sh
+              addSpnToEnvironment: false
+              useGlobalConfig: false
+              failOnStandardError: false
+              workingDirectory: $(Pipeline.Workspace)
+            env:
+              SAF_ENV_NAME: ${{ parameters.hostEnvironment }}
+              SAF_ENVIRONMENTS_JSON: ${{ convertToJson(parameters.environments) }}
+              SAF_SERVICE_CONNECTION: sc-platform-provisioning-${{ parameters.hostEnvironment }}
+              SAF_ENTRA_PHASE: plan
+            target:
+              commands: restricted
+              settableVariables: none
+          # Runs after a failed comparison too: entra-needed.txt then lists only the apps that were
+          # compared, or is missing (false), so nothing unplanned is ever deployed.
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/provisioning/entra-decide.sh"
+            name: entraDecide
+            displayName: Decide whether the Entra stage runs
+            condition: always()
+            env:
+              SAF_ENTRA_PHASE: plan
+            target:
+              commands: restricted
+              settableVariables:
+                - entraNeeded
+          - task: PublishPipelineArtifact@1
+            displayName: Publish plan_${{ parameters.hostEnvironment }}
+            condition: always()
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/plan_${{ parameters.hostEnvironment }}
+              artifact: plan_${{ parameters.hostEnvironment }}
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: PublishPipelineArtifact@1
+            displayName: Publish units
+            condition: always()
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/units
+              artifact: units
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none

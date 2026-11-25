@@ -1,0 +1,11 @@
+{
+  "rule": "P06",
+  "description": "A parameter file variable is assigned once, in prov-lib.sh (never from an artifact).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "plan=\"\"\n",
+      "replace": "plan=\"\"\nprov_entra_param=\"$SAF_IN/entra_plan/app-registration.bicepparam\"\n"
+    }
+  ]
+}

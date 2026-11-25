@@ -1,0 +1,61 @@
+# Common last steps of the deployment jobs (deploy.yml, promote.yml): the run summary, the
+# artifact release-result-<env> (read by the stages that promote from this environment) and the
+# deploy event for the portal.
+#
+# The summary is uploaded by its own step: task.uploadsummary is not allowed in restricted mode,
+# and this step prints only the fixed command line below. No `settableVariables` (rule T22).
+
+parameters:
+  - name: app
+    type: object
+  - name: environment
+    type: object
+
+steps:
+  - bash: |
+      set -euo pipefail
+      summary="$PIPELINE_WORKSPACE/saf-out/release-result/summary.md"
+      if [ -f "$summary" ]; then
+        echo "##vso[task.uploadsummary]$summary"
+      fi
+    displayName: Upload run summary
+    condition: succeededOrFailed()
+    target:
+      commands: any
+  - task: PublishPipelineArtifact@1
+    displayName: Publish release-result-${{ parameters.environment.name }}
+    condition: succeededOrFailed()
+    inputs:
+      targetPath: $(Pipeline.Workspace)/saf-out/release-result
+      artifact: release-result-${{ parameters.environment.name }}
+      publishLocation: pipeline
+    target:
+      commands: restricted
+  # Deploy event for the portal (ADR-0037): the last step, after release-result-<env> exists, so
+  # the portal can read it back. Same service connection as the job's deploy step (the delivery
+  # identity), never the job token. scripts/report.sh reads portal.clientId and portal.apiBaseUrl
+  # from instance.yaml and skips with one log line when either is missing. It never fails the run:
+  # the script always exits 0, continueOnError covers a failed login before it, and the timeout a
+  # portal that hangs (4 attempts of at most 30 s, waits 10/30/60 s). succeededOrFailed(): a failed
+  # deploy is reported too, a canceled one is not (the portal's poll picks it up). Rule T30.
+  - task: AzureCLI@2
+    displayName: Report the deploy to the portal
+    condition: succeededOrFailed()
+    continueOnError: true
+    timeoutInMinutes: 5
+    inputs:
+      azureSubscription: sc-${{ parameters.app.slug }}-${{ parameters.environment.name }}
+      scriptType: bash
+      scriptLocation: scriptPath
+      scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/report.sh
+      addSpnToEnvironment: false
+      useGlobalConfig: false
+      failOnStandardError: false
+      workingDirectory: $(Pipeline.Workspace)
+    env:
+      SAF_SLUG: ${{ parameters.app.slug }}
+      SAF_ENV_NAME: ${{ parameters.environment.name }}
+      SAF_SERVICE_CONNECTION: sc-${{ parameters.app.slug }}-${{ parameters.environment.name }}
+      SAF_JOB_STATUS: $(Agent.JobStatus)
+    target:
+      commands: restricted

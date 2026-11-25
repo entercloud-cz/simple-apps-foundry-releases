@@ -1,0 +1,11 @@
+{
+  "rule": "P20",
+  "description": "The custom domain is deployed only in azure-post.sh front_door_step().",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "  prov_write_frontdoor_entry \"$out\"\n",
+      "replace": "  prov_write_frontdoor_entry \"$out\"\n  prov_arm create frontdoor \"$dir/frontdoor.json\" \"fd-$slug-$env_name\" \"$rg\" \"$dir/fd.json\"\n"
+    }
+  ]
+}

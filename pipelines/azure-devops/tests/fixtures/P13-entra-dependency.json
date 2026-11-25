@@ -1,0 +1,11 @@
+{
+  "rule": "P13",
+  "description": "azure_post_<env> waits for stage entra (a new registration's client ID).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure-post.yml",
+      "find": "      - entra_plan\n      - entra\n",
+      "replace": "      - entra_plan\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "T16",
+  "description": "A job on another agent image is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/verify.yml",
+      "find": "        displayName: Build and check (untrusted)\n        dependsOn: prepare\n        pool:\n          name: Azure Pipelines\n          vmImage: ubuntu-24.04\n",
+      "replace": "        displayName: Build and check (untrusted)\n        dependsOn: prepare\n        pool:\n          name: Azure Pipelines\n          vmImage: ubuntu-latest\n"
+    }
+  ]
+}

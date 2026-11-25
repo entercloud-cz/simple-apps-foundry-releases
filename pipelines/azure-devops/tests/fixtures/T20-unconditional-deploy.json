@@ -1,0 +1,11 @@
+{
+  "rule": "T20",
+  "description": "A deploy stage without the decide condition is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/deploy.yml",
+      "find": "    condition: and(succeeded(), eq(dependencies.verify.outputs['scan.decide.deployBuildEnvironments'], 'true'))\n",
+      "replace": "    condition: succeeded()\n"
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+# Fixture: a two-environment instance shaped like the sandbox the provisioning inputs were
+# checked against (nonprod External only on the managed network, prod a promotion environment
+# with the VNet variant). Placeholder IDs only.
+schemaVersion: "1.0-draft"
+coreVersion: v0.1.0-rc.3
+productName: SAF
+tenantId: 00000000-0000-0000-0000-000000000001
+defaultRegion: westeurope
+naming:
+  prefix: contoso
+scm:
+  provider: azureDevOps
+  azureDevOps:
+    organizationUrl: https://dev.azure.com/contoso
+    platformProject: Platform
+    platformConfigRepo: platform-config
+    appsProject: Apps
+environments:
+  - name: nonprod
+    kind: nonprod
+    subscriptionId: 00000000-0000-0000-0000-00000000a001
+    networkModes:
+      externalOnly:
+        network: managed
+  - name: prod
+    kind: prod
+    promoteFrom: nonprod
+    subscriptionId: 00000000-0000-0000-0000-00000000a001
+    networkModes:
+      externalOnly:
+        network: vnet
+        vnetAddressSpace: 10.20.0.0/24
+        caeSubnetPrefix: 10.20.0.0/25
+        privateEndpointSubnetPrefix: 10.20.0.128/26
+portal:
+  hostEnvironment: prod
+  network:
+    vnetAddressSpace: 10.20.2.0/24
+    caeSubnetPrefix: 10.20.2.0/25
+    privateEndpointSubnetPrefix: 10.20.2.128/26
+platformAdmins:
+  objectId: 00000000-0000-0000-0000-00000000c001
+approvals:
+  platformTeam:
+    objectId: 00000000-0000-0000-0000-00000000c002
+  prodDeployApprovers: platformTeam
+authentication:
+  enforcement: required
+  defaultAppRoles: [Reader, Editor, Admin]
+data:
+  postgres:
+    enabled: true
+    version: "16"
+    cpuCreditAlert: true
+    sizes:
+      S: { sku: Standard_B1ms, tier: Burstable, storageGb: 32 }
+      M: { sku: Standard_B2s, tier: Burstable, storageGb: 64 }
+      L: { sku: Standard_D2ds_v5, tier: GeneralPurpose, storageGb: 128 }
+  azureSql:
+    enabled: true
+    sizes:
+      S: { sku: S0, storageGb: 250 }
+      M: { sku: S2, storageGb: 250 }
+    backupStorageRedundancy:
+      prod: Local
+      nonprod: Local
+  storage:
+    enabled: true
+    prodRedundancy: LRS
+    nonprodRedundancy: LRS
+    protection:
+      softDeleteDaysProd: 7
+      softDeleteDaysNonprod: 7
+      pointInTimeRestore: true
+  backup:
+    retentionDaysProd: 7
+    retentionDaysNonprod: 7
+    geoRedundantProd: false
+budgets:
+  mode: optional
+  defaultMonthlyAmount: 20
+  notifyAtPercent: [80, 100]
+  forecastNotifyAtPercent: [100]
+observability:
+  logRetentionDays: 30
+  defaultAlerts: true

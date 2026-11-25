@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The uniqueName entra-delete gets takes the app's incarnation (ADR-0061): a later app with a deleted app's slug deletes its own registration, never the first one's.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  [ \"$incarnation\" = 0 ] || expected+=\"--i$incarnation\"\n",
+      "replace": ""
+    }
+  ]
+}

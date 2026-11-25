@@ -1,0 +1,10 @@
+{
+  "rule": "P06",
+  "description": "az bicep build-params runs only in prov_entra_expected().",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra-plan.sh",
+      "append": "\nSAF_ENTRA_JSON=\"{}\" az bicep build-params --file \"$prov_entra_param\" --stdout > /dev/null\n"
+    }
+  ]
+}

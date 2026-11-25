@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The old Entra record in rg-{prefix}-entra is deleted only after the registration's deployment into its environment's records group succeeded (ADR-0063).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  prov_arm create entra \"$inputs\" \"$entra_name\" \"$entra_rg\" \"$PROV_DIR/deployment.json\"\n  if [ \"$target\" = environment ]; then retire_instance_record \"$app_env\"; fi\n",
+      "replace": "  if [ \"$target\" = environment ]; then retire_instance_record \"$app_env\"; fi\n  prov_arm create entra \"$inputs\" \"$entra_name\" \"$entra_rg\" \"$PROV_DIR/deployment.json\"\n"
+    }
+  ]
+}

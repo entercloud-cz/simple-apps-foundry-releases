@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "The step decide runs after a failed read of the host too (its apps are then not planned there).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/plan.yml",
+      "find": "            name: decide\n            displayName: Decide which units run\n            condition: succeededOrFailed()\n",
+      "replace": "            name: decide\n            displayName: Decide which units run\n"
+    }
+  ]
+}

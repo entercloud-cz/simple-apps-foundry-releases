@@ -1,0 +1,11 @@
+{
+  "rule": "P01",
+  "description": "Root variables in the provisioning entry point are rejected.",
+  "patches": [
+    {
+      "file": "app-provisioning.yml",
+      "find": "\nstages:\n",
+      "replace": "\nvariables:\n  - name: x\n    value: y\n\nstages:\n"
+    }
+  ]
+}

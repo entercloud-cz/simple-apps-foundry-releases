@@ -1,0 +1,11 @@
+{
+  "rule": "E06",
+  "description": "The deployment job runs on another environment than platform-<env> (its Approval).",
+  "patches": [
+    {
+      "file": "templates/platform/stages/deploy.yml",
+      "find": "        environment: platform-${{ parameters.environment }}\n",
+      "replace": "        environment: shared-gate\n"
+    }
+  ]
+}

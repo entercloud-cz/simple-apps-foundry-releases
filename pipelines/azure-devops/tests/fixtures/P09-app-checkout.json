@@ -1,0 +1,11 @@
+{
+  "rule": "P09",
+  "description": "Provisioning never checks out an app repository.",
+  "patches": [
+    {
+      "file": "templates/provisioning/steps/setup.yml",
+      "find": "  - checkout: self\n    path: s/config\n",
+      "replace": "  - checkout: app\n    path: s/app\n"
+    }
+  ]
+}

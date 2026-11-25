@@ -1,0 +1,11 @@
+{
+  "rule": "P18",
+  "description": "SAF_ARM_TOKEN is unset right after dbinit.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  unset SAF_ARM_TOKEN\n",
+      "replace": ""
+    }
+  ]
+}

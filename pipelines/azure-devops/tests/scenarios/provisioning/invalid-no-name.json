@@ -1,0 +1,21 @@
+{
+  "description": "Empty name.",
+  "entry": "app-provisioning.yml",
+  "parameters": {
+    "environments": [
+      {
+        "name": "",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      }
+    ],
+    "hostEnvironment": "nonprod",
+    "scope": "changed",
+    "upgrade": "none"
+  },
+  "expect": {
+    "errors": [
+      "an environment has no name"
+    ]
+  }
+}

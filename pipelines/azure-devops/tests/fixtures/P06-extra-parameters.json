@@ -1,0 +1,11 @@
+{
+  "rule": "P06",
+  "description": "Extra --parameters next to landing-zone.bicepparam are rejected.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "          --parameters \"$prov_lz_param\" --only-show-errors --output json > \"$out\" 2> \"$err\"\n        ;;\n      validate/release)",
+      "replace": "          --parameters \"$prov_lz_param\" --parameters budget=null --only-show-errors --output json > \"$out\" 2> \"$err\"\n        ;;\n      validate/release)"
+    }
+  ]
+}

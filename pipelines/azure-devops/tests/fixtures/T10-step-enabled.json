@@ -1,0 +1,11 @@
+{
+  "rule": "T10",
+  "description": "`enabled: false` switches a step off (here the prod scan gate) and is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/promote.yml",
+      "find": "                    displayName: Prod scan gate (instance.yaml scanning)\n",
+      "replace": "                    displayName: Prod scan gate (instance.yaml scanning)\n                    enabled: false\n"
+    }
+  ]
+}

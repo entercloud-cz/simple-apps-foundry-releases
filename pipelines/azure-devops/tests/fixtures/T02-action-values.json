@@ -1,0 +1,11 @@
+{
+  "rule": "T02",
+  "description": "An action outside deliver|redeploy (or no values list) is rejected.",
+  "patches": [
+    {
+      "file": "app-delivery.yml",
+      "find": "    values:\n      - deliver\n      - redeploy\n",
+      "replace": "    values:\n      - deliver\n      - redeploy\n      - skipchecks\n"
+    }
+  ]
+}

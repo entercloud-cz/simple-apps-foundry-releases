@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "record_<env> deletes a decommissioned app's landing-zone record only once its service connection is recorded gone (sandbox run 3421, ADR-0056 amendment 2026-11-12); without that check the record could go while a connection is left.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/record.sh",
+      "find": "  if [ \"$(jq -r --arg k \"connection-$env_name\" '.detail[$k] // \"\"' \"$(prov_status_path \"$SAF_IN/ado\" \"$slug\")\" 2> /dev/null)\" != gone ]; then\n    saf_info \"  $slug in $env_name: its service connection isn't deleted yet; the record $lz_name stays (the next run deletes the connection, then the record)\"\n    return 0\n  fi\n",
+      "replace": ""
+    }
+  ]
+}

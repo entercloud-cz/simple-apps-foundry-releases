@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "plan_<env> reads with its own environment's connection only.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/plan.yml",
+      "find": "                  SAF_ENV_NAME: ${{ env.name }}\n",
+      "replace": "                  SAF_ENV_NAME: ${{ env.name }}\n                  SAF_SCOPE_ALL: 'false'\n"
+    }
+  ]
+}

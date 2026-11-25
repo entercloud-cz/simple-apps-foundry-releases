@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "No template runs the Easy Auth secret step.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra.yml",
+      "find": "          - task: PublishPipelineArtifact@1\n",
+      "replace": "          - bash: node \"$PIPELINE_WORKSPACE/s/core/tools/platform-cli/dist/src/cli.js\" provisioning easyauth-secret --output x.json\n            target:\n              commands: restricted\n              settableVariables: none\n          - task: PublishPipelineArtifact@1\n"
+    }
+  ]
+}

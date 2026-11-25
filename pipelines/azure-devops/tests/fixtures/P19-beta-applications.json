@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "Graph's beta applications endpoint counts as a credential change too.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  unset SAF_GRAPH_TOKEN SAF_ARM_TOKEN\n",
+      "replace": "  unset SAF_GRAPH_TOKEN SAF_ARM_TOKEN\n  az rest --method get --url \"$graph_host/beta/applications/$app_object_id\" --output none\n"
+    }
+  ]
+}

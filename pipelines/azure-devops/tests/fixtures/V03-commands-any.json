@@ -1,0 +1,11 @@
+{
+  "rule": "V03",
+  "description": "Every validation step is restricted.",
+  "patches": [
+    {
+      "file": "platform-validation.yml",
+      "find": "platform-validation.sh\"\n            displayName: Validate instance.yaml, apps/*/app.yaml and generated files\n            target:\n              commands: restricted\n",
+      "replace": "platform-validation.sh\"\n            displayName: Validate instance.yaml, apps/*/app.yaml and generated files\n            target:\n              commands: any\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "T16",
+  "description": "Provisioning jobs run on ubuntu-24.04.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/report.yml",
+      "find": "      - job: report\n        displayName: Status of every app\n        pool:\n          name: Azure Pipelines\n          vmImage: ubuntu-24.04\n",
+      "replace": "      - job: report\n        displayName: Status of every app\n        pool:\n          name: Azure Pipelines\n          vmImage: ubuntu-22.04\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "T13",
+  "description": "Fetching the 1 GB Java DB for every image is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/verify.yml",
+      "find": "            displayName: Verify and install the Trivy Java DB (sha256, max age)\n            condition: and(succeeded(), eq(variables['SAF_SCAN_JAVA'], 'true'))\n",
+      "replace": "            displayName: Verify and install the Trivy Java DB (sha256, max age)\n"
+    }
+  ]
+}

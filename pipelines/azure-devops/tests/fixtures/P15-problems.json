@@ -1,0 +1,11 @@
+{
+  "rule": "P15",
+  "description": "app.yaml problems are printed only through saf_neutralise.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/validate.sh",
+      "find": "'.apps[] | select(.slug == $s) | .problems[]? | \"  \\(.)\"' \"$out/apps.json\" | saf_neutralise",
+      "replace": "'.apps[] | select(.slug == $s) | .problems[]? | \"  \\(.)\"' \"$out/apps.json\""
+    }
+  ]
+}

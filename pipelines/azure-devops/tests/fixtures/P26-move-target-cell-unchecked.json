@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The move deletes the app only when the plan's target cell is app.yaml's (ADR-0053, ADR-0060 amendment 2026-11-16): the landing zone and the release create it in app.yaml's cell, so a plan naming another one would leave it in a CAE the move didn't check.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  [ \"$to_cell\" = \"$(prov_app_cell \"$slug\" \"$env_name\")\" ] || saf_die \"the plan moves $slug in $env_name into another capacity cell than app.yaml names\"\n",
+      "replace": "  true\n"
+    }
+  ]
+}

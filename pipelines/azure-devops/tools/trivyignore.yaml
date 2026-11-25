@@ -1,0 +1,4 @@
+# Platform-owned Trivy ignore file (ADR-0024). Deliberately empty: scan.sh passes it with
+# --ignorefile so an app repo's .trivyignore is never read. Accepting a finding is a reviewed core
+# change (or, later, a portal exception), never a file in the app repo.
+vulnerabilities: []

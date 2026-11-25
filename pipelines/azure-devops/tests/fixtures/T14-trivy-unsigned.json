@@ -1,0 +1,11 @@
+{
+  "rule": "T14",
+  "description": "Trivy without Sigstore verification is rejected.",
+  "patches": [
+    {
+      "file": "tools/tools.json",
+      "find": "\"sigstore\": {\n        \"bundleUrl\": \"https://github.com/aquasecurity",
+      "replace": "\"signature\": {\n        \"bundleUrl\": \"https://github.com/aquasecurity"
+    }
+  ]
+}

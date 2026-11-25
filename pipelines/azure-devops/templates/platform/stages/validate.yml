@@ -1,0 +1,43 @@
+# Stage `validate` of the platform pipeline (ADR-0043): no service connection, no Azure or ADO call.
+# scripts/platform/validate.sh: validate-run, `platform validate instance`, `generate --check`, and
+# the environment's inputs resolve. Any problem fails the stage, and then nothing else runs.
+
+parameters:
+  - name: environment
+    type: string
+  - name: hostEnvironment
+    type: string
+
+stages:
+  - stage: validate
+    displayName: Validate the run and instance.yaml
+    dependsOn: []
+    isSkippable: false
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - job: validate
+        displayName: Validate run, instance.yaml and inputs
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 20
+        variables:
+          # The core ref as a runtime expression, mapped into the step environment below; never a
+          # macro in script text.
+          - name: saf.coreRef
+            value: $[ resources.repositories.core.ref ]
+        steps:
+          - template: ../../provisioning/steps/setup.yml
+            parameters:
+              tools: [node]
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/platform/validate.sh"
+            displayName: Validate run, instance.yaml and inputs
+            env:
+              SAF_ENV_NAME: ${{ parameters.environment }}
+              SAF_HOST_ENVIRONMENT: ${{ parameters.hostEnvironment }}
+              SAF_CORE_REF: $(saf.coreRef)
+            target:
+              commands: restricted
+              settableVariables: none

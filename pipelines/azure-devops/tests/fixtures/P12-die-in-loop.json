@@ -1,0 +1,11 @@
+{
+  "rule": "P12",
+  "description": "Nothing in the app loop may stop the other apps.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "      prov_skip \"$slug\" \"its landing zone in $source_env is not ok\"\n      continue\n",
+      "replace": "      saf_die \"$slug is not ok in $source_env\"\n"
+    }
+  ]
+}

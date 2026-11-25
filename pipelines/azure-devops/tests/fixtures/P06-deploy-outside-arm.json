@@ -1,0 +1,10 @@
+{
+  "rule": "P06",
+  "description": "Deployments run only inside prov_arm().",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "append": "\nprov_entra_quick() {\n  az deployment group create --resource-group \"$1\" --name \"$2\" --parameters \"$prov_entra_param\"\n}\n"
+    }
+  ]
+}

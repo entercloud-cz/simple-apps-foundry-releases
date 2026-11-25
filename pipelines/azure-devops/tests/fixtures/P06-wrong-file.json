@@ -1,0 +1,11 @@
+{
+  "rule": "P06",
+  "description": "The landing zone deploys only through infra/app/provisioning/landing-zone.bicepparam.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "prov_lz_param=\"$SAF_CORE/infra/app/provisioning/landing-zone.bicepparam\"",
+      "replace": "prov_lz_param=\"$SAF_CONFIG/apps/landing-zone.bicepparam\""
+    }
+  ]
+}

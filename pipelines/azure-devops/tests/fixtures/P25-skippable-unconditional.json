@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "The artifact of a stage that may be skipped is downloaded only when its job ran.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/record.yml",
+      "find": "              artifacts:\n                - units\n              optional:\n                - azure_${{ parameters.environment.name }}\n",
+      "replace": "              artifacts:\n                - units\n                - azure_${{ parameters.environment.name }}\n              optional:\n"
+    }
+  ]
+}

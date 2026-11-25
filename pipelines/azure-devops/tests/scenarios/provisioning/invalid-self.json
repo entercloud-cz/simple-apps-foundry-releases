@@ -1,0 +1,26 @@
+{
+  "description": "prod promotes from itself.",
+  "entry": "app-provisioning.yml",
+  "parameters": {
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      },
+      {
+        "name": "prod",
+        "kind": "prod",
+        "promoteFrom": "prod"
+      }
+    ],
+    "hostEnvironment": "nonprod",
+    "scope": "changed",
+    "upgrade": "none"
+  },
+  "expect": {
+    "errors": [
+      "an environment cannot promote from itself"
+    ]
+  }
+}

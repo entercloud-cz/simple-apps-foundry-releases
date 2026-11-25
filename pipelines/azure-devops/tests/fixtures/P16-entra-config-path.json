@@ -1,0 +1,11 @@
+{
+  "rule": "P16",
+  "description": "entra.sh must run from the core checkout, not from platform-config (s/config).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra.yml",
+      "find": "              scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/provisioning/entra.sh\n",
+      "replace": "              scriptPath: $(Pipeline.Workspace)/s/config/pipelines/azure-devops/scripts/provisioning/entra.sh\n"
+    }
+  ]
+}

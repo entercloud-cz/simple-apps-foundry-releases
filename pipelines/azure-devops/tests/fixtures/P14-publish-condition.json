@@ -1,0 +1,11 @@
+{
+  "rule": "P14",
+  "description": "Statuses are published even when the job failed or timed out.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure.yml",
+      "find": "            displayName: Publish azure_${{ parameters.environment.name }}\n            condition: always()\n",
+      "replace": "            displayName: Publish azure_${{ parameters.environment.name }}\n            condition: succeededOrFailed()\n"
+    }
+  ]
+}

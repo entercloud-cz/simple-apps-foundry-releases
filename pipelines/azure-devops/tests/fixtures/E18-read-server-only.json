@@ -1,0 +1,11 @@
+{
+  "rule": "E18",
+  "description": "plat_former_db_read() reads only the server, so the postgres zone a failed pass 1 left behind (no server) would never be removed.",
+  "patches": [
+    {
+      "file": "scripts/platform/plat-lib.sh",
+      "find": "  for pair in \"$2|Microsoft.DBforPostgreSQL/flexibleServers\" \"$3|Microsoft.Network/privateDnsZones\"; do\n",
+      "replace": "  for pair in \"$2|Microsoft.DBforPostgreSQL/flexibleServers\"; do\n"
+    }
+  ]
+}

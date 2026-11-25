@@ -1,0 +1,11 @@
+{
+  "rule": "E18",
+  "description": "deploy_portal() removes the former database whether or not the approved plan names it.",
+  "patches": [
+    {
+      "file": "scripts/platform/deploy.sh",
+      "find": "    if [ -n \"$former_p\" ]; then\n",
+      "replace": "    if true; then\n"
+    }
+  ]
+}
