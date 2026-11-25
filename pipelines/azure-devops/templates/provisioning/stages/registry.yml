@@ -1,0 +1,81 @@
+# Stage `registry_<env>`: the registry image purge of ONE build environment (no promoteFrom;
+# app-provisioning.yml includes this stage for those environments only), ADR-0059. Service connection
+# sc-platform-provisioning-<env> only, as in azure.yml: the environment's provisioning identity holds
+# Container Registry Repository Contributor on each app's registry there (landing-zone.bicep, assigned
+# to the deploying identity; the delivery identity has no delete right). Runs only when the plan
+# purges an app here (output registry_<env> of stage plan: inside the maintenance window,
+# maintenance.registryRetention.mode not off, the app's last purge at least 7 days old), after
+# azure_post_<env>, so this run's releases are deployed before what the apps run is read again.
+#
+# scripts/provisioning/registry.sh, per app units/registry.json purges here: its registry by the
+# landing-zone record, checked to be in the app's resource group by naming; what its Container App
+# runs now, with what the plan read in every environment of the app; the manifests of its repository;
+# `platform provisioning registry-purge` decides; mode purge deletes them by digest (dryRun: reports
+# only); the tag saf-registry-purge on the app's group. Nothing of any app's provisioning depends on
+# this stage; a failed app fails the stage at its end, keeps its old tag, and the next window tries
+# again.
+# Artifact registry_<env> (created by the first step, published with always()): status/{slug}.{env}.json
+# with the counts (purge, images, kept, deleted or wouldDelete), read by report.
+
+parameters:
+  - name: environment
+    type: object
+
+stages:
+  - stage: registry_${{ parameters.environment.name }}
+    displayName: Old images ${{ parameters.environment.name }}
+    dependsOn:
+      - validate
+      - plan
+      - azure_post_${{ parameters.environment.name }}
+    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'), eq(dependencies.plan.outputs['decide.decide.registry_${{ parameters.environment.name }}'], 'true'))
+    isSkippable: false
+    lockBehavior: runLatest
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - job: purge
+        displayName: Purge old images in ${{ parameters.environment.name }}
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 60
+        steps:
+          - template: ../steps/setup.yml
+            parameters:
+              tools: [node]
+              cli: artifact
+              artifact: registry_${{ parameters.environment.name }}
+          - template: ../steps/download.yml
+            parameters:
+              artifacts:
+                - units
+          - task: AzureCLI@2
+            displayName: Purge old images (ADR-0059)
+            inputs:
+              azureSubscription: sc-platform-provisioning-${{ parameters.environment.name }}
+              scriptType: bash
+              scriptLocation: scriptPath
+              scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/provisioning/registry.sh
+              addSpnToEnvironment: false
+              useGlobalConfig: false
+              failOnStandardError: false
+              workingDirectory: $(Pipeline.Workspace)
+            env:
+              SAF_ENV_NAME: ${{ parameters.environment.name }}
+              SAF_PROMOTE_FROM: ${{ parameters.environment.promoteFrom }}
+              SAF_SERVICE_CONNECTION: sc-platform-provisioning-${{ parameters.environment.name }}
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: PublishPipelineArtifact@1
+            displayName: Publish registry_${{ parameters.environment.name }}
+            condition: always()
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/registry_${{ parameters.environment.name }}
+              artifact: registry_${{ parameters.environment.name }}
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none

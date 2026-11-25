@@ -1,0 +1,11 @@
+{
+  "rule": "P07",
+  "description": "The decide step sets exactly entraNeeded.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra-plan.yml",
+      "find": "              settableVariables:\n                - entraNeeded\n",
+      "replace": "              settableVariables:\n                - entraNeeded\n                - saf.entraResult\n"
+    }
+  ]
+}

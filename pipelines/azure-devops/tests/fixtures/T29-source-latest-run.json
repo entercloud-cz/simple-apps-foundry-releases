@@ -1,0 +1,11 @@
+{
+  "rule": "T29",
+  "description": "Downloading the latest run instead of sourceRunId is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/source.yml",
+      "find": "                  buildVersionToDownload: specific\n                  pipelineId: ${{ parameters.sourceRunId }}\n                  artifactName: release-manifest\n",
+      "replace": "                  buildVersionToDownload: latest\n                  artifactName: release-manifest\n"
+    }
+  ]
+}

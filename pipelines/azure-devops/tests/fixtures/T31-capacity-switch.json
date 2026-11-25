@@ -1,0 +1,11 @@
+{
+  "rule": "T31",
+  "description": "The capacity reservation can't become a template switch: no delivery template names it.",
+  "patches": [
+    {
+      "file": "app-delivery.yml",
+      "find": "  - ${{ if eq(length(parameters.environments), 0) }}:\n",
+      "replace": "  - ${{ if eq(format('{0}', parameters.environments[0].capacity.size), 'l') }}:\n    - 'SAF template error: large apps skip the checks': fail\n  - ${{ if eq(length(parameters.environments), 0) }}:\n"
+    }
+  ]
+}

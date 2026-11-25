@@ -1,0 +1,11 @@
+{
+  "rule": "P12",
+  "description": "Nothing in entra.sh's registration loop may stop the other registrations.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  e=\"${t#*.}\"\n",
+      "replace": "  e=\"${t#*.}\"\n  prov_valid_env \"$e\" || saf_die \"invalid environment $e\"\n"
+    }
+  ]
+}

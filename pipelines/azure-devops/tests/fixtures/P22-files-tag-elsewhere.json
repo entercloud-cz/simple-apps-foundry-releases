@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "saf-u-files is written only by record.sh and prov_tags_restore.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "prov_parallel\nfor slug",
+      "replace": "az tag update --resource-id x --operation merge --tags saf-u-files=000000000000\nprov_parallel\nfor slug"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "An ARM write through az rest whose URL holds no /restart literal is caught: az rest writes only the template hash and the restart.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "  prov_write_frontdoor_entry \"$out\"\n",
+      "replace": "  prov_write_frontdoor_entry \"$out\"\n  action=restart\n  az rest --method post --url \"$app_id/revisions/$rev/$action?api-version=2024-03-01\"\n"
+    }
+  ]
+}

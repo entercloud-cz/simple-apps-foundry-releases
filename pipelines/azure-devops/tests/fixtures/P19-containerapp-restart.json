@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "az containerapp revision restart is a restart too, and only azure-post.sh restarts.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  unset SAF_GRAPH_TOKEN SAF_ARM_TOKEN\n",
+      "replace": "  unset SAF_GRAPH_TOKEN SAF_ARM_TOKEN\n  az containerapp revision restart -g \"$rg\" -n \"$app\" --revision \"$rev\"\n"
+    }
+  ]
+}

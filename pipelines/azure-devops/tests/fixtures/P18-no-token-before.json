@@ -1,0 +1,11 @@
+{
+  "rule": "P18",
+  "description": "prov_arm_token runs right before dbinit.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  prov_arm_token\n  saf_cli provisioning dbinit",
+      "replace": "  prov_arm_token\n  saf_info \"  starting dbinit\"\n  saf_cli provisioning dbinit"
+    }
+  ]
+}

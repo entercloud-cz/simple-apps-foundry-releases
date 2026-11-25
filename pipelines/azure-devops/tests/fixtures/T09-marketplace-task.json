@@ -1,0 +1,11 @@
+{
+  "rule": "T09",
+  "description": "A task outside the allowlist is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/verify.yml",
+      "find": "          - task: Cache@2\n",
+      "replace": "          - task: SomeVendorTrivy@1\n"
+    }
+  ]
+}

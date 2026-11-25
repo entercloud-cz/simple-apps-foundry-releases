@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "The token may only be masked and written to the header file.",
+  "patches": [
+    {
+      "file": "scripts/report.sh",
+      "find": "unset token\n",
+      "replace": "printf '%s' \"$token\" > \"$work/token\"\nunset token\n"
+    }
+  ]
+}

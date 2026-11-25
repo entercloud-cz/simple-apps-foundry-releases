@@ -1,0 +1,13 @@
+# Tool settings. Dependencies are pinned in requirements*.txt.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+extend-exclude = [".agents", ".claude"] # skill examples for AI agents, not app code
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = ["S101", "S104"] # asserts in tests; binding 0.0.0.0 is required in a container

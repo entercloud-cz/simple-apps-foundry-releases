@@ -1,0 +1,11 @@
+{
+  "rule": "T25",
+  "description": "The promote job's az login must stay in its step (useGlobalConfig: false).",
+  "patches": [
+    {
+      "file": "templates/stages/promote.yml",
+      "find": "                    scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/deploy.sh\n                    addSpnToEnvironment: false\n                    useGlobalConfig: false\n",
+      "replace": "                    scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/deploy.sh\n                    addSpnToEnvironment: false\n                    useGlobalConfig: true\n"
+    }
+  ]
+}

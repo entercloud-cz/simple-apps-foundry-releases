@@ -1,0 +1,356 @@
+# AGENTS.md — {{APP_NAME}}
+
+Instructions for any AI coding agent (Claude Code, GitHub Copilot, Cursor, Codex, Gemini,
+Antigravity, Junie, …) working in this repository. This file is the single source of agent
+instructions; `CLAUDE.md` and the other tool files only point here. Task-specific guidance is in
+skills under `.agents/skills/` (index at the end). Load a skill before you work on its topic.
+
+## This app
+
+| | |
+|---|---|
+| Name | {{APP_NAME}} (`{{APP_SLUG}}`) |
+| Purpose | {{APP_DESCRIPTION}} |
+| Stack | {{STACK_LABEL}} (`{{STACK}}`) |
+| Data | {{APP_DATA}}, as the repository was created; the app's Data tab in the portal shows the current state |
+| Portal page | {{APP_PORTAL_URL}} |
+| Platform docs | {{PLATFORM_DOCS_URL}} |
+| Created from template | {{TEMPLATE_VERSION}} on {{CREATED_DATE}} |
+
+## Who you are working with
+
+The person you help may not be a professional developer. Act like a careful senior colleague:
+
+- Explain what you change and why in plain language, in the user's language. No jargon where
+  a plain word works; when you must use a technical term, explain it in one sentence.
+- Before you start a larger change, say in 2–5 bullets what you will do. After it, summarise
+  what changed, how you verified it, and what the user should check in the app.
+- **Ask before anything destructive or hard to undo:** deleting files or data, removing database
+  columns or tables, changing app roles or sign-in behaviour, rewriting git history, force-push,
+  merging to the default branch (that requests a production release), or changing `platform.yaml`
+  secrets. Never do these just because a check fails.
+- Commit and push only when the user asks or agrees. A push deploys to nonprod automatically.
+- If a request conflicts with these rules (e.g. "just store the password in the code"), explain
+  the risk, offer the compliant way, and do not do the unsafe thing.
+- Don't guess. If you don't know how the platform behaves, say so and point to the platform docs
+  or the platform team; never invent Azure behaviour.
+- Work in the repository and the terminal only. **Never take over the user's screen, mouse,
+  keyboard or browser** (computer use, browser extensions or integrations), and don't open pages in
+  the user's browser to check your work. Check it with tests, the build, `platform check`, requests
+  to the app running locally (`curl`) and, for the look, `platform preview` (screenshots from a
+  headless browser of its own, skill `ui-and-brand`); what you can't check that way, tell the user to look at.
+- **Never use the user's stored credentials** (Git credentials, tokens, browser cookies) to call
+  Azure DevOps, Azure, the portal or any other API. You don't need them: pushing is the only deploy action,
+  and `platform deploy status` tells you how it went.
+
+Write code, identifiers, comments and commit messages in English. The app's UI language is the
+owner's choice: ask, and record the decision in `docs/decisions/`.
+
+The app's look comes from `theme/` when the repository has it: style with its `--brand-*`
+variables, never hard-coded colours or fonts. Load `ui-and-brand` before any UI work.
+
+## What the platform does for you
+
+The platform (SAF) builds, checks and runs this app as **one container** on
+Azure Container Apps. You write the app; the platform owns everything around it.
+
+| Concern | Who | What it means for you |
+|---|---|---|
+| Build, checks, scan, deploy | platform pipeline | Push code. Never add pipeline files, Bicep, Terraform or deploy scripts. |
+| Sign-in (Microsoft Entra ID) | platform (Easy Auth) | Users are signed in before requests reach the app. Read the user from a header. Never build a login. |
+| App roles (e.g. Reader, Admin) | portal | Defined by the owner in the portal and given to Entra groups. Your code checks role values. |
+| Secrets | portal + Key Vault | You list secret **names** in `platform.yaml`; the owner sets **values** per environment in the portal. They reach the app as environment variables. |
+| Database, file storage | portal request | PostgreSQL, Azure SQL or Blob Storage are requested in the portal and approved. Access is passwordless (managed identity). |
+| URL, custom domain, HTTPS, Front Door | portal request | Never hardcode the app's host name. |
+| Logs, metrics, alerts | platform | Log JSON to stdout; Application Insights is wired through one environment variable. Logs are visible in the portal. |
+| Size, scaling, health probes | `platform.yaml` | Runtime settings you control; what the app is *allowed* to have is decided in the portal. |
+
+Environments: changes go to **nonprod** first, then to **prod** after approval. An instance may
+have more environments; their names are shown in the portal.
+
+## The app contract (mandatory, checked by `platform check` and the pipeline)
+
+1. **One container**, built from the `Dockerfile` at the repo root (path set in `platform.yaml`).
+2. **Listens on `$PORT`** (default 8080) on `0.0.0.0`. Never hardcode another port.
+3. **`GET /healthz`** (liveness) returns 200 quickly while the process works. It must not check
+   the database or other services. **`GET /readyz`** (readiness) returns 200 only when the app can
+   serve traffic (e.g. database reachable, migrations done), otherwise 503. Both need no sign-in.
+4. **Logs are JSON lines on stdout** (one object per line, `level`, `time`, `msg`). No log files.
+5. **Configuration only from environment variables.** No config files with environment-specific
+   values, no `.env` in the image or repo.
+6. **Stateless.** The container filesystem is temporary and per replica: use `/tmp` only for
+   short-lived scratch files. Store data in the database, files in Blob Storage, sessions nowhere
+   (the platform's sign-in handles them).
+7. **Non-root user** in the final image (`USER` line).
+8. **Pinned base image**: exact version tag (e.g. `node:22.23.4-trixie-slim`), ideally plus digest.
+   Never `latest` or a floating tag. Pinned dependency versions with a committed lockfile.
+9. **Graceful shutdown**: on `SIGTERM` stop accepting requests, finish running ones, close
+   connections and exit within 25 seconds. Start the process in exec form (`CMD ["node", …]`), not
+   through `npm start` or a shell.
+10. **No secrets in code, repo, image, logs or URLs.** Secrets come from environment variables
+    defined in `platform.yaml` and set in the portal.
+
+Load `app-contract-and-docker` before changing the Dockerfile, ports, health endpoints or startup.
+
+## Repository layout
+
+| Path | Contents |
+|---|---|
+| `AGENTS.md` | these instructions (platform-managed; add app-specific notes only in the marked section at the end) |
+| `.agents/skills/` | skills (canonical). `.claude/skills/` is a generated copy: never edit it |
+| `platform.yaml` | runtime settings: port, size, scale, health paths, env vars, secret names, deploy branches |
+| `Dockerfile`, `.dockerignore` | the container build |
+| `README.md` | what the app does, who uses it, how to run it locally (plain language) |
+| `CHANGELOG.md` | user-visible changes ([Keep a Changelog](https://keepachangelog.com/en/1.1.0/)) |
+| `docs/architecture.md` | how the app works: components, data, configuration, integrations |
+| `docs/decisions/` | short decision records (`NNNN-title.md`) |
+| app code | see `docs/architecture.md`; for the starter stacks: `src/` (Node), `app/` (Python), `src/App/` (.NET) |
+
+## Commands
+
+| Task | Command |
+|---|---|
+| Install dependencies | `{{INSTALL_COMMAND}}` |
+| Run locally | `{{DEV_COMMAND}}` → {{LOCAL_URL}} |
+| Tests | `{{TEST_COMMAND}}` |
+| Lint and type checks | `{{LINT_COMMAND}}` |
+| Build | `{{BUILD_COMMAND}}` |
+| **Platform checks (before every commit)** | `platform check` |
+| Look at pages (app running locally) | `platform preview --url {{LOCAL_URL}} --path /` → PNG files at desktop and phone width |
+| Container locally (needs Docker) | `docker build -t {{APP_SLUG}} . && docker run --rm -p 8080:8080 -e DEV_FAKE_USER=dev@contoso.com -e DEV_FAKE_ROLES=Admin {{APP_SLUG}}` |
+
+`platform` is the platform CLI. This repo is pinned to version **{{PLATFORM_CLI_VERSION}}**
+(file `.platform/cli-version`, kept current by template updates). Install exactly that version from the
+platform's release: its file `simple-apps-foundry-platform-cli-{{PLATFORM_CLI_VERSION}}.tgz`, with
+`npm install --global --ignore-scripts <that file>`; the platform team says where the releases are. Never
+install it by name from a public package registry (no `npx`): the platform CLI isn't published there, and a
+package of that name could be anyone's. **Always run `platform check` before committing and fix every error.** It runs the
+same checks as the pipeline: `platform.yaml` against the schema, Dockerfile rules (pinned base
+image, non-root user, port), secret scan, forbidden files (`.env`, `node_modules/`, `bin/`,
+`obj/`, …), a runtime smoke test of `/healthz`, docs freshness (warning) and the agent files.
+If a check can't run locally (e.g. no Docker), tell the user; the pipeline runs it anyway. Never
+weaken, skip or work around a check: fix the cause. `platform check --help` lists options.
+
+## Workflow: from change to production
+
+1. Work on a short-lived branch (e.g. `feature/export-csv`). Keep changes small.
+2. Change code **and tests and docs together** (see Documentation duties).
+3. Run tests, lint, then `platform check`. All must pass.
+4. Commit (Conventional Commits: `feat: …`, `fix: …`, `docs: …`) and push, with the user's OK.
+5. **Push → nonprod.** Every push to a branch matching `deploy.branches` (default: all) builds the
+   image, runs the checks and a vulnerability scan, and deploys to **nonprod**. Nonprod is shared
+   by all branches: the last push wins. The portal shows which branch and commit runs there.
+   After the push, run **`platform deploy status --wait`**: it asks the portal how the commit's run
+   goes, as the signed-in user, waits until it ends (a few minutes) and exits 0 when deployed, 1 when it
+   failed, with every failed check and a prompt for you. Tell the user the result; on 1, fix and push
+   again (with the user's OK). When it says the user isn't signed in, ask them to run
+   `platform login --portal {{PORTAL_URL}}` once in a terminal, then run it again. When the platform
+   doesn't offer it, tell the user the app's Deployments tab in the portal ({{APP_PORTAL_URL}}) shows the
+   run. Never follow a run in a browser or through any other API.
+6. The user tests in nonprod.
+7. **Merge to the default branch (usually `main`) → prod release request.** The same image (by
+   digest, no rebuild) waits for approval by the platform team, then goes to **prod**.
+8. **Rollback**: in the portal, redeploy a previous version (prod still needs approval). In code,
+   revert the commit and push. Because rollback runs the *previous* image against the *current*
+   database, every database change must be backward compatible (below).
+
+A failed pipeline run is shown in the portal with a plain-language explanation and a
+"copy prompt for your AI agent" button: the user can paste that prompt to you.
+
+Load `deploy-and-rollback` for details, `testing-smoke` for tests.
+
+## Sign-in and roles
+
+- The platform signs users in with their company Microsoft Entra account before the request
+  reaches the app and adds the header **`X-MS-CLIENT-PRINCIPAL`** (base64 JSON with claims).
+  The starter stacks parse it for you: Node `request.user`, Python `CurrentUser`, .NET
+  `ClaimsPrincipal`. Use the Entra **object id** (`user.id`) as the key for user data, never the
+  email or name.
+- Roles: app role values from the portal (e.g. `Reader`, `Editor`, `Admin`) arrive as role claims.
+  Guard every route that reads or changes data (`requireUser` / `requireRole('Admin')`). Check
+  permissions on the server; hiding a button in the UI is not access control.
+- Check **ownership** too: a user may only see or change records they are allowed to (e.g.
+  `WHERE created_by = :userId` unless they have an elevated role).
+- Locally there is no platform sign-in: set `DEV_FAKE_USER` (email) and `DEV_FAKE_ROLES`
+  (comma-separated) to simulate a user. The app refuses to start with them on Azure.
+- Sign-out link: `/.auth/logout`. Never build login pages, password storage, OAuth/OIDC flows,
+  JWT validation or session cookies yourself, and never call Microsoft Graph with user tokens
+  without asking the platform team.
+- Some apps are allowed to be public (anonymous). Then the header is absent: code must handle
+  `user = null` and still protect anything that is not public.
+
+Load `auth-entra` before any change to users, roles or permissions.
+
+## Configuration and secrets
+
+- Every setting is an environment variable, read once at startup and validated (Node: `zod` in
+  `src/server/config.ts`). Missing required settings must stop the app with a clear message that
+  names the variable, never its value.
+- **Set by the platform** (never define them in `platform.yaml`): `PORT`,
+  `APPLICATIONINSIGHTS_CONNECTION_STRING`, `AZURE_CLIENT_ID` (client id of the app's managed
+  identity), `CONTAINER_APP_NAME`, data connection info (`DATABASE_HOST`, `DATABASE_NAME`,
+  `DATABASE_USER`, `STORAGE_BLOB_ENDPOINT`) when the service exists, and `FRONT_DOOR_ID` when the
+  app is served through Front Door.
+- **Your own non-secret settings**: `runtime.env` in `platform.yaml` (`name` + `value`), with
+  per-environment overrides under `environments.<name>.env`.
+- **Secrets** (API keys of external services, SMTP passwords, …):
+  1. add the secret name (lowercase, digits, `-`) to `secrets:` in `platform.yaml`,
+  2. map it to an env var: `runtime.env: [{ name: SMTP_PASSWORD, secret: smtp-password }]`,
+  3. ask the owner to set the value **in the portal for every environment before pushing**,
+     otherwise the deploy fails,
+  4. locally, put the value in `.env` (git-ignored, never committed, never read by agents).
+- Never put secret values in code, `platform.yaml`, tests, docs, commit messages, logs, error
+  messages or URLs. Don't ask the user to paste secrets into the chat.
+- Prefer managed identity over secrets for Azure services: databases and storage need **no**
+  secret at all.
+
+Load `secrets-and-config` before adding a setting or secret.
+
+## Data
+
+**The app's data lives on the server, in the app's database** (files in Blob Storage): everything
+a user enters and expects to find again (after a browser restart, on another device, for a
+colleague). The browser never holds app data: no `localStorage`, `sessionStorage`, IndexedDB or
+cookies for it, and no "export and import a file" in place of saving (they are fine for UI
+preferences such as a collapsed panel). The row **Data** at the top says what the app has. When a
+feature must keep data and the app has no database, stop and tell the user: the owner adds one on
+the app's Data tab in the portal, then you build on it. Never decide on your own that the app
+works without one. Locally without a database, keep the data access behind one server-side module
+and test it with an in-memory stand-in; never move storage into the browser to make a local
+preview work.
+
+Databases and storage are requested in the portal (one per app and environment, approved by the
+platform team). All access is **passwordless**: the app gets a short-lived Microsoft Entra token
+for its managed identity (`AZURE_CLIENT_ID`). There are no connection strings with passwords and
+no storage keys. Never ask for one, never create one.
+
+- Which one the app has: `DATABASE_HOST` ending in `.database.windows.net` is Azure SQL, any other
+  host is PostgreSQL (only PostgreSQL gets `DATABASE_USER`). The platform team sets the default.
+- **PostgreSQL**: token scope `https://ossrdbms-aad.database.windows.net/.default`, TLS required,
+  user = `DATABASE_USER`. Load `database-postgres`.
+- **Azure SQL**: Entra-only authentication with the managed identity (mssql, Microsoft.Data.SqlClient
+  or pyodbc), T-SQL. Load `database-sql`.
+- The Node starter connects to either in `src/server/db/` and runs the SQL files in `migrations/`
+  at startup (PostgreSQL or T-SQL, whichever the app has).
+- **Blob Storage** for files and uploads: `STORAGE_BLOB_ENDPOINT` + managed identity. No account
+  keys, no public containers. Load `blob-storage`.
+- **Migrations must be backward compatible (expand/contract)**: add columns as nullable or with
+  defaults, backfill, switch code, and remove old columns only in a **later** release once no
+  running or rollback version uses them. Never drop or rename a column or table in the same release
+  that stops using it. Never edit a migration that was pushed.
+- Prod data never goes to nonprod. Seed nonprod with test data from code or scripts.
+- Ask the user before any migration that deletes data.
+
+## Logging and monitoring
+
+- Log JSON to stdout through the stack's logger (Node: `request.log` / `app.log` (pino), Python:
+  `logging`, .NET: `ILogger`). Never `console.log` in server code.
+- Log events with context (`{ itemId, durationMs }`), errors with the error object. Log the user's
+  object id, not their name or email. Never log secrets, tokens, headers like
+  `X-MS-CLIENT-PRINCIPAL`, or full request bodies with personal data.
+- Telemetry (requests, dependencies, exceptions) goes to Application Insights automatically when
+  `APPLICATIONINSIGHTS_CONNECTION_STRING` is set. Don't add other telemetry vendors.
+- Users read logs in the portal (search, live tail, "copy prompt for AI"). Load `observability`.
+
+## URLs and Front Door
+
+- The app's URLs (nonprod and prod) are managed in the portal. Use **relative URLs** in links,
+  redirects and API calls. Never hardcode a host name; don't build absolute URLs from
+  `Host`/`X-Forwarded-Host` headers.
+- If the app is served through Azure Front Door, the platform sets `FRONT_DOOR_ID` and the
+  starter's middleware rejects requests without the matching `X-Azure-FDID` header (health
+  endpoints exempt). Keep that middleware.
+- One origin for UI and API: no CORS needed. Never enable wildcard CORS.
+
+## Security baseline
+
+Load `security-baseline` for details and code. The essentials:
+
+- Validate every input on the server (schema per route, length limits, allow-lists) and return
+  400 with a helpful message. Use parameterised queries or an ORM; never build SQL, shell commands
+  or file paths from user input.
+- Authorise every route on the server (role and ownership). Deny by default.
+- Keep the security headers (CSP `default-src 'self'`, `nosniff`, `frame-ancestors 'none'`, HSTS).
+  Don't add inline scripts or third-party script CDNs; bundle dependencies.
+- Escape output (React does it; never `dangerouslySetInnerHTML` with user content).
+- Errors: generic message to the user, details only in logs. No stack traces in responses.
+- Uploads: check size and type, store in Blob Storage with generated names, never execute them.
+- Dependencies: pinned versions, committed lockfile, only well-known maintained packages, no
+  packages for trivial things. Fix critical/high findings the scan reports.
+- No secrets anywhere (see above). No personal data in logs or nonprod.
+
+## Documentation duties (part of every change)
+
+Keep these current **in the same commit** as the code change. Load `docs-keeping`.
+
+| Change | Update |
+|---|---|
+| Anything a user or owner notices (feature, fix, UI text) | `CHANGELOG.md` under `## [Unreleased]` (Added / Changed / Fixed / Removed), in plain language |
+| How to run, use or configure the app | `README.md` |
+| New component, data table, integration, env var, role, secret | `docs/architecture.md` |
+| A choice with alternatives (library, data model, UI language, public access) | new `docs/decisions/NNNN-title.md` |
+
+The portal shows `README.md` and `CHANGELOG.md` to owners. `platform check` warns when code
+changed but docs didn't.
+
+## Never do this
+
+- Add pipeline files (`azure-pipelines.yml`, `.github/workflows/` with deploy steps, …), Bicep,
+  ARM, Terraform, `az`/`kubectl` deploy scripts, or a `docker-compose.yml` meant for production.
+- Use `latest` or floating base image tags; run as root; listen on a hardcoded port.
+- Store files or state on the container disk; keep sessions or caches that must survive restarts
+  in memory.
+- Keep app data in the browser (`localStorage`, IndexedDB, downloaded files) instead of the app's
+  database.
+- Take over the user's screen or browser, or call any API with the user's stored credentials.
+- Implement login, password storage or token handling; trust role checks done only in the browser.
+- Commit `.env` files, keys, certificates, connection strings, tokens, or real personal data.
+- Read `.env` files or print environment variables to find secrets.
+- Add wildcard CORS, disable TLS verification, disable the security headers or the Front Door check.
+- Drop or rename columns/tables in the same release that stops using them; edit pushed migrations.
+- Edit `.claude/skills/` (generated) or weaken `platform check`, tests or the Dockerfile rules to
+  get a green build.
+- Copy prod data to nonprod or your laptop.
+
+## Skills
+
+Skills are in `.agents/skills/<name>/SKILL.md` (Claude Code reads the identical copy in
+`.claude/skills/`). Load the matching skill before you work on its topic.
+
+| Skill | Load when |
+|---|---|
+| `app-contract-and-docker` | Dockerfile, base image, port, health endpoints, startup/shutdown, adapting an existing app |
+| `auth-entra` | signed-in user, roles, permissions, public pages, sign-out, local user mock |
+| `secrets-and-config` | adding a setting, env var or secret; `platform.yaml` runtime settings |
+| `database-postgres` | PostgreSQL access, queries, migrations, local database, test data |
+| `database-sql` | Azure SQL access, EF Core / mssql, migrations |
+| `blob-storage` | file uploads/downloads, Blob Storage access |
+| `observability` | logging, telemetry, Application Insights, alerts, reading logs |
+| `deploy-and-rollback` | branches, nonprod/prod, releases, rollback, failed pipeline runs |
+| `security-baseline` | input validation, headers, CSP, CORS, uploads, dependencies, OWASP top 10 |
+| `testing-smoke` | writing tests, local smoke test of the container, what `platform check` runs |
+| `ui-and-brand` | pages, styles, colours, fonts, logo, forms, accessibility, the theme in `theme/` |
+| `docs-keeping` | README, CHANGELOG, architecture doc, decision records |
+| `troubleshooting` | anything fails: check results, pipeline errors, crashes, 401/403/5xx, slow app |
+
+After you add or edit a skill in `.agents/skills/`, run `platform sync-agent-files` so the
+`.claude/skills/` copy stays identical (the check fails otherwise). Don't edit platform-provided
+skills; they are replaced on template updates. Add your own skill folders instead.
+
+## When stuck
+
+1. Read the error message fully. `platform check` prints what failed, where, and how to fix it.
+2. Reproduce locally: run the tests, run the app with `{{DEV_COMMAND}}`, call `/healthz`, `/readyz`.
+3. For a failed pipeline run, `platform deploy status` lists the failed checks with a prompt. For a
+   broken environment, ask the user to open the app in the portal ({{APP_PORTAL_URL}}) and paste the
+   relevant log lines (portal log viewer, "copy prompt for AI"). Don't open the portal yourself.
+4. Load `troubleshooting`; it maps common symptoms (crash loop, 401/403, 502/503, database
+   sign-in errors, missing env var) to causes.
+5. If the cause is on the platform side (permissions, network, a resource that doesn't exist yet,
+   approval), say so plainly and suggest the user contacts the platform team through the portal.
+   Don't work around platform controls.
+
+## App-specific notes
+
+<!-- app-notes:start — Add notes specific to this app below. The platform keeps this section when it updates AGENTS.md. -->
+<!-- app-notes:end -->

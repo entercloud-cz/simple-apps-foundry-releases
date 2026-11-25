@@ -1,0 +1,11 @@
+{
+  "rule": "T23",
+  "description": "A promotion stage that does not wait for its source environment is rejected (expanded graph).",
+  "patches": [
+    {
+      "file": "templates/stages/promote.yml",
+      "find": "        - verify\n        - deploy_${{ parameters.environment.promoteFrom }}\n",
+      "replace": "        - verify\n"
+    }
+  ]
+}

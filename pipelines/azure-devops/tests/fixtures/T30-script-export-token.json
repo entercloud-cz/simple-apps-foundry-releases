@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "The token must never be exported to child processes (curl, az, node).",
+  "patches": [
+    {
+      "file": "scripts/report.sh",
+      "find": "unset token\n",
+      "replace": "export token\nunset token\n"
+    }
+  ]
+}

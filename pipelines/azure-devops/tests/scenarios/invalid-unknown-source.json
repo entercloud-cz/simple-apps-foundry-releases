@@ -1,0 +1,26 @@
+{
+  "description": "promoteFrom must name an environment of the list.",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      },
+      {
+        "name": "prod",
+        "kind": "prod",
+        "promoteFrom": "staging"
+      }
+    ]
+  },
+  "expect": {
+    "errors": [
+      "promoteFrom must name an environment of the list"
+    ]
+  }
+}

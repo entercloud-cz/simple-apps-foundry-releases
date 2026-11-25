@@ -1,0 +1,11 @@
+{
+  "rule": "P16",
+  "description": "Stage entra has the one job registrations (saf.entraResult reads its result).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra.yml",
+      "find": "      - job: registrations\n",
+      "replace": "      - job: register\n"
+    }
+  ]
+}

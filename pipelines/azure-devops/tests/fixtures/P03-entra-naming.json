@@ -1,0 +1,11 @@
+{
+  "rule": "P03",
+  "description": "The Entra connection name comes from naming.bicep instanceServiceConnection('entra').",
+  "patches": [
+    {
+      "file": "@naming.bicep",
+      "find": "contains(['ado', 'entra'], purpose)",
+      "replace": "contains(['ado'], purpose)"
+    }
+  ]
+}

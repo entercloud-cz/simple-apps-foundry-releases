@@ -1,0 +1,11 @@
+{
+  "rule": "V05",
+  "description": "The archive of deleted apps is validated with the same base (ADR-0061).",
+  "patches": [
+    {
+      "file": "scripts/platform-validation.sh",
+      "find": "if ! saf_cli validate archive \"$SAF_CONFIG\" \"${base[@]}\"; then\n",
+      "replace": "if ! saf_cli validate archive \"$SAF_CONFIG\"; then\n"
+    }
+  ]
+}

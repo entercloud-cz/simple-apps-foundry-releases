@@ -1,0 +1,11 @@
+{
+  "rule": "E07",
+  "description": "A step of the validate job may run any logging command.",
+  "patches": [
+    {
+      "file": "templates/platform/stages/validate.yml",
+      "find": "            target:\n              commands: restricted\n              settableVariables: none\n",
+      "replace": "            target:\n              commands: any\n              settableVariables: none\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "A portal-side endpoint is deleted only when it links the app's own vault in its resource group by naming (ADR-0052, ADR-0056, ADR-0025 amendment 2026-11-14).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  if [[ \"${target,,}\" != /subscriptions/*\"${vault_id,,}\" ]]; then\n",
+      "replace": "  if false; then\n"
+    }
+  ]
+}

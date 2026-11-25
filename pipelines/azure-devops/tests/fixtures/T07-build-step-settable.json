@@ -1,0 +1,11 @@
+{
+  "rule": "T07",
+  "description": "A build-job step that may set variables is rejected (via the shared step template).",
+  "patches": [
+    {
+      "file": "templates/steps/platform-cli.yml",
+      "find": "      settableVariables: none\n",
+      "replace": "      settableVariables:\n        - PATH\n"
+    }
+  ]
+}

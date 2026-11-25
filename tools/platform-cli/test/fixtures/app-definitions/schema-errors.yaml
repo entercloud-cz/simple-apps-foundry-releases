@@ -1,0 +1,38 @@
+# Negative fixture: schema violations of an app definition (config/schema/app.schema.json).
+schemaVersion: "1.0-draft"
+slug: demo-app
+title: ""
+bogus: true
+owner:
+  objectId: 00000000-0000-0000-0000-00000000e001
+  principalType: Group
+  email: not-an-email
+deputy:
+  objectId: not-a-guid
+  principalType: User
+  email: deputy@contoso.com
+repository:
+  provider: github
+  project: Apps
+  name: demo-app
+  defaultBranch: refs/heads/main
+  template: java
+authentication:
+  mode: optional
+  roles:
+    - value: "1Reader"
+      displayName: Reader
+data:
+  database:
+    engine: mysql
+    size: XL
+environments:
+  nonprod:
+    networkMode: internalOnly
+    budget:
+      monthlyAmount: 0
+    cell: "1"
+    capacity:
+      size: xl
+      maxReplicas: 11
+    customDomains: [demo.contoso.com]

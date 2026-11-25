@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "A landing-zone deployment rewrites the group's tags: prov_lz writes them back right after it.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "    prov_tags_restore \"$(jq -r '.resourceGroupName.value // \"\"' \"$outputs\")\"\n",
+      "replace": ""
+    }
+  ]
+}
