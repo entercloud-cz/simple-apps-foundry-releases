@@ -1,0 +1,42 @@
+# Keep the build context small and free of secrets.
+.git
+.gitignore
+.gitattributes
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+
+# Agent and editor files (not needed in the image)
+.agents
+.claude
+.gemini
+.github
+.vscode
+.idea
+AGENTS.md
+CLAUDE.md
+
+# Docs
+docs
+*.md
+
+# Dependencies and build output (rebuilt inside the image)
+node_modules
+dist
+coverage
+.venv
+venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.ruff_cache
+bin
+obj
+TestResults
+
+# Local-only files
+example.env
+Dockerfile
+.dockerignore

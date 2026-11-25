@@ -1,0 +1,11 @@
+{
+  "rule": "P06",
+  "description": "prov_entra_expected() takes the template hash from ARM's calculateTemplateHash, nothing else.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "/providers/Microsoft.Resources/calculateTemplateHash?api-version=2021-04-01",
+      "replace": "/providers/Microsoft.Resources/deployments/validate?api-version=2021-04-01"
+    }
+  ]
+}

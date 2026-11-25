@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "The token variables are never expanded by a script (not even their length).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  saf_info \"  Writing $secret_name to $secret_vault through the kvset job\"\n",
+      "replace": "  saf_info \"  Writing $secret_name to $secret_vault through the kvset job\"\n  saf_info \"token length ${#SAF_ARM_TOKEN}\"\n"
+    }
+  ]
+}

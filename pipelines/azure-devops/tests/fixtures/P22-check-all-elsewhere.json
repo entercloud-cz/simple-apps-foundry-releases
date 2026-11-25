@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "No provisioning script reads checkAllApps: the plan does (it only widens the run).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "prov_parallel\nfor slug",
+      "replace": "jq -r '.checkAllApps' \"$SAF_APPS_JSON\"\nprov_parallel\nfor slug"
+    }
+  ]
+}

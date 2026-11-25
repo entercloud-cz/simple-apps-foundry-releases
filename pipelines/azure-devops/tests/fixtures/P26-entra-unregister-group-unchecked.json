@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "Decommissioning deletes the registration's records only in the two groups names.bicep names (ADR-0063, ADR-0056).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  for entra_rg in \"$(prov_name \"$names\" entraEnvironmentResourceGroup)\" \"$(prov_name \"$names\" entraResourceGroup)\"; do\n",
+      "replace": "  for entra_rg in $(jq -r '.groups[]' \"$plan/entra-groups.json\"); do\n"
+    }
+  ]
+}

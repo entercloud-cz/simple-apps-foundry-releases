@@ -1,0 +1,11 @@
+{
+  "rule": "P23",
+  "description": "The stage entra starts the kvset job without checking that it runs this core's saf-jobs image.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  job_state=\"$(prov_job_state \"$secret_job\")\"\n  if [ \"$job_state\" != current ]; then\n",
+      "replace": "  if false; then\n"
+    }
+  ]
+}

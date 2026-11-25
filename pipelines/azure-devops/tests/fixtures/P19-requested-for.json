@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "No script decides on who started the run (BUILD_REQUESTEDFOR).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  [ \"$auth_mode\" = required ] || return 0\n  mkdir -p \"$dir\"\n",
+      "replace": "  [ \"$auth_mode\" = required ] || return 0\n  [ \"${BUILD_REQUESTEDFOR:-}\" != \"Microsoft.VisualStudio.Services.TFS\" ] || return 0\n  mkdir -p \"$dir\"\n"
+    }
+  ]
+}

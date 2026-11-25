@@ -1,0 +1,11 @@
+{
+  "rule": "T27",
+  "description": "Mapping the job token into the preview job is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/preview.yml",
+      "find": "              SAF_ACTION: ${{ parameters.action }}\n",
+      "replace": "              SAF_ACTION: ${{ parameters.action }}\n              SYSTEM_ACCESSTOKEN: $(System.AccessToken)\n"
+    }
+  ]
+}

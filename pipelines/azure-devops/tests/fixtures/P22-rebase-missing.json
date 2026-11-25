@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "record.sh writes the plan's rebase value of a held unit.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/record.sh",
+      "find": "      rebase=\"$(prov_unit_tag \"$slug\" \"$env_name\" \"$u\" rebase)\"\n",
+      "replace": "      rebase=\"\"\n"
+    }
+  ]
+}

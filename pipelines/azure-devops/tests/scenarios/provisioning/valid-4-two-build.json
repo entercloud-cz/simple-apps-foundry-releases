@@ -1,0 +1,48 @@
+{
+  "description": "Two build environments, prod promoted from the first.",
+  "entry": "app-provisioning.yml",
+  "parameters": {
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      },
+      {
+        "name": "sandbox",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      },
+      {
+        "name": "prod",
+        "kind": "prod",
+        "promoteFrom": "nonprod"
+      }
+    ],
+    "hostEnvironment": "sandbox",
+    "scope": "changed",
+    "upgrade": "none"
+  },
+  "expect": {
+    "stages": [
+      "validate",
+      "plan",
+      "azure_nonprod",
+      "azure_sandbox",
+      "azure_prod",
+      "ado_resources",
+      "entra_plan",
+      "entra",
+      "azure_post_nonprod",
+      "azure_post_sandbox",
+      "azure_post_prod",
+      "ado_pipelines",
+      "registry_nonprod",
+      "registry_sandbox",
+      "report",
+      "record_nonprod",
+      "record_sandbox",
+      "record_prod"
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "//": "Linter settings for every Bicep file in this repo (infra/**). Tightened on purpose: a lint error fails CI. No experimental features are enabled. Extensions: Microsoft Graph v1.0 (GA) for Entra app registrations (ADR-0009, ADR-0023).",
+  "extensions": {
+    "microsoftGraphV1": "br:mcr.microsoft.com/bicep/extensions/microsoftgraph/v1.0:1.0.0"
+  },
+  "analyzers": {
+    "core": {
+      "enabled": true,
+      "rules": {
+        "no-hardcoded-location": { "level": "error" },
+        "no-loc-expr-outside-params": { "level": "error" },
+        "explicit-values-for-loc-params": { "level": "error" },
+        "no-hardcoded-env-urls": { "level": "error" },
+        "secure-secrets-in-params": { "level": "error" },
+        "secure-parameter-default": { "level": "error" },
+        "secure-params-in-nested-deploy": { "level": "error" },
+        "outputs-should-not-contain-secrets": { "level": "error" },
+        "protect-commandtoexecute-secrets": { "level": "error" },
+        "adminusername-should-not-be-literal": { "level": "error" },
+        "use-secure-value-for-secure-inputs": { "level": "error" },
+        "no-unused-params": { "level": "error" },
+        "no-unused-vars": { "level": "error" },
+        "no-unused-existing-resources": { "level": "error" },
+        "no-unnecessary-dependson": { "level": "error" },
+        "no-deployments-resources": { "level": "error" },
+        "use-stable-resource-identifiers": { "level": "error" },
+        "use-resource-id-functions": { "level": "error" },
+        "use-resource-symbol-reference": { "level": "error" },
+        "use-parent-property": { "level": "error" },
+        "use-safe-access": { "level": "error" },
+        "prefer-interpolation": { "level": "error" },
+        "prefer-unquoted-property-names": { "level": "error" },
+        "simplify-interpolation": { "level": "error" },
+        "simplify-json-null": { "level": "error" },
+        "max-outputs": { "level": "error" },
+        "max-params": { "level": "error" },
+        "max-resources": { "level": "error" },
+        "max-variables": { "level": "error" },
+        "artifacts-parameters": { "level": "off" },
+        "use-recent-api-versions": { "level": "warning", "maxAllowedAgeInDays": 730 },
+        "use-recent-module-versions": { "level": "off" },
+        "what-if-short-circuiting": { "level": "warning" }
+      }
+    }
+  }
+}

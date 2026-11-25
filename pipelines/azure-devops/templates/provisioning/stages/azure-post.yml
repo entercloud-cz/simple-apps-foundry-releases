@@ -1,0 +1,138 @@
+# Stage `azure_post_<env>`: landing zones, second pass, and releases of ONE environment
+# (ADR-0032). Service connection sc-platform-provisioning-<env> only, as in azure.yml. Runs only when
+# the plan runs one of its units (ADR-0048, output post_<env> of stage plan): lz, frontdoor or release
+# of an app in <env>; in the stage of hostEnvironment also the pep of an app in any environment, in
+# another environment with its own subscription the pep's approval there. Each step runs only for
+# the units the plan runs; every other app is unchanged here.
+#
+# scripts/provisioning/azure-post.sh, per app whose lz, frontdoor or release runs in <env>, whose
+# landing zone is ok (azure_<env> when its lz ran there, else plan_<env>), whose Azure DevOps resources
+# are ok when its ado ran, and that is ok in <promoteFrom> when it runs there too:
+#   1. landing zone again, now with the federation of the app's service connection from the `ado`
+#      artifact (deploys only when that changed the inputs);
+#   2. release-{slug}: an app that requires sign-in without an Entra client ID (artifact entra, else
+#      entra_plan, else the release record) or Easy Auth secret is `waiting` and its release is not
+#      touched (an Entra failure does not stop the release of an app whose client ID is known); no release record = bootstrap (saf-placeholder
+#      imported by digest into the app registry first), otherwise re-apply with the record's
+#      app-owned values; `az deployment group validate` + `compare`; right before a re-apply the
+#      Container App's saf-run-id must equal the record's run (else re-read once, then `waiting`);
+#      `az deployment group create` through infra/app/provisioning/release.bicepparam; smoke test.
+# Then the portal-side private endpoints of app vaults (ADR-0025): in the stage of hostEnvironment,
+# for every app whose pep the plan runs in an environment whose landing zone is ok there (so it also
+# downloads plan_<E> and, when it ran, azure_<E> of every environment), the
+# deployment pep-portal-{slug}-{E} in the portal resource group through
+# infra/app/provisioning/portal-endpoint.bicepparam; in another environment with its own
+# subscription, the approval of the pending portal-side connection on its own app vaults.
+# Artifact azure_post_<env> (created by the first step, published with always()):
+# status/{slug}.{env}.json (with `done`: the units finished here), lz-outputs/{slug}.{env}.json and,
+# in the host's stage, portal/status/{slug}.{E}.json.
+
+parameters:
+  - name: environment
+    type: object
+  - name: environments
+    type: object
+  - name: hostEnvironment
+    type: string
+
+stages:
+  - stage: azure_post_${{ parameters.environment.name }}
+    displayName: Releases ${{ parameters.environment.name }}
+    dependsOn:
+      - validate
+      - plan
+      - azure_${{ parameters.environment.name }}
+      - ado_resources
+      - entra_plan
+      - entra
+      - ${{ if ne(format('{0}', parameters.environment.promoteFrom), '') }}:
+        - azure_post_${{ parameters.environment.promoteFrom }}
+      # The portal host: every environment's landing zones (portal-side endpoints).
+      - ${{ each env in parameters.environments }}:
+        - ${{ if and(eq(parameters.environment.name, parameters.hostEnvironment), ne(env.name, parameters.environment.name)) }}:
+          - azure_${{ env.name }}
+    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'), eq(dependencies.plan.outputs['decide.decide.post_${{ parameters.environment.name }}'], 'true'))
+    isSkippable: false
+    lockBehavior: runLatest
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - job: releases
+        displayName: Landing zones (second pass) and releases in ${{ parameters.environment.name }}
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 240
+        variables:
+          # Results of the jobs whose artifacts are optional here (steps/download.yml): empty when
+          # their stage was skipped or never started. TODO(verify) UNIT-6 (generalises PROV-3):
+          # stageDependencies.<stage>.<job>.result of a skipped stage in a job variable of a later stage.
+          - name: saf.result.azure_${{ parameters.environment.name }}
+            value: $[ stageDependencies.azure_${{ parameters.environment.name }}.landing_zones.result ]
+          - name: saf.result.ado
+            value: $[ stageDependencies.ado_resources.resources.result ]
+          - name: saf.result.entra_plan
+            value: $[ stageDependencies.entra_plan.plan.result ]
+          - name: saf.result.entra
+            value: $[ stageDependencies.entra.registrations.result ]
+          - ${{ if ne(format('{0}', parameters.environment.promoteFrom), '') }}:
+            - name: saf.result.azure_post_${{ parameters.environment.promoteFrom }}
+              value: $[ stageDependencies.azure_post_${{ parameters.environment.promoteFrom }}.releases.result ]
+          - ${{ each env in parameters.environments }}:
+            - ${{ if and(eq(parameters.environment.name, parameters.hostEnvironment), ne(env.name, parameters.environment.name)) }}:
+              - name: saf.result.azure_${{ env.name }}
+                value: $[ stageDependencies.azure_${{ env.name }}.landing_zones.result ]
+        steps:
+          - template: ../steps/setup.yml
+            parameters:
+              tools: [node, bicep]
+              cli: artifact
+              artifact: azure_post_${{ parameters.environment.name }}
+          - template: ../steps/download.yml
+            parameters:
+              artifacts:
+                - units
+                - plan_${{ parameters.environment.name }}
+                # The portal host: every environment's entries (portal-side endpoints).
+                - ${{ each env in parameters.environments }}:
+                  - ${{ if and(eq(parameters.environment.name, parameters.hostEnvironment), ne(env.name, parameters.environment.name)) }}:
+                    - plan_${{ env.name }}
+              optional:
+                - azure_${{ parameters.environment.name }}
+                - ado
+                - entra_plan
+                - entra
+                - ${{ if ne(format('{0}', parameters.environment.promoteFrom), '') }}:
+                  - azure_post_${{ parameters.environment.promoteFrom }}
+                - ${{ each env in parameters.environments }}:
+                  - ${{ if and(eq(parameters.environment.name, parameters.hostEnvironment), ne(env.name, parameters.environment.name)) }}:
+                    - azure_${{ env.name }}
+          - task: AzureCLI@2
+            displayName: Landing zones (second pass), releases, smoke tests, portal-side vault endpoints
+            inputs:
+              azureSubscription: sc-platform-provisioning-${{ parameters.environment.name }}
+              scriptType: bash
+              scriptLocation: scriptPath
+              scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/provisioning/azure-post.sh
+              addSpnToEnvironment: false
+              useGlobalConfig: false
+              failOnStandardError: false
+              workingDirectory: $(Pipeline.Workspace)
+            env:
+              SAF_ENV_NAME: ${{ parameters.environment.name }}
+              SAF_PROMOTE_FROM: ${{ parameters.environment.promoteFrom }}
+              SAF_SERVICE_CONNECTION: sc-platform-provisioning-${{ parameters.environment.name }}
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: PublishPipelineArtifact@1
+            displayName: Publish azure_post_${{ parameters.environment.name }}
+            condition: always()
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/azure_post_${{ parameters.environment.name }}
+              artifact: azure_post_${{ parameters.environment.name }}
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none

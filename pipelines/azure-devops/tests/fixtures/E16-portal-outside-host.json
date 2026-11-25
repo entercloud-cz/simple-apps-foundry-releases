@@ -1,0 +1,11 @@
+{
+  "rule": "E16",
+  "description": "The plan plans the portal in every environment, not only in its host.",
+  "patches": [
+    {
+      "file": "scripts/platform/plan.sh",
+      "find": "if [ \"$env_name\" = \"$SAF_HOST_ENVIRONMENT\" ]; then\n  plan_portal\nfi\n",
+      "replace": "plan_portal\n"
+    }
+  ]
+}

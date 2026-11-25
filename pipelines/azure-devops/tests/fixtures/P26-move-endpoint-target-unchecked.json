@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The move deletes a private endpoint only when every connection targets a resource of the app's group (ADR-0060, ADR-0052).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "    if [ -n \"$(tr ' ' '\\n' <<< \"${targets,,}\" | grep -v \"^/subscriptions/${subscription,,}/resourcegroups/${rg,,}/providers/\" || true)\" ]; then\n",
+      "replace": "    if false; then\n"
+    }
+  ]
+}

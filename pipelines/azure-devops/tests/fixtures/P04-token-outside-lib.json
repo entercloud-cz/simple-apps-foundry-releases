@@ -1,0 +1,11 @@
+{
+  "rule": "P04",
+  "description": "The ADO token is obtained only by prov_ado_token().",
+  "patches": [
+    {
+      "file": "scripts/provisioning/ado.sh",
+      "find": "org_url=\"$(prov_org_url)\"\n",
+      "replace": "org_url=\"$(prov_org_url)\"\nAZURE_DEVOPS_TOKEN=\"$(az account get-access-token --query accessToken --output tsv)\"\nexport AZURE_DEVOPS_TOKEN\n"
+    }
+  ]
+}

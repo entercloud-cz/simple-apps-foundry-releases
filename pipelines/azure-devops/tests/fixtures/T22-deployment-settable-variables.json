@@ -1,0 +1,11 @@
+{
+  "rule": "T22",
+  "description": "A deployment-job step that sets target.settableVariables is rejected (shared deployment step template).",
+  "patches": [
+    {
+      "file": "templates/steps/deployment-setup.yml",
+      "find": "    displayName: Install pinned tools (${{ join(', ', parameters.tools) }})\n    env:\n      SAF_TOOLS: ${{ join(' ', parameters.tools) }}\n    target:\n      commands: restricted\n",
+      "replace": "    displayName: Install pinned tools (${{ join(', ', parameters.tools) }})\n    env:\n      SAF_TOOLS: ${{ join(' ', parameters.tools) }}\n    target:\n      commands: restricted\n      settableVariables: none\n"
+    }
+  ]
+}

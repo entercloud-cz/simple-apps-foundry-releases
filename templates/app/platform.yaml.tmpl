@@ -1,0 +1,44 @@
+# platform.yaml: runtime settings of {{APP_NAME}} that you control.
+# Checked by `platform check` and the pipeline (schema: app manifest {{MANIFEST_SCHEMA_VERSION}}).
+# What the app is ALLOWED to have (database, URL, roles, network, budget) is requested in the
+# portal, not here. Details: skill `secrets-and-config`.
+
+schemaVersion: "{{MANIFEST_SCHEMA_VERSION}}"
+app: {{APP_SLUG}} # must match the portal registration; never change
+
+build:
+  dockerfile: Dockerfile
+  context: .
+
+runtime:
+  port: 8080 # the app reads $PORT; keep equal to EXPOSE in the Dockerfile
+  size: s # xs | s | m | l
+  scale:
+    minReplicas: 0 # 0 = scale to zero when idle (first request after a pause is slower)
+    maxReplicas: 2
+  health:
+    liveness: /healthz
+    readiness: /readyz
+  env:
+    - name: LOG_LEVEL
+      value: info
+    # Secret example (name listed under `secrets`, value set per environment in the portal):
+    # - name: SMTP_PASSWORD
+    #   secret: smtp-password
+
+# Secret NAMES only. Values are set by the owner in the portal for every environment.
+secrets: []
+
+# Per-environment overrides, keyed by environment name (this platform: {{ENVIRONMENT_NAMES}}).
+# Example:
+# environments:
+#   nonprod:
+#     env:
+#       - name: LOG_LEVEL
+#         value: debug
+#   prod:
+#     scale:
+#       minReplicas: 1   # one warm replica, no cold start
+
+deploy:
+  branches: ["*"] # branches that deploy to nonprod on push (last push wins)

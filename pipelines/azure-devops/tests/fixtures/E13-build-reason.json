@@ -1,0 +1,10 @@
+{
+  "rule": "E13",
+  "description": "A platform script decides by what started the run.",
+  "patches": [
+    {
+      "file": "scripts/platform/plan.sh",
+      "append": "if [ \"${BUILD_REASON:-}\" = Schedule ]; then exit 0; fi\n"
+    }
+  ]
+}

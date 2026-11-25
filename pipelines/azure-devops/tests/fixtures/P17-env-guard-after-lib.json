@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "prov_env_guard runs before lib.sh is sourced.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "}\nprov_env_guard\n\n# shellcheck source=../lib.sh\nsource \"$(dirname \"${BASH_SOURCE[0]}\")/../lib.sh\"\n",
+      "replace": "}\n\n# shellcheck source=../lib.sh\nsource \"$(dirname \"${BASH_SOURCE[0]}\")/../lib.sh\"\nprov_env_guard\n"
+    }
+  ]
+}

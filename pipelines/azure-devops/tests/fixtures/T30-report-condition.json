@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "A deploy event only on success would hide failed deploys.",
+  "patches": [
+    {
+      "file": "templates/steps/deployment-finish.yml",
+      "find": "    displayName: Report the deploy to the portal\n    condition: succeededOrFailed()\n",
+      "replace": "    displayName: Report the deploy to the portal\n    condition: succeeded()\n"
+    }
+  ]
+}

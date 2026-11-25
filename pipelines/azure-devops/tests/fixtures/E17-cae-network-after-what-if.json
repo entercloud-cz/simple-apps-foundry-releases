@@ -1,0 +1,11 @@
+{
+  "rule": "E17",
+  "description": "The CAE network check runs only after what-if (and validate), so the approvers see a preview of a change Azure refuses or a deploy that breaks every app of the CAE.",
+  "patches": [
+    {
+      "file": "scripts/platform/plan.sh",
+      "find": "plat_env_snapshot \"$out/inputs.json\" \"$PLAT_DIR/environment-snapshot.json\"\nif ! saf_cli environment cae-network ",
+      "replace": "plat_arm what-if environment \"$out/inputs.json\" \"$deployment\" \"$PLAT_DIR/what-if-early.json\"\nplat_env_snapshot \"$out/inputs.json\" \"$PLAT_DIR/environment-snapshot.json\"\nif ! saf_cli environment cae-network "
+    }
+  ]
+}

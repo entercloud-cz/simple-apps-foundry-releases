@@ -1,0 +1,50 @@
+{
+  "prefix": "contoso",
+  "environmentName": "nonprod",
+  "environmentKind": "nonprod",
+  "location": "westeurope",
+  "vaultGeneration": 0,
+  "networkModes": {
+    "externalOnly": {
+      "network": "managed"
+    },
+    "externalHybrid": {
+      "vnet": {
+        "existingVnetId": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-network-nonprod/providers/Microsoft.Network/virtualNetworks/vnet-spoke-apps-nonprod"
+      },
+      "caeSubnetPrefix": "10.21.0.0/25",
+      "privateEndpointSubnetPrefix": "10.21.1.0/24",
+      "routeTableId": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-network-nonprod/providers/Microsoft.Network/routeTables/rt-to-firewall",
+      "dnsServers": [
+        "10.0.0.4",
+        "10.0.0.5"
+      ],
+      "egressAllowListProcess": "Service desk queue 'Network – firewall rules'",
+      "egressBaseline": {
+        "status": "active",
+        "reference": "CHG-1101"
+      }
+    }
+  },
+  "hub": {
+    "vnetId": "/subscriptions/00000000-0000-0000-0000-00000000f001/resourceGroups/rg-network-hub/providers/Microsoft.Network/virtualNetworks/vnet-hub-westeurope",
+    "firewallPrivateIp": "10.0.1.4"
+  },
+  "frontDoor": {
+    "environment": "nonprod",
+    "sku": "Standard",
+    "waf": {
+      "mode": "detection",
+      "managedRuleSets": false
+    }
+  },
+  "logRetentionDays": 90,
+  "platformAlertEmails": [
+    "platform-team@contoso.com"
+  ],
+  "managedBy": "SAF",
+  "tags": {},
+  "platformJobsImageDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "entraProvisioningPrincipalId": "00000000-0000-0000-0000-00000000d101",
+  "portalIdentityPrincipalId": "00000000-0000-0000-0000-00000000e102"
+}

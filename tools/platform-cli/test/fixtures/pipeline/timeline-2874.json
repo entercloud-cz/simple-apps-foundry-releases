@@ -1,0 +1,242 @@
+{
+ "id": "00000000-0000-0000-0000-000000000287",
+ "changeId": 57,
+ "records": [
+  {
+   "id": "00000000-0000-0000-0000-000000000001",
+   "parentId": null,
+   "type": "Stage",
+   "identifier": "verify",
+   "name": "Verify",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000002",
+   "parentId": "00000000-0000-0000-0000-000000000001",
+   "type": "Phase",
+   "identifier": "verify.prepare",
+   "name": "Validate run and platform inputs",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000003",
+   "parentId": "00000000-0000-0000-0000-000000000002",
+   "type": "Job",
+   "identifier": "verify.prepare.__default",
+   "name": "Validate run and platform inputs",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1,
+   "workerName": "Hosted Agent"
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000004",
+   "parentId": "00000000-0000-0000-0000-000000000003",
+   "type": "Task",
+   "identifier": null,
+   "name": "Checkout core@refs/tags/v0.3.0 to s/core",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000005",
+   "parentId": "00000000-0000-0000-0000-000000000001",
+   "type": "Phase",
+   "identifier": "verify.build",
+   "name": "Build and check image",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000006",
+   "parentId": "00000000-0000-0000-0000-000000000005",
+   "type": "Job",
+   "identifier": "verify.build.__default",
+   "name": "Build and check image",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1,
+   "workerName": "Hosted Agent"
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000007",
+   "parentId": "00000000-0000-0000-0000-000000000006",
+   "type": "Task",
+   "identifier": null,
+   "name": "Checkout core@refs/tags/v0.3.0 to s/core",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000008",
+   "parentId": "00000000-0000-0000-0000-000000000001",
+   "type": "Phase",
+   "identifier": "verify.scan",
+   "name": "Scan and release manifest",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000009",
+   "parentId": "00000000-0000-0000-0000-000000000008",
+   "type": "Job",
+   "identifier": "verify.scan.__default",
+   "name": "Scan and release manifest",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1,
+   "workerName": "Hosted Agent"
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000010",
+   "parentId": "00000000-0000-0000-0000-000000000009",
+   "type": "Task",
+   "identifier": null,
+   "name": "Checkout core@refs/tags/v0.3.0 to s/core",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000011",
+   "parentId": null,
+   "type": "Stage",
+   "identifier": "deploy_nonprod",
+   "name": "Deploy to nonprod",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000012",
+   "parentId": "00000000-0000-0000-0000-000000000011",
+   "type": "Phase",
+   "identifier": "deploy_nonprod.release",
+   "name": "Release",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000013",
+   "parentId": "00000000-0000-0000-0000-000000000012",
+   "type": "Job",
+   "identifier": "deploy_nonprod.release.release",
+   "name": "Release",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1,
+   "workerName": "Hosted Agent"
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000014",
+   "parentId": "00000000-0000-0000-0000-000000000013",
+   "type": "Task",
+   "identifier": null,
+   "name": "Checkout core@refs/tags/v0.3.0 to s/core",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000015",
+   "parentId": null,
+   "type": "Stage",
+   "identifier": "preview_prod",
+   "name": "Preview prod",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000016",
+   "parentId": "00000000-0000-0000-0000-000000000015",
+   "type": "Phase",
+   "identifier": "preview_prod.preview",
+   "name": "What-if preview",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000017",
+   "parentId": "00000000-0000-0000-0000-000000000016",
+   "type": "Job",
+   "identifier": "preview_prod.preview.__default",
+   "name": "What-if preview",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1,
+   "workerName": "Hosted Agent"
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000018",
+   "parentId": "00000000-0000-0000-0000-000000000017",
+   "type": "Task",
+   "identifier": null,
+   "name": "Checkout core@refs/tags/v0.3.0 to s/core",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000019",
+   "parentId": null,
+   "type": "Stage",
+   "identifier": "deploy_prod",
+   "name": "Deploy to prod",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000020",
+   "parentId": "00000000-0000-0000-0000-000000000019",
+   "type": "Phase",
+   "identifier": "deploy_prod.release",
+   "name": "Release",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000021",
+   "parentId": "00000000-0000-0000-0000-000000000020",
+   "type": "Job",
+   "identifier": "deploy_prod.release.release",
+   "name": "Release",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1,
+   "workerName": "Hosted Agent"
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000022",
+   "parentId": "00000000-0000-0000-0000-000000000021",
+   "type": "Task",
+   "identifier": null,
+   "name": "Checkout core@refs/tags/v0.3.0 to s/core",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000023",
+   "parentId": "00000000-0000-0000-0000-000000000019",
+   "type": "Checkpoint",
+   "identifier": "Checkpoint",
+   "name": "Checkpoint",
+   "state": "completed",
+   "result": "succeeded",
+   "attempt": 1
+  }
+ ]
+}

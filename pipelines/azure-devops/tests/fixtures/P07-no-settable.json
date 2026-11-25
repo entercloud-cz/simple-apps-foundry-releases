@@ -1,0 +1,11 @@
+{
+  "rule": "P07",
+  "description": "Every provisioning step sets settableVariables: none.",
+  "patches": [
+    {
+      "file": "templates/provisioning/steps/setup.yml",
+      "find": "  - checkout: core\n    path: s/core\n    fetchDepth: 1\n    fetchTags: false\n    submodules: false\n    lfs: false\n    persistCredentials: false\n    target:\n      commands: restricted\n      settableVariables: none\n",
+      "replace": "  - checkout: core\n    path: s/core\n    fetchDepth: 1\n    fetchTags: false\n    submodules: false\n    lfs: false\n    persistCredentials: false\n    target:\n      commands: restricted\n"
+    }
+  ]
+}

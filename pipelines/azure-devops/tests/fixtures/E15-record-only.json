@@ -1,0 +1,11 @@
+{
+  "rule": "E15",
+  "description": "The plan trusts the deployment record alone: a job deleted or changed by hand stays up to date, and provisioning waits for it forever.",
+  "patches": [
+    {
+      "file": "scripts/platform/plan.sh",
+      "find": "  if [ \"${#job_issues[@]}\" -gt 0 ] && [ \"$result\" = up-to-date ]; then\n",
+      "replace": "  if false; then\n"
+    }
+  ]
+}

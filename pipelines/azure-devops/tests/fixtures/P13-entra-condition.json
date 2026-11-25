@@ -1,0 +1,11 @@
+{
+  "rule": "P13",
+  "description": "Stage entra runs only when an Entra plan planned a change (no change never reaches sc-platform-entra, nor its Approval check with approvals.entraChanges separate).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra.yml",
+      "find": "    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'), or(eq(dependencies.plan.outputs['decide.entraDecide.entraNeeded'], 'true'), eq(dependencies.entra_plan.outputs['plan.decide.entraNeeded'], 'true')))\n",
+      "replace": "    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'))\n"
+    }
+  ]
+}

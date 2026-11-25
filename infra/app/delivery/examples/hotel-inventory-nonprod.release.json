@@ -1,0 +1,53 @@
+{
+  "prefix": "contoso",
+  "environmentName": "nonprod",
+  "slug": "hotel-inventory",
+  "generation": 0,
+  "vaultGeneration": 0,
+  "location": "westeurope",
+  "networkMode": "externalOnly",
+  "cell": "01",
+  "externalOnlyNetwork": "managed",
+  "image": {
+    "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "runtime": {
+    "port": 8080,
+    "size": "s",
+    "minReplicas": 0,
+    "maxReplicas": 3,
+    "livenessPath": "/healthz",
+    "readinessPath": "/readyz"
+  },
+  "env": [
+    { "name": "LOG_LEVEL", "value": "debug", "secret": null },
+    { "name": "PMS_API_KEY", "value": null, "secret": "pms-api-key" }
+  ],
+  "secrets": ["pms-api-key"],
+  "landingZone": {
+    "runtimeIdentityClientId": "00000000-0000-0000-0000-00000000d101",
+    "database": {
+      "host": "pgsql-contoso-hotel-inventory-nonprod-gtcji7.postgres.database.azure.com",
+      "name": "hotel_inventory",
+      "user": "id-contoso-hotel-inventory-run-nonprod"
+    },
+    "storageBlobEndpoint": "https://sthotelinventorygtcji7.blob.core.windows.net/"
+  },
+  "frontDoor": {
+    "mode": "none",
+    "frontDoorId": null,
+    "backendIpRanges": []
+  },
+  "customDomains": [
+    { "name": "hotel-inventory-test.contoso.com", "certificateName": "mc-hotel-inventory-test-contoso-com" }
+  ],
+  "authentication": {
+    "mode": "required",
+    "clientId": "00000000-0000-0000-0000-00000000d201"
+  },
+  "run": {
+    "id": "1234",
+    "commit": "0123456789abcdef0123456789abcdef01234567"
+  },
+  "coreVersion": "v0.1.0"
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "The bound of parallel units is a small core constant.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "PROV_PARALLEL_MAX=6\n",
+      "replace": "PROV_PARALLEL_MAX=20\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "A _dnsauth TXT record set is deleted only after its owner (the mark saf-app/saf-env) was read.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "    owner=\"$(fd_dns_owner \"$dir/txt.json\")\"\n",
+      "replace": "    owner=mine\n"
+    }
+  ]
+}

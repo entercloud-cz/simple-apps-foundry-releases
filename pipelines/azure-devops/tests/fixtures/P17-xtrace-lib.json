@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "No xtrace in prov-lib.sh.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "shopt -s inherit_errexit\n",
+      "replace": "shopt -s inherit_errexit\nset -o xtrace\n"
+    }
+  ]
+}

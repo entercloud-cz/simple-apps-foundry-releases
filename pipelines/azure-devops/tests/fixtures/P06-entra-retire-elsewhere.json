@@ -1,0 +1,11 @@
+{
+  "rule": "P06",
+  "description": "The old Entra record is deleted only in retire_instance_record() (ADR-0063); the same delete anywhere else is refused.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  if [ \"$target\" = environment ]; then retire_instance_record \"$app_env\"; fi\n",
+      "replace": "  if [ \"$target\" = environment ]; then retire_instance_record \"$app_env\"; fi\n  if az deployment group delete --name \"$entra_name\" --resource-group \"$instance_rg\" --only-show-errors --output none 2> \"$err\"; then :; fi\n"
+    }
+  ]
+}

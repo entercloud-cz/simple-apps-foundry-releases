@@ -1,0 +1,11 @@
+{
+  "rule": "E19",
+  "description": "Something resets env_changed between the compare and the what-if, so a changed environment gets no preview.",
+  "patches": [
+    {
+      "file": "scripts/platform/plan.sh",
+      "find": "saf_info \"\"\nif [ \"$env_changed\" = true ]; then\n",
+      "replace": "saf_info \"\"\n[ \"$pass\" = 2 ] || env_changed=false\nif [ \"$env_changed\" = true ]; then\n"
+    }
+  ]
+}

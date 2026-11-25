@@ -1,0 +1,11 @@
+{
+  "rule": "P18",
+  "description": "prov_arm_token writes the token nowhere but SAF_ARM_TOKEN.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "  SAF_ARM_TOKEN=\"$token\"\n  SAF_ARM_ENDPOINT=\"${arm%/}\"\n  export SAF_ARM_TOKEN SAF_ARM_ENDPOINT\n}",
+      "replace": "  SAF_ARM_TOKEN=\"$token\"\n  printf '%s' \"$token\" > \"$PROV_DIR/arm.token\"\n  SAF_ARM_ENDPOINT=\"${arm%/}\"\n  export SAF_ARM_TOKEN SAF_ARM_ENDPOINT\n}"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P13",
+  "description": "Stage entra also runs on the Entra plan of the job decide (an entra-only change skips entra_plan, ADR-0050).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra.yml",
+      "find": "    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'), or(eq(dependencies.plan.outputs['decide.entraDecide.entraNeeded'], 'true'), eq(dependencies.entra_plan.outputs['plan.decide.entraNeeded'], 'true')))\n",
+      "replace": "    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'), eq(dependencies.entra_plan.outputs['plan.decide.entraNeeded'], 'true'))\n"
+    }
+  ]
+}

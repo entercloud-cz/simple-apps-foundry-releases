@@ -1,0 +1,26 @@
+{
+  "clientId": {
+    "type": "String",
+    "value": "00000000-0000-0000-0000-00000000e101"
+  },
+  "applicationObjectId": {
+    "type": "String",
+    "value": "00000000-0000-0000-0000-00000000e103"
+  },
+  "servicePrincipalId": {
+    "type": "String",
+    "value": "00000000-0000-0000-0000-00000000e104"
+  },
+  "apiScope": {
+    "type": "String",
+    "value": "api://00000000-0000-0000-0000-00000000e101/access_as_user"
+  },
+  "cliClientId": {
+    "type": "String",
+    "value": "00000000-0000-0000-0000-00000000e105"
+  },
+  "cliScope": {
+    "type": "String",
+    "value": "api://00000000-0000-0000-0000-00000000e101/apps.read"
+  }
+}

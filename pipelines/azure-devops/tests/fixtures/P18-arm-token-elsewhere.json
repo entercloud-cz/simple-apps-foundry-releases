@@ -1,0 +1,11 @@
+{
+  "rule": "P18",
+  "description": "prov_arm_token is called once in azure-post.sh (dbinit) and once in azure.sh (the Easy Auth secret's delete), nowhere else.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "  prov_write_frontdoor_entry \"$out\"\n",
+      "replace": "  prov_write_frontdoor_entry \"$out\"\n  prov_arm_token\n"
+    }
+  ]
+}

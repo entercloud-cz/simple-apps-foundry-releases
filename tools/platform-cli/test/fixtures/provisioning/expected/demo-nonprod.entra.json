@@ -1,0 +1,38 @@
+{
+  "prefix": "contoso",
+  "environmentName": "nonprod",
+  "environmentKind": "nonprod",
+  "slug": "demo",
+  "incarnation": 0,
+  "appTitle": "Demo",
+  "hosts": [
+    "ca-demo.happyfield-00000000.westeurope.azurecontainerapps.io"
+  ],
+  "appRoles": [
+    {
+      "value": "Reader",
+      "displayName": "Reader",
+      "description": "Can view the app."
+    },
+    {
+      "value": "Editor",
+      "displayName": "Editor",
+      "description": "Can change data in the app."
+    },
+    {
+      "value": "Admin",
+      "displayName": "Admin",
+      "description": "Can manage the app."
+    }
+  ],
+  "roleAssignments": [
+    {
+      "principalId": "00000000-0000-0000-0000-00000000e002",
+      "role": "Admin"
+    },
+    {
+      "principalId": "00000000-0000-0000-0000-00000000e001",
+      "role": "Reader"
+    }
+  ]
+}

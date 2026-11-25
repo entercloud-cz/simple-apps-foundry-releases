@@ -1,0 +1,21 @@
+{
+  "description": "Unknown kind.",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "qa",
+        "promoteFrom": ""
+      }
+    ]
+  },
+  "expect": {
+    "errors": [
+      "an environment kind is not prod or nonprod"
+    ]
+  }
+}

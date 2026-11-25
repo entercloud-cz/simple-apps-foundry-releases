@@ -1,0 +1,11 @@
+{
+  "rule": "P20",
+  "description": "No az rest DELETE outside fd_delete(), e.g. of a DNS record in another function.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "      fd_delete \"$txt_id\" \"$DNS_API\"\n",
+      "replace": "      az rest --method delete --url \"$txt_id?api-version=2018-05-01\" --only-show-errors --output none\n"
+    }
+  ]
+}
