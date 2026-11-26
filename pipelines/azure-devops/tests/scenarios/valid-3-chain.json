@@ -1,0 +1,35 @@
+{
+  "description": "Chain dev -> test -> prod; test is a nonprod promotion environment (no preview).",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "dev",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      },
+      {
+        "name": "test",
+        "kind": "nonprod",
+        "promoteFrom": "dev"
+      },
+      {
+        "name": "prod",
+        "kind": "prod",
+        "promoteFrom": "test"
+      }
+    ]
+  },
+  "expect": {
+    "stages": [
+      "verify",
+      "deploy_dev",
+      "deploy_test",
+      "preview_prod",
+      "deploy_prod"
+    ]
+  }
+}

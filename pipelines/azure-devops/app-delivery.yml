@@ -1,0 +1,151 @@
+# App delivery pipeline: the ONLY entry point instances extend (ADR-0006, ADR-0021, ADR-0024).
+#
+# Each app's pipeline lives in the instance's platform-config repo (apps/{slug}/delivery.yml),
+# declares the repository resources `app` (the app repo, CI trigger on all branches) and `core`
+# (the core mirror, pinned to refs/tags/<coreVersion>) and extends this file:
+#
+#   parameters:                     # queue-time (portal: redeploy/rollback); push runs use defaults
+#     - { name: action, type: string, default: deliver, values: [deliver, redeploy] }
+#     - { name: targetEnvironment, type: string, default: none, values: [none, nonprod, prod] }
+#     - { name: sourceRunId, type: number, default: 0 }
+#   extends:
+#     template: pipelines/azure-devops/app-delivery.yml@core
+#     parameters:
+#       app: { slug: demo, defaultBranch: refs/heads/main }
+#       environments:
+#         - { name: nonprod, kind: nonprod, promoteFrom: '' }
+#         - { name: prod, kind: prod, promoteFrom: nonprod }
+#       action: ${{ parameters.action }}
+#       targetEnvironment: ${{ parameters.targetEnvironment }}
+#       sourceRunId: ${{ parameters.sourceRunId }}
+#
+# Rules this file and everything it includes follow (tests/check-templates.py enforces them):
+#   - exactly five parameters: app and environments (object), action (deliver | redeploy),
+#     targetEnvironment (string) and sourceRunId (number); no booleans, no step/job/stage lists,
+#     no tool versions or thresholds: nothing a run passes can skip, weaken or reorder a check;
+#   - every stage `isSkippable: false`; no root variables, no variable groups;
+#   - the verify stage holds no service connection, environment, AzureCLI or System.AccessToken;
+#     the build job (runs the app's Dockerfile) restricts every step's logging commands;
+#   - credentials exist only in the preview and deploy stages, whose steps are fixed here; the job
+#     token (System.AccessToken) only in the jobs source.resolve and retain;
+#   - templates are only included from this repo (never @app or @self);
+#   - every deployment job ends with the deploy event for the portal (scripts/report.sh, with the
+#     job's own service connection, ADR-0037); it is the only step with continueOnError and can't
+#     fail the run; portal.clientId and portal.apiBaseUrl come from instance.yaml at run time, not
+#     from a parameter;
+#   - only built-in tasks; third-party tools come from tools/tools.json (pinned and verified).
+#
+# action deliver (push-triggered): verify, then per environment
+#   - build environment (promoteFrom ''):   deploy_<env>  (push by digest; branch in deploy.branches)
+#   - promotion environment (promoteFrom S): preview_<env> (kind prod only: what-if before approval)
+#                                            and deploy_<env> (import by digest from S's registry),
+#     both after verify and deploy_S, only when the run's app ref is the default branch.
+# action redeploy (queued by the portal with targetEnvironment T and sourceRunId N): no verify and
+# no other environment. Stage `source` checks run N (verify-source-run) and republishes its
+# artifacts in this run; then (prod) preview_T and deploy_T, which redeploy N's digest: rollback
+# when it is in T's registry, otherwise import from T's source environment (promotion of an
+# earlier build). Every deploy stage ends with job `retain` (retention lease on the deployed run).
+# Approvals, Branch control, Required template and Exclusive lock are checks on the ADO resources,
+# created by provisioning; the templates never implement approvals.
+
+parameters:
+  - name: app
+    type: object
+  - name: environments
+    type: object
+  - name: action
+    type: string
+    default: deliver
+    values:
+      - deliver
+      - redeploy
+  - name: targetEnvironment
+    type: string
+    default: none
+  - name: sourceRunId
+    type: number
+    default: 0
+
+stages:
+  # -------------------------------------------------------------------------------------------
+  # Compile-time guards. An entry that is not a stage makes Azure Pipelines reject the run
+  # before anything is queued and shows the key as the error, e.g. "Unexpected value 'SAF template
+  # error: ...'" (Preview API, sandbox 2026-10-29). `platform pipeline validate-run` repeats the
+  # checks at runtime against instance.yaml and also rejects promotion cycles.
+  # -------------------------------------------------------------------------------------------
+  - ${{ if eq(format('{0}', parameters.app.slug), '') }}:
+    - 'SAF template error: parameters.app.slug is empty': fail
+  - ${{ if not(startsWith(format('{0}', parameters.app.defaultBranch), 'refs/heads/')) }}:
+    - 'SAF template error: parameters.app.defaultBranch must start with refs/heads/': fail
+  - ${{ if and(eq(parameters.action, 'deliver'), or(ne(parameters.targetEnvironment, 'none'), ne(parameters.sourceRunId, 0))) }}:
+    - 'SAF template error: action deliver takes targetEnvironment none and sourceRunId 0': fail
+  - ${{ if and(eq(parameters.action, 'redeploy'), not(containsValue(parameters.environments.*.name, parameters.targetEnvironment))) }}:
+    - 'SAF template error: action redeploy needs targetEnvironment to name an environment of the list': fail
+  - ${{ if and(eq(parameters.action, 'redeploy'), le(parameters.sourceRunId, 0)) }}:
+    - 'SAF template error: action redeploy needs sourceRunId > 0': fail
+  - ${{ if eq(length(parameters.environments), 0) }}:
+    - 'SAF template error: parameters.environments lists no environment': fail
+  - ${{ each env in parameters.environments }}:
+    - ${{ if notIn(env.kind, 'prod', 'nonprod') }}:
+      - 'SAF template error: an environment kind is not prod or nonprod': ${{ env.name }}
+    - ${{ if and(eq(env.kind, 'prod'), eq(format('{0}', env.promoteFrom), '')) }}:
+      - 'SAF template error: a prod environment must set promoteFrom (prod only receives promoted images)': ${{ env.name }}
+    - ${{ if eq(format('{0}', env.promoteFrom), format('{0}', env.name)) }}:
+      - 'SAF template error: an environment cannot promote from itself': ${{ env.name }}
+    # containsValue() over the filtered array `parameters.environments.*.name` compiles (Preview
+    # API, 2026-10-29). validate-run checks the same at runtime, plus cycles.
+    - ${{ if and(ne(format('{0}', env.promoteFrom), ''), not(containsValue(parameters.environments.*.name, env.promoteFrom))) }}:
+      - 'SAF template error: promoteFrom must name an environment of the list': ${{ env.name }}
+
+  # -------------------------------------------------------------------------------------------
+  # deliver: verify (no Azure credentials): prepare (trusted) -> build (untrusted) -> scan (trusted).
+  # redeploy: source (no Azure credentials): verify the earlier run, republish its artifacts.
+  # -------------------------------------------------------------------------------------------
+  - ${{ if eq(parameters.action, 'deliver') }}:
+    - template: templates/stages/verify.yml
+      parameters:
+        app: ${{ parameters.app }}
+        environments: ${{ parameters.environments }}
+        action: ${{ parameters.action }}
+        targetEnvironment: ${{ parameters.targetEnvironment }}
+        sourceRunId: ${{ parameters.sourceRunId }}
+  - ${{ if eq(parameters.action, 'redeploy') }}:
+    - template: templates/stages/source.yml
+      parameters:
+        app: ${{ parameters.app }}
+        environments: ${{ parameters.environments }}
+        action: ${{ parameters.action }}
+        targetEnvironment: ${{ parameters.targetEnvironment }}
+        sourceRunId: ${{ parameters.sourceRunId }}
+
+  # -------------------------------------------------------------------------------------------
+  # Per environment (deliver: every environment; redeploy: the target only). Build environments:
+  # deploy stage. Promotion environments: (prod) preview, then promote. deliver stages run after
+  # verify (and deploy_S) on the decide outputs; redeploy stages after `source`. Every stage names
+  # its dependsOn explicitly, so the order of the environment list does not matter.
+  # TODO(verify): a stage may depend on a stage that appears later in the stages list (environment
+  # list with prod before its source; tests/scenarios/valid-4-unordered.json), Preview API.
+  # -------------------------------------------------------------------------------------------
+  - ${{ each env in parameters.environments }}:
+    - ${{ if or(eq(parameters.action, 'deliver'), eq(env.name, parameters.targetEnvironment)) }}:
+      - ${{ if eq(format('{0}', env.promoteFrom), '') }}:
+        - template: templates/stages/deploy.yml
+          parameters:
+            app: ${{ parameters.app }}
+            environment: ${{ env }}
+            action: ${{ parameters.action }}
+            sourceRunId: ${{ parameters.sourceRunId }}
+      - ${{ if ne(format('{0}', env.promoteFrom), '') }}:
+        - ${{ if eq(env.kind, 'prod') }}:
+          - template: templates/stages/preview.yml
+            parameters:
+              app: ${{ parameters.app }}
+              environment: ${{ env }}
+              action: ${{ parameters.action }}
+              sourceRunId: ${{ parameters.sourceRunId }}
+        - template: templates/stages/promote.yml
+          parameters:
+            app: ${{ parameters.app }}
+            environment: ${{ env }}
+            action: ${{ parameters.action }}
+            sourceRunId: ${{ parameters.sourceRunId }}

@@ -1,0 +1,11 @@
+{
+  "rule": "T29",
+  "description": "A redeploy to prod without the source run's scan is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/source.yml",
+      "find": "              - ${{ if eq(env.kind, 'prod') }}:\n                - task: DownloadPipelineArtifact@2\n",
+      "replace": "              - ${{ if eq(env.kind, 'never') }}:\n                - task: DownloadPipelineArtifact@2\n"
+    }
+  ]
+}

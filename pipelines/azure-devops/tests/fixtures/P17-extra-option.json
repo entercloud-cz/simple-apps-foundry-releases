@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "easyauth-secret takes exactly the documented options.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "    --output \"$result\" || rc=$?",
+      "replace": "    --output \"$result\" --keep-job-secret || rc=$?"
+    }
+  ]
+}

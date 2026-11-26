@@ -1,0 +1,11 @@
+{
+  "rule": "P18",
+  "description": "The ARM token never reaches dbinit as an argument.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "--principal-client-id \"$client\" --output",
+      "replace": "--principal-client-id \"$client\" --arm-token \"$SAF_ARM_TOKEN\" --output"
+    }
+  ]
+}

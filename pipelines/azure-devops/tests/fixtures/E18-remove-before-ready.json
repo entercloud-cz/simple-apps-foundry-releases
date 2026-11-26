@@ -1,0 +1,11 @@
+{
+  "rule": "E18",
+  "description": "deploy_portal() removes the former PostgreSQL database right after pass 2, before the portal's revision on Azure SQL is ready.",
+  "patches": [
+    {
+      "file": "scripts/platform/deploy.sh",
+      "find": "    plat_arm create portal \"$inputs_p\" \"$deployment_p\" \"$PLAT_DIR/portal-pass2.json\"\n",
+      "replace": "    plat_arm create portal \"$inputs_p\" \"$deployment_p\" \"$PLAT_DIR/portal-pass2.json\"\n    plat_former_db_remove \"$rg_p\"\n"
+    }
+  ]
+}

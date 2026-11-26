@@ -1,0 +1,11 @@
+{
+  "rule": "T12",
+  "description": "deploy.sh deploying a template file directly is rejected.",
+  "patches": [
+    {
+      "file": "scripts/deploy.sh",
+      "find": "      --name \"$deployment\" \\\n",
+      "replace": "      --name \"$deployment\" \\\n      --template-file \"$SAF_CORE/infra/app/release.bicep\" \\\n"
+    }
+  ]
+}

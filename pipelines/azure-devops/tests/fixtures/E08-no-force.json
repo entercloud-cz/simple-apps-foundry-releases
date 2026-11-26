@@ -1,0 +1,11 @@
+{
+  "rule": "E08",
+  "description": "The saf-jobs import runs without --force (a re-run would fail on the existing tag).",
+  "patches": [
+    {
+      "file": "scripts/platform/deploy.sh",
+      "find": "--image \"$repo:sha256-${digest#sha256:}\" --force --only-show-errors",
+      "replace": "--image \"$repo:sha256-${digest#sha256:}\" --only-show-errors"
+    }
+  ]
+}

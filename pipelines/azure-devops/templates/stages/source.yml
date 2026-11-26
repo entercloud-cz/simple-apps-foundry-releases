@@ -1,0 +1,190 @@
+# Stage `source` (action redeploy only): check the earlier run named by sourceRunId and make its
+# artifacts this run's artifacts (ADR-0029 items 5 and 6).
+#
+# No Azure credentials, no environment, no app checkout, core code only. Job `resolve` is, with
+# `retain`, the only job that maps System.AccessToken (the job token reads this pipeline's runs,
+# timelines and artifacts). Steps:
+#   0. `platform pipeline validate-run` (a redeploy run has no prepare job): the five parameters
+#      against instance.yaml and the core release tag.
+#   1. `platform pipeline verify-source-run` (scripts/source-run.sh verify): same pipeline,
+#      completed, scan succeeded, and either deploy_T succeeded (path rollback) or deploy_S
+#      succeeded from the default branch (path promotion); prod targets need the default branch.
+#   2. DownloadPipelineArtifact@2 from that run (buildType specific): release-manifest, and
+#      release-result-S for a promotion environment (in both paths: deploy.sh uses it only when the
+#      digest is not in T's registry yet), and scan for a prod target.
+#   3. source-run.sh check: manifest run and commit equal source.json; republished below under
+#      the same names, so preview and deploy read only this run's artifacts, as for deliver.
+
+parameters:
+  - name: app
+    type: object
+  - name: environments
+    type: object
+  - name: action
+    type: string
+    values:
+      - redeploy
+  - name: targetEnvironment
+    type: string
+  - name: sourceRunId
+    type: number
+
+# The parameters are exactly the five of app-delivery.yml, so SAF_PARAMS_JSON
+# (convertToJson(parameters)) is what validate-run expects; `env` below is the target environment.
+stages:
+  - ${{ each env in parameters.environments }}:
+    - ${{ if eq(env.name, parameters.targetEnvironment) }}:
+      - stage: source
+        displayName: Source run ${{ parameters.sourceRunId }}
+        dependsOn: []
+        isSkippable: false
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        jobs:
+          - job: resolve
+            displayName: Verify run ${{ parameters.sourceRunId }} for ${{ env.name }}
+            pool:
+              name: Azure Pipelines
+              vmImage: ubuntu-24.04
+            timeoutInMinutes: 20
+            variables:
+              - name: saf.coreRef
+                value: $[ resources.repositories.core.ref ]
+            steps:
+              - checkout: core
+                path: s/core
+                fetchDepth: 1
+                fetchTags: false
+                submodules: false
+                lfs: false
+                persistCredentials: false
+                target:
+                  commands: restricted
+                  settableVariables: none
+              - checkout: self
+                path: s/config
+                fetchDepth: 1
+                fetchTags: false
+                submodules: false
+                lfs: false
+                persistCredentials: false
+                target:
+                  commands: restricted
+                  settableVariables: none
+              - template: ../steps/install-tools.yml
+                parameters:
+                  tools: [node]
+              - template: ../steps/platform-cli.yml
+              # The redeploy run has no prepare job: validate the run's parameters here.
+              - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/source-run.sh" validate
+                displayName: Validate run parameters (validate-run)
+                env:
+                  SAF_PARAMS_JSON: ${{ convertToJson(parameters) }}
+                  RESOURCES_REPOSITORIES_CORE_REF: $(saf.coreRef)
+                  SAF_SLUG: ${{ parameters.app.slug }}
+                  SAF_SOURCE_RUN_ID: ${{ parameters.sourceRunId }}
+                  SAF_TARGET: ${{ env.name }}
+                  SAF_TARGET_KIND: ${{ env.kind }}
+                  SAF_PROMOTE_FROM: ${{ env.promoteFrom }}
+                  SAF_DEFAULT_BRANCH: ${{ parameters.app.defaultBranch }}
+                target:
+                  commands: restricted
+                  settableVariables: none
+              - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/source-run.sh" verify
+                displayName: Verify run ${{ parameters.sourceRunId }} (pipeline, scan, deployments, branch)
+                env:
+                  SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+                  SAF_SLUG: ${{ parameters.app.slug }}
+                  SAF_SOURCE_RUN_ID: ${{ parameters.sourceRunId }}
+                  SAF_TARGET: ${{ env.name }}
+                  SAF_TARGET_KIND: ${{ env.kind }}
+                  SAF_PROMOTE_FROM: ${{ env.promoteFrom }}
+                  SAF_DEFAULT_BRANCH: ${{ parameters.app.defaultBranch }}
+                target:
+                  commands: restricted
+                  settableVariables: none
+              # TODO(verify) ADO-22: DownloadPipelineArtifact@2 with buildType specific reads another
+              # run of the same pipeline with the job token ("Limit job authorization scope" on).
+              - task: DownloadPipelineArtifact@2
+                displayName: Download release-manifest of run ${{ parameters.sourceRunId }}
+                inputs:
+                  buildType: specific
+                  project: $(System.TeamProjectId)
+                  definition: $(System.DefinitionId)
+                  buildVersionToDownload: specific
+                  pipelineId: ${{ parameters.sourceRunId }}
+                  artifactName: release-manifest
+                  targetPath: $(Pipeline.Workspace)/source-run/release-manifest
+                target:
+                  commands: restricted
+                  settableVariables: none
+              - ${{ if ne(format('{0}', env.promoteFrom), '') }}:
+                - task: DownloadPipelineArtifact@2
+                  displayName: Download release-result-${{ env.promoteFrom }} of run ${{ parameters.sourceRunId }}
+                  inputs:
+                    buildType: specific
+                    project: $(System.TeamProjectId)
+                    definition: $(System.DefinitionId)
+                    buildVersionToDownload: specific
+                    pipelineId: ${{ parameters.sourceRunId }}
+                    artifactName: release-result-${{ env.promoteFrom }}
+                    targetPath: $(Pipeline.Workspace)/source-run/release-result-${{ env.promoteFrom }}
+                  target:
+                    commands: restricted
+                    settableVariables: none
+              - ${{ if eq(env.kind, 'prod') }}:
+                - task: DownloadPipelineArtifact@2
+                  displayName: Download scan of run ${{ parameters.sourceRunId }}
+                  inputs:
+                    buildType: specific
+                    project: $(System.TeamProjectId)
+                    definition: $(System.DefinitionId)
+                    buildVersionToDownload: specific
+                    pipelineId: ${{ parameters.sourceRunId }}
+                    artifactName: scan
+                    targetPath: $(Pipeline.Workspace)/source-run/scan
+                  target:
+                    commands: restricted
+                    settableVariables: none
+              - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/source-run.sh" check
+                displayName: Check the artifacts of run ${{ parameters.sourceRunId }}
+                env:
+                  SAF_SLUG: ${{ parameters.app.slug }}
+                  SAF_SOURCE_RUN_ID: ${{ parameters.sourceRunId }}
+                  SAF_TARGET: ${{ env.name }}
+                  SAF_TARGET_KIND: ${{ env.kind }}
+                  SAF_PROMOTE_FROM: ${{ env.promoteFrom }}
+                  SAF_DEFAULT_BRANCH: ${{ parameters.app.defaultBranch }}
+                target:
+                  commands: restricted
+                  settableVariables: none
+              - task: PublishPipelineArtifact@1
+                displayName: Republish release-manifest (+ source.json)
+                inputs:
+                  targetPath: $(Pipeline.Workspace)/saf-out/release-manifest
+                  artifact: release-manifest
+                  publishLocation: pipeline
+                target:
+                  commands: restricted
+                  settableVariables: none
+              - ${{ if ne(format('{0}', env.promoteFrom), '') }}:
+                - task: PublishPipelineArtifact@1
+                  displayName: Republish release-result-${{ env.promoteFrom }}
+                  inputs:
+                    targetPath: $(Pipeline.Workspace)/saf-out/release-result-${{ env.promoteFrom }}
+                    artifact: release-result-${{ env.promoteFrom }}
+                    publishLocation: pipeline
+                  target:
+                    commands: restricted
+                    settableVariables: none
+              - ${{ if eq(env.kind, 'prod') }}:
+                - task: PublishPipelineArtifact@1
+                  displayName: Republish scan
+                  inputs:
+                    targetPath: $(Pipeline.Workspace)/saf-out/scan
+                    artifact: scan
+                    publishLocation: pipeline
+                  target:
+                    commands: restricted
+                    settableVariables: none

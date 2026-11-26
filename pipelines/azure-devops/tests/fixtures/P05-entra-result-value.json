@@ -1,0 +1,11 @@
+{
+  "rule": "P05",
+  "description": "saf.result.<artifact> is exactly the result of a job (no default that would read a missing artifact).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure-post.yml",
+      "find": "            value: $[ stageDependencies.entra.registrations.result ]\n",
+      "replace": "            value: $[ coalesce(stageDependencies.entra.registrations.result, 'Succeeded') ]\n"
+    }
+  ]
+}

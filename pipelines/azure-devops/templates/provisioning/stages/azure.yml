@@ -1,0 +1,99 @@
+# Stage `azure_<env>`: landing zones of ONE environment, first pass (ADR-0032). Runs only when the
+# plan runs the unit `lz` of an app in <env> (ADR-0048, output lz_<env> of stage plan) and processes
+# exactly those apps.
+#
+# Service connection sc-platform-provisioning-<env> (Azure provisioning identity of that
+# environment, ADR-0031; naming.bicep provisioningServiceConnection), nothing else. Normal job with
+# AzureCLI@2, not a deployment job: the protection (Required template, Branch control, Exclusive
+# lock) sits on the service connection.
+#
+# scripts/provisioning/azure.sh, per app whose lz runs in <env> (and whose landing zone is ok in
+# <promoteFrom> when it runs there too): records, `platform provisioning state` (federation and Easy
+# Auth flag carried from the lz record), `inputs --step lz`, `az deployment sub validate`,
+# `platform provisioning compare`; `az deployment sub create` of lz-{slug}-{env} through
+# infra/app/provisioning/landing-zone.bicepparam only when the record is not up to date, then the
+# plan's unit tags back on the app resource group; for an app that requires sign-in, its Easy Auth
+# secret entry, and its custom domain's entry (ADR-0035, ADR-0010).
+# Artifact azure_<env> (created by the first step, published with always(), so a later stage that
+# downloads it finds it whenever this job ran): status/{slug}.{env}.json, lz-outputs/{slug}.{env}.json,
+# secret/{slug}.{env}.json (sign-in apps) and frontdoor/.
+
+parameters:
+  - name: environment
+    type: object
+
+stages:
+  - stage: azure_${{ parameters.environment.name }}
+    displayName: Landing zones ${{ parameters.environment.name }}
+    dependsOn:
+      - validate
+      - plan
+      - ${{ if ne(format('{0}', parameters.environment.promoteFrom), '') }}:
+        - azure_${{ parameters.environment.promoteFrom }}
+    # Runs when the source environment's stage failed or was skipped, too: the apps whose landing
+    # zone isn't ok there are skipped here.
+    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'), eq(dependencies.plan.outputs['decide.decide.lz_${{ parameters.environment.name }}'], 'true'))
+    isSkippable: false
+    # Exclusive lock on the service connection: a newer run waiting for the lock cancels an older
+    # waiting one; safe because every run plans from current state (ADR-0032 decision 10).
+    lockBehavior: runLatest
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - job: landing_zones
+        displayName: Landing zones in ${{ parameters.environment.name }}
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 180
+        ${{ if ne(format('{0}', parameters.environment.promoteFrom), '') }}:
+          variables:
+            # Results of the jobs whose artifacts are optional here (steps/download.yml): empty when
+            # their stage was skipped or never started.
+            - name: saf.result.azure_${{ parameters.environment.promoteFrom }}
+              value: $[ stageDependencies.azure_${{ parameters.environment.promoteFrom }}.landing_zones.result ]
+        steps:
+          - template: ../steps/setup.yml
+            parameters:
+              tools: [node, bicep]
+              cli: artifact
+              artifact: azure_${{ parameters.environment.name }}
+          - template: ../steps/download.yml
+            parameters:
+              artifacts:
+                - units
+                - plan_${{ parameters.environment.name }}
+              optional:
+                - ${{ if ne(format('{0}', parameters.environment.promoteFrom), '') }}:
+                  - azure_${{ parameters.environment.promoteFrom }}
+          # AzureCLI@2 logs in with the service connection (workload identity federation) in its
+          # own AZURE_CONFIG_DIR. Restricted: the script uses only task.logissue.
+          - task: AzureCLI@2
+            displayName: Landing zones (first pass)
+            inputs:
+              azureSubscription: sc-platform-provisioning-${{ parameters.environment.name }}
+              scriptType: bash
+              scriptLocation: scriptPath
+              scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/provisioning/azure.sh
+              addSpnToEnvironment: false
+              useGlobalConfig: false
+              failOnStandardError: false
+              workingDirectory: $(Pipeline.Workspace)
+            env:
+              SAF_ENV_NAME: ${{ parameters.environment.name }}
+              SAF_PROMOTE_FROM: ${{ parameters.environment.promoteFrom }}
+              SAF_SERVICE_CONNECTION: sc-platform-provisioning-${{ parameters.environment.name }}
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: PublishPipelineArtifact@1
+            displayName: Publish azure_${{ parameters.environment.name }}
+            condition: always()
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/azure_${{ parameters.environment.name }}
+              artifact: azure_${{ parameters.environment.name }}
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none

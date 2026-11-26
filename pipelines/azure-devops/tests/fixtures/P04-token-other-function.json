@@ -1,0 +1,11 @@
+{
+  "rule": "P04",
+  "description": "get-access-token in prov-lib.sh only in prov_ado_token() and prov_secret_tokens().",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "  local url=\"${SYSTEM_COLLECTIONURI:-}\"\n",
+      "replace": "  local url=\"${SYSTEM_COLLECTIONURI:-}\"\n  az account get-access-token --query accessToken --output tsv > /dev/null\n"
+    }
+  ]
+}

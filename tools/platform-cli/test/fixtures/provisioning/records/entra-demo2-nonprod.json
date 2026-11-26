@@ -1,0 +1,183 @@
+{
+  "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-app-demo2-nonprod/providers/Microsoft.Resources/deployments/entra-demo2-nonprod",
+  "location": null,
+  "name": "entra-demo2-nonprod",
+  "properties": {
+    "correlationId": "00000000-0000-0000-0000-0000000b0022",
+    "debugSetting": null,
+    "dependencies": [
+      {
+        "dependsOn": [
+          {
+            "extension": {
+              "alias": "microsoftGraphV1",
+              "name": "MicrosoftGraph",
+              "version": "1.0.0"
+            },
+            "id": null,
+            "resourceName": null,
+            "resourceType": "Microsoft.Graph/applications@v1.0",
+            "symbolicName": "application"
+          }
+        ],
+        "extension": {
+          "alias": "microsoftGraphV1",
+          "name": "MicrosoftGraph",
+          "version": "1.0.0"
+        },
+        "id": null,
+        "resourceName": null,
+        "resourceType": "Microsoft.Graph/servicePrincipals@v1.0",
+        "symbolicName": "servicePrincipal"
+      },
+      {
+        "dependsOn": [
+          {
+            "extension": {
+              "alias": "microsoftGraphV1",
+              "name": "MicrosoftGraph",
+              "version": "1.0.0"
+            },
+            "id": null,
+            "resourceName": null,
+            "resourceType": "Microsoft.Graph/servicePrincipals@v1.0",
+            "symbolicName": "graphServicePrincipal"
+          },
+          {
+            "extension": {
+              "alias": "microsoftGraphV1",
+              "name": "MicrosoftGraph",
+              "version": "1.0.0"
+            },
+            "id": null,
+            "resourceName": null,
+            "resourceType": "Microsoft.Graph/servicePrincipals@v1.0",
+            "symbolicName": "servicePrincipal"
+          }
+        ],
+        "extension": {
+          "alias": "microsoftGraphV1",
+          "name": "MicrosoftGraph",
+          "version": "1.0.0"
+        },
+        "id": null,
+        "resourceName": null,
+        "resourceType": "Microsoft.Graph/oauth2PermissionGrants@v1.0",
+        "symbolicName": "signInConsent"
+      },
+      {
+        "dependsOn": [
+          {
+            "extension": {
+              "alias": "microsoftGraphV1",
+              "name": "MicrosoftGraph",
+              "version": "1.0.0"
+            },
+            "id": null,
+            "resourceName": null,
+            "resourceType": "Microsoft.Graph/servicePrincipals@v1.0",
+            "symbolicName": "servicePrincipal"
+          }
+        ],
+        "extension": {
+          "alias": "microsoftGraphV1",
+          "name": "MicrosoftGraph",
+          "version": "1.0.0"
+        },
+        "id": null,
+        "resourceName": null,
+        "resourceType": "Microsoft.Graph/appRoleAssignedTo@v1.0",
+        "symbolicName": "assignments[0]"
+      }
+    ],
+    "diagnostics": null,
+    "duration": "PT4.6247941S",
+    "error": null,
+    "extensions": [],
+    "mode": "Incremental",
+    "onErrorDeployment": null,
+    "outputResources": [],
+    "outputs": {
+      "applicationObjectId": {
+        "type": "String",
+        "value": "00000000-0000-0000-0000-0000000b0023"
+      },
+      "clientId": {
+        "type": "String",
+        "value": "00000000-0000-0000-0000-0000000b0021"
+      },
+      "servicePrincipalId": {
+        "type": "String",
+        "value": "00000000-0000-0000-0000-0000000b0024"
+      }
+    },
+    "parameters": {
+      "appRoles": {
+        "type": "Array",
+        "value": [
+          {
+            "description": "Reader",
+            "displayName": "Reader",
+            "value": "Reader"
+          },
+          {
+            "description": "Editor",
+            "displayName": "Editor",
+            "value": "Editor"
+          },
+          {
+            "description": "Admin",
+            "displayName": "Admin",
+            "value": "Admin"
+          }
+        ]
+      },
+      "appTitle": {
+        "type": "String",
+        "value": "Demo 2"
+      },
+      "environmentKind": {
+        "type": "String",
+        "value": "nonprod"
+      },
+      "environmentName": {
+        "type": "String",
+        "value": "nonprod"
+      },
+      "hosts": {
+        "type": "Array",
+        "value": [
+          "ca-demo2.happyfield-00000000.westeurope.azurecontainerapps.io"
+        ]
+      },
+      "prefix": {
+        "type": "String",
+        "value": "contoso"
+      },
+      "roleAssignments": {
+        "type": "Array",
+        "value": [
+          {
+            "principalId": "00000000-0000-0000-0000-00000000e002",
+            "role": "Admin"
+          }
+        ]
+      },
+      "slug": {
+        "type": "String",
+        "value": "demo2"
+      }
+    },
+    "parametersLink": null,
+    "providers": [],
+    "provisioningState": "Succeeded",
+    "templateHash": "11807533261757611808",
+    "templateLink": null,
+    "timestamp": "2026-10-29T09:51:19.175958+00:00",
+    "validatedResources": null,
+    "validationLevel": null
+  },
+  "resourceGroup": "rg-contoso-app-demo2-nonprod",
+  "tags": null,
+  "type": "Microsoft.Resources/deployments"
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "A restart URL built from variables in another script is caught too.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "  prov_write_frontdoor_entry \"$out\"\n",
+      "replace": "  prov_write_frontdoor_entry \"$out\"\n  url=\"$app_id/revisions/$(jq -r '.[0]' r.json)\"\n  az rest --method post --url \"$url/restart?api-version=2024-03-01\"\n"
+    }
+  ]
+}

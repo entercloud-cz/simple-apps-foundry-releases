@@ -1,0 +1,11 @@
+{
+  "rule": "T14",
+  "description": "A compromised Trivy release is rejected.",
+  "patches": [
+    {
+      "file": "tools/tools.json",
+      "find": "\"version\": \"0.76.2\"",
+      "replace": "\"version\": \"0.69.4\""
+    }
+  ]
+}

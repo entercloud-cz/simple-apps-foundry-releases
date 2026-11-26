@@ -1,0 +1,13 @@
+{
+  "prefix": "contoso",
+  "location": "westeurope",
+  "workspaceResourceId": "/subscriptions/00000000-0000-0000-0000-00000000b001/resourceGroups/rg-contoso-platform-prod/providers/Microsoft.OperationalInsights/workspaces/log-contoso-prod",
+  "entraProvisioningPrincipalId": "00000000-0000-0000-0000-00000000d101",
+  "actionGroupIds": [
+    "/subscriptions/00000000-0000-0000-0000-00000000b001/resourceGroups/rg-contoso-platform-prod/providers/Microsoft.Insights/actionGroups/ag-contoso-platform-prod",
+    "/subscriptions/00000000-0000-0000-0000-00000000b001/resourceGroups/rg-contoso-identity/providers/Microsoft.Insights/actionGroups/ag-contoso-identity-team"
+  ],
+  "tags": {
+    "ManagedBy": "SAF"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P06",
+  "description": "prov_arm create/entra passes the Entra parameter file, not another one.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "      create/entra)\n        SAF_ENTRA_JSON=\"$(cat \"$inputs\")\" az deployment group create --resource-group \"$where\" --name \"$name\" \\\n          --parameters \"$prov_entra_param\"",
+      "replace": "      create/entra)\n        SAF_ENTRA_JSON=\"$(cat \"$inputs\")\" az deployment group create --resource-group \"$where\" --name \"$name\" \\\n          --parameters \"$prov_release_param\""
+    }
+  ]
+}

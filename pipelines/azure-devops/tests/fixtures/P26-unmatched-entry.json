@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "An allow-list entry that no call matches any more fails (the list shrinks with the scripts).",
+  "patches": [
+    {
+      "file": "scripts/retain.sh",
+      "find": "saf_cli pipeline retention-lease --run-id",
+      "replace": "saf_cli pipeline retention-leases --run-id"
+    }
+  ]
+}

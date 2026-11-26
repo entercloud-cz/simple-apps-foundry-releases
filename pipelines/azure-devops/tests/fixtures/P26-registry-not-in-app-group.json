@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The registry purge deletes images only in a registry it found in the app's own resource group by naming (ADR-0059).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/registry.sh",
+      "find": "  if ! az acr show --name \"$registry\" --resource-group \"$rg\" --query id",
+      "replace": "  if ! az acr show --name \"$registry\" --query id"
+    }
+  ]
+}

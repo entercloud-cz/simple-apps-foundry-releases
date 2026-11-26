@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "report.sh must end with exit 0, whatever happened.",
+  "patches": [
+    {
+      "file": "scripts/report.sh",
+      "find": "  if [ \"$rc\" -ne 0 ]; then report_warn \"unexpected error (status $rc)\"; fi\n  exit 0\n}",
+      "replace": "  if [ \"$rc\" -ne 0 ]; then report_warn \"unexpected error (status $rc)\"; fi\n  exit \"$rc\"\n}"
+    }
+  ]
+}

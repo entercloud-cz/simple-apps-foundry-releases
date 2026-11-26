@@ -1,0 +1,11 @@
+{
+  "rule": "V01",
+  "description": "The validation pipeline takes no parameters (nothing can be switched off).",
+  "patches": [
+    {
+      "file": "platform-validation.yml",
+      "find": "\nstages:\n  - stage: validate\n",
+      "replace": "\nparameters:\n  - name: checkApps\n    type: string\n    default: 'yes'\n\nstages:\n  - stage: validate\n"
+    }
+  ]
+}

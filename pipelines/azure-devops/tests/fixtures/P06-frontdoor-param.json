@@ -1,0 +1,11 @@
+{
+  "rule": "P06",
+  "description": "prov_arm create/frontdoor deploys only through frontdoor.bicepparam.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "      create/frontdoor)\n        SAF_FRONTDOOR_JSON=\"$(cat \"$inputs\")\" az deployment group create --resource-group \"$where\" --name \"$name\" \\\n          --parameters \"$prov_frontdoor_param\"",
+      "replace": "      create/frontdoor)\n        SAF_FRONTDOOR_JSON=\"$(cat \"$inputs\")\" az deployment group create --resource-group \"$where\" --name \"$name\" \\\n          --parameters \"$prov_release_param\""
+    }
+  ]
+}

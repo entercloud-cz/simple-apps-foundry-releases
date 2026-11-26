@@ -1,0 +1,11 @@
+{
+  "rule": "T01",
+  "description": "A duplicate key in a template is a parse error.",
+  "patches": [
+    {
+      "file": "templates/stages/deploy.yml",
+      "find": "    isSkippable: false\n",
+      "replace": "    isSkippable: false\n    isSkippable: false\n"
+    }
+  ]
+}

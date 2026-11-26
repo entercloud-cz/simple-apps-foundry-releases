@@ -1,0 +1,11 @@
+{
+  "rule": "P14",
+  "description": "Stage entra deploys the inputs an Entra plan rendered: units (the plan job decide) and entra_plan when it ran.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra.yml",
+      "find": "              optional:\n                - entra_plan\n",
+      "replace": ""
+    }
+  ]
+}

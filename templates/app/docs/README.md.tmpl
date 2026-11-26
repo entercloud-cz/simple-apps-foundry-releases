@@ -1,0 +1,52 @@
+# {{APP_NAME}}
+
+{{APP_DESCRIPTION}}
+
+- **In the portal:** {{APP_PORTAL_URL}} (environments, URLs, logs, secrets, releases)
+- **Changes:** [CHANGELOG.md](CHANGELOG.md)
+- **How it works:** [docs/architecture.md](docs/architecture.md)
+
+## Who uses it
+
+<!-- Describe the users and what each role may do. Keep in sync with the roles in the portal. -->
+
+| Role | Who | Can |
+|---|---|---|
+| _Reader_ | _e.g. all employees of the department_ | _view …_ |
+| _Admin_ | _e.g. the app owner's team_ | _everything, including …_ |
+
+Users sign in with their company Microsoft account. Access is given through the roles above,
+which the app owner manages in the portal.
+
+## How to use it
+
+<!-- Short description of the main features, in plain language. Update with every feature. -->
+
+_Not written yet._
+
+## Run it on your computer
+
+You need: {{PREREQUISITES}}.
+
+```bash
+{{INSTALL_COMMAND}}
+{{DEV_COMMAND}}
+```
+
+Then open {{LOCAL_URL}}. Run the tests with `{{TEST_COMMAND}}` and the platform checks with
+`platform check` before committing.
+
+There is no company sign-in on your computer: the settings `DEV_FAKE_USER` (an email) and
+`DEV_FAKE_ROLES` (comma-separated roles) decide who you are. Local settings: {{LOCAL_SETTINGS}}.
+
+## Deploying
+
+There is nothing to deploy by hand. Pushing a branch deploys it to the test environment
+(nonprod); merging into the default branch requests a production release, which the platform team
+approves. See the portal for status, history and rollback.
+
+## Help
+
+- App questions: the app owner (see the portal).
+- Platform questions (sign-in, environments, databases, releases): the platform team, through the
+  portal ({{PORTAL_URL}}). Platform documentation: {{PLATFORM_DOCS_URL}}
