@@ -1,0 +1,11 @@
+{
+  "rule": "P10",
+  "description": "Stage entra uses a service connection and needs lockBehavior runLatest.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra.yml",
+      "find": "    lockBehavior: runLatest\n",
+      "replace": ""
+    }
+  ]
+}

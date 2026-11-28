@@ -1,0 +1,24 @@
+{
+  "description": "redeploy without a target environment.",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      }
+    ],
+    "action": "redeploy",
+    "targetEnvironment": "none",
+    "sourceRunId": 5
+  },
+  "expect": {
+    "errors": [
+      "action redeploy needs targetEnvironment to name an environment of the list"
+    ]
+  }
+}

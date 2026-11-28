@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "prov_names snapshots its own copy: parallel units never share the snapshot file.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "bicep snapshot \"$param\"",
+      "replace": "bicep snapshot \"$prov_names_param\""
+    }
+  ]
+}

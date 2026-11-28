@@ -1,0 +1,39 @@
+{
+  "description": "nonprod -> prod (the sandbox and the default instance).",
+  "entry": "app-provisioning.yml",
+  "parameters": {
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      },
+      {
+        "name": "prod",
+        "kind": "prod",
+        "promoteFrom": "nonprod"
+      }
+    ],
+    "hostEnvironment": "prod",
+    "scope": "changed",
+    "upgrade": "none"
+  },
+  "expect": {
+    "stages": [
+      "validate",
+      "plan",
+      "azure_nonprod",
+      "azure_prod",
+      "ado_resources",
+      "entra_plan",
+      "entra",
+      "azure_post_nonprod",
+      "azure_post_prod",
+      "ado_pipelines",
+      "registry_nonprod",
+      "report",
+      "record_nonprod",
+      "record_prod"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "V05",
+  "description": "The validation runs generate --check.",
+  "patches": [
+    {
+      "file": "scripts/platform-validation.sh",
+      "find": "if ! saf_cli generate --config-dir \"$SAF_CONFIG\" --check; then",
+      "replace": "if ! saf_cli generate --config-dir \"$SAF_CONFIG\"; then"
+    }
+  ]
+}

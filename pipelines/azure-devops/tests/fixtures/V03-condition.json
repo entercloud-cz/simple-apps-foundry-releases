@@ -1,0 +1,11 @@
+{
+  "rule": "V03",
+  "description": "No condition can skip the validation.",
+  "patches": [
+    {
+      "file": "platform-validation.yml",
+      "find": "        timeoutInMinutes: 20\n",
+      "replace": "        timeoutInMinutes: 20\n        condition: ne(variables['Build.Reason'], 'Manual')\n"
+    }
+  ]
+}

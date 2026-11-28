@@ -1,0 +1,11 @@
+{
+  "rule": "P18",
+  "description": "`platform provisioning dbinit` runs only in azure-post.sh.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "  prov_write_frontdoor_entry \"$out\"\n",
+      "replace": "  prov_write_frontdoor_entry \"$out\"\n  saf_cli provisioning dbinit --job \"$job\" --engine postgres --host h --database d --principal-name n --principal-id i --output \"$dir/d.json\"\n"
+    }
+  ]
+}

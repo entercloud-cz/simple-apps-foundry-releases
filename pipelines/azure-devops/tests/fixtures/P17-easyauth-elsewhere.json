@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "`platform provisioning easyauth-secret` runs only in entra.sh.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  prov_detail placeholder imported\n",
+      "replace": "  prov_detail placeholder imported\n  saf_cli provisioning easyauth-secret --client-id \"$client_id\" --job \"$job\" --secret-name \"$secret\" --vault \"$vault\" --display-name x --output \"$dir/s.json\"\n"
+    }
+  ]
+}

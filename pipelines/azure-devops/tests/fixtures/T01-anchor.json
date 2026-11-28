@@ -1,0 +1,11 @@
+{
+  "rule": "T01",
+  "description": "YAML anchors are rejected (Azure Pipelines does not support them).",
+  "patches": [
+    {
+      "file": "templates/stages/deploy.yml",
+      "find": "    pool:\n      name: Azure Pipelines\n      vmImage: ubuntu-24.04\n    jobs:",
+      "replace": "    pool: &p\n      name: Azure Pipelines\n      vmImage: ubuntu-24.04\n    jobs:"
+    }
+  ]
+}

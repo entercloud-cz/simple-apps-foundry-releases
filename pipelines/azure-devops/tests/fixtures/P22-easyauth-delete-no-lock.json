@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "The Easy Auth secret's delete hand-off (ADR-0061) holds the kvset job's lock: one execution at a time.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "  prov_lock \"kvset-$job\"\n",
+      "replace": ""
+    }
+  ]
+}

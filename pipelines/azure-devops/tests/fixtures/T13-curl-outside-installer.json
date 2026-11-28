@@ -1,0 +1,11 @@
+{
+  "rule": "T13",
+  "description": "A download outside install-tool.sh is rejected.",
+  "patches": [
+    {
+      "file": "scripts/scan.sh",
+      "find": "out=\"$SAF_OUT/scan\"\n",
+      "replace": "curl -fsSL -o /tmp/x https://example.com/x\nout=\"$SAF_OUT/scan\"\n"
+    }
+  ]
+}

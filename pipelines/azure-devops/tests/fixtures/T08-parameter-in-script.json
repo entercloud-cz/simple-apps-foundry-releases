@@ -1,0 +1,11 @@
+{
+  "rule": "T08",
+  "description": "A template parameter inserted into script text is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/verify.yml",
+      "find": "          - bash: bash \"$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/prepare.sh\"\n",
+      "replace": "          - bash: echo ${{ parameters.app.slug }} && bash \"$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/prepare.sh\"\n"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+# Stage `plan` of the platform pipeline (ADR-0043): reads only, no approval.
+#
+# Service connection sc-platform-provisioning-<env> (the environment's Azure provisioning identity,
+# ADR-0031), nothing else. Normal job with AzureCLI@2. scripts/platform/plan.sh: names, the roles
+# gate (the custom roles of this core's roles.bicep exist; otherwise the run stops before the
+# approval), the host's identity principals, the CAE networks (each CAE read once; an existing CAE
+# whose network type or subnet would change stops the run before validate and what-if, `platform
+# environment cae-network`, rule E17; a CAE of a mode no longer enabled is reported), the record
+# platform-{prefix}-{env} against `az deployment sub validate` (`platform environment compare`) and
+# the what-if preview the approvers read; in the portal host the same for portal.bicep (record
+# portal-{prefix}-{env}, the Container App on the pinned saf-portal digest; ADR-0043 decision 10).
+# The step `decide` then sets the output `changed`; the stage `deploy` runs only when it is 'true',
+# so a run without a change asks for no approval.
+# Artifact platform_plan: inputs.json, cae-network.json, plan.json, what-if.txt, changed.txt; in the
+# portal host also portal-inputs.json and portal-what-if.txt.
+
+parameters:
+  - name: environment
+    type: string
+  - name: hostEnvironment
+    type: string
+
+stages:
+  - stage: plan
+    displayName: Plan ${{ parameters.environment }}
+    dependsOn:
+      - validate
+    condition: and(not(canceled()), eq(dependencies.validate.result, 'Succeeded'))
+    isSkippable: false
+    # Exclusive lock on the service connection: a newer run waiting for the lock cancels an older
+    # waiting one; safe because every run plans from current state.
+    lockBehavior: runLatest
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      - job: plan
+        displayName: Roles gate, compare and preview
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 60
+        steps:
+          - template: ../../provisioning/steps/setup.yml
+            parameters:
+              tools: [node, bicep]
+          - task: AzureCLI@2
+            displayName: Roles gate, compare and preview
+            inputs:
+              azureSubscription: sc-platform-provisioning-${{ parameters.environment }}
+              scriptType: bash
+              scriptLocation: scriptPath
+              scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/platform/plan.sh
+              addSpnToEnvironment: false
+              useGlobalConfig: false
+              failOnStandardError: false
+              workingDirectory: $(Pipeline.Workspace)
+            env:
+              SAF_ENV_NAME: ${{ parameters.environment }}
+              SAF_HOST_ENVIRONMENT: ${{ parameters.hostEnvironment }}
+              SAF_SERVICE_CONNECTION: sc-platform-provisioning-${{ parameters.environment }}
+            target:
+              commands: restricted
+              settableVariables: none
+          # Runs after a failed plan too: changed.txt is then false (or missing), so nothing deploys.
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/platform/decide.sh"
+            name: decide
+            displayName: Decide whether the deploy stage runs
+            condition: always()
+            target:
+              commands: restricted
+              settableVariables:
+                - changed
+          - task: PublishPipelineArtifact@1
+            displayName: Publish platform_plan
+            condition: succeededOrFailed()
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/platform_plan
+              artifact: platform_plan
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none

@@ -1,0 +1,16 @@
+{
+  "rule": "T19",
+  "description": "Removing the self-promotion guard is rejected.",
+  "patches": [
+    {
+      "file": "app-delivery.yml",
+      "find": "      - 'SAF template error: an environment cannot promote from itself': ${{ env.name }}\n",
+      "replace": ""
+    },
+    {
+      "file": "app-delivery.yml",
+      "find": "    - ${{ if eq(format('{0}', env.promoteFrom), format('{0}', env.name)) }}:\n",
+      "replace": ""
+    }
+  ]
+}

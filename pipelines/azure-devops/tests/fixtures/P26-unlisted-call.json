@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "A mutating call that is on no allow-list entry (a tag write in another function) fails.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "    jq -e '.properties.outputs' \"$dir/deployment.json\" > \"$dir/outputs.json\"\n",
+      "replace": "    jq -e '.properties.outputs' \"$dir/deployment.json\" > \"$dir/outputs.json\"\n    az tag update --resource-id \"$portal_rg\" --operation merge --tags saf-x=1 --only-show-errors --output none\n"
+    }
+  ]
+}

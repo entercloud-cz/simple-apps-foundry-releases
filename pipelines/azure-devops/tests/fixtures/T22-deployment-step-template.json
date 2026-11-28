@@ -1,0 +1,11 @@
+{
+  "rule": "T22",
+  "description": "A step template that sets target.settableVariables, used in a deployment job, is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/promote.yml",
+      "find": "                - download: none\n",
+      "replace": "                - download: none\n                - template: ../steps/platform-cli.yml\n"
+    }
+  ]
+}

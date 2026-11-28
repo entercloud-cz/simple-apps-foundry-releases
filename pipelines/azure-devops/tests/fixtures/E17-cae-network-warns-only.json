@@ -1,0 +1,11 @@
+{
+  "rule": "E17",
+  "description": "A refused CAE network only warns: the plan goes on to what-if and the deploy, which fails half-way or worse on a CAE whose network can't change.",
+  "patches": [
+    {
+      "file": "scripts/platform/plan.sh",
+      "find": "  saf_die \"the plan stops before validate and what-if: the CAE network check failed (the errors above).",
+      "replace": "  saf_warn \"the plan stops before validate and what-if: the CAE network check failed (the errors above)."
+    }
+  ]
+}

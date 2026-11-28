@@ -1,0 +1,30 @@
+{
+  "description": "Rollback/redeploy to the build environment.",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      },
+      {
+        "name": "prod",
+        "kind": "prod",
+        "promoteFrom": "nonprod"
+      }
+    ],
+    "action": "redeploy",
+    "targetEnvironment": "nonprod",
+    "sourceRunId": 2873
+  },
+  "expect": {
+    "stages": [
+      "source",
+      "deploy_nonprod"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "E16",
+  "description": "The portal's plan trusts its deployment record alone: a Container App changed or deleted by hand, or a deploy that failed after the import, stays up to date.",
+  "patches": [
+    {
+      "file": "scripts/platform/plan.sh",
+      "find": "    if [ \"$target\" = 2 ] && [ \"$state\" != current ] && [ \"$result_p\" = up-to-date ]; then\n",
+      "replace": "    if false; then\n"
+    }
+  ]
+}

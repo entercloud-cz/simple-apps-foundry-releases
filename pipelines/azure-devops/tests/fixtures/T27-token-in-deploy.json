@@ -1,0 +1,11 @@
+{
+  "rule": "T27",
+  "description": "Mapping the job token into a deployment job (next to Azure credentials) is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/deploy.yml",
+      "find": "                    SAF_ACTION: ${{ parameters.action }}\n",
+      "replace": "                    SAF_ACTION: ${{ parameters.action }}\n                    SYSTEM_ACCESSTOKEN: $(System.AccessToken)\n"
+    }
+  ]
+}

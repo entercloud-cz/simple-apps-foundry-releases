@@ -1,0 +1,10 @@
+{
+  "rule": "E04",
+  "description": "A platform script gets an access token.",
+  "patches": [
+    {
+      "file": "scripts/platform/plan.sh",
+      "append": "token=\"$(az account get-access-token --query accessToken --output tsv)\"\necho \"${#token}\"\n"
+    }
+  ]
+}

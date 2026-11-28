@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "Only azure-post.sh restarts a revision (the Entra stage has no Container Apps role).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  unset SAF_GRAPH_TOKEN SAF_ARM_TOKEN\n",
+      "replace": "  unset SAF_GRAPH_TOKEN SAF_ARM_TOKEN\n  az rest --method post --url \"$app_id/revisions/$rev/restart?api-version=2024-03-01\"\n"
+    }
+  ]
+}

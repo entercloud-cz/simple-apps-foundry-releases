@@ -1,0 +1,37 @@
+{
+  "adoAutomationIdentity": {
+    "type": "Object"
+  },
+  "entraEnvironmentResourceGroups": {
+    "type": "Object"
+  },
+  "entraProvisioningIdentity": {
+    "type": "Object"
+  },
+  "entraResourceGroup": {
+    "type": "String"
+  },
+  "identitiesResourceGroup": {
+    "type": "String",
+    "value": "rg-contoso-identities-nonprod"
+  },
+  "portalIdentity": {
+    "type": "Object"
+  },
+  "provisioningIdentity": {
+    "type": "Object",
+    "value": {
+      "name": "id-contoso-provisioning-nonprod",
+      "clientId": "00000000-0000-0000-0000-00000000f001",
+      "principalId": "00000000-0000-0000-0000-00000000f002"
+    }
+  },
+  "subscriptionId": {
+    "type": "String",
+    "value": "00000000-0000-0000-0000-00000000a001"
+  },
+  "tenantId": {
+    "type": "String",
+    "value": "00000000-0000-0000-0000-000000000001"
+  }
+}

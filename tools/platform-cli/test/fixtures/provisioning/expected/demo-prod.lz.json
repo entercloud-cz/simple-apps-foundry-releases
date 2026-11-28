@@ -1,0 +1,53 @@
+{
+  "prefix": "contoso",
+  "environmentName": "prod",
+  "environmentKind": "prod",
+  "location": "westeurope",
+  "slug": "demo",
+  "generation": 0,
+  "vaultGeneration": 0,
+  "networkMode": "externalOnly",
+  "cell": "01",
+  "externalOnlyNetwork": "vnet",
+  "promoteFrom": {
+    "environmentName": "nonprod",
+    "subscriptionId": "00000000-0000-0000-0000-00000000a001"
+  },
+  "owner": {
+    "principalId": "00000000-0000-0000-0000-00000000e001",
+    "principalType": "User",
+    "email": "jane.owner@contoso.com"
+  },
+  "deputy": {
+    "principalId": "00000000-0000-0000-0000-00000000e002",
+    "principalType": "User",
+    "email": "john.deputy@contoso.com"
+  },
+  "developers": [],
+  "data": {},
+  "backupRetentionDays": 7,
+  "postgresGeoRedundantBackup": false,
+  "alertEmails": [
+    "jane.owner@contoso.com",
+    "john.deputy@contoso.com"
+  ],
+  "postgresCpuCreditAlert": true,
+  "budget": {
+    "amount": 20,
+    "startDate": "2026-10-01",
+    "notifyAtPercent": [
+      80,
+      100
+    ],
+    "forecastNotifyAtPercent": [
+      100
+    ]
+  },
+  "deliveryFederation": {
+    "issuer": "https://login.microsoftonline.com/00000000-0000-0000-0000-000000000001/v2.0",
+    "subject": "/eid1/c/pub/t/AAAAAAAAAAAAAAAAAAAAAA/a/BBBBBBBBBBBBBBBBBBBBBB/sc/00000000-0000-0000-0000-0000000000c1/00000000-0000-0000-0000-0000000000d2"
+  },
+  "easyAuthSecretExists": false,
+  "managedBy": "SAF",
+  "costCenter": ""
+}
