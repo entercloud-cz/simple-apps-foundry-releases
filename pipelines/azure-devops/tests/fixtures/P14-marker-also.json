@@ -1,0 +1,11 @@
+{
+  "rule": "P14",
+  "description": "The job decide creates both its artifact folders (units, plan_<host>) before its checkouts.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/plan.yml",
+      "find": "              alsoArtifact: plan_${{ parameters.hostEnvironment }}\n",
+      "replace": ""
+    }
+  ]
+}

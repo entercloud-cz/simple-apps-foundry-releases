@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "One dbinit job execution at a time.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  prov_lock \"dbinit-$job\"\n",
+      "replace": ""
+    }
+  ]
+}

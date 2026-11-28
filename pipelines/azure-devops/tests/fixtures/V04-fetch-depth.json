@@ -1,0 +1,11 @@
+{
+  "rule": "V04",
+  "description": "platform-config is fetched with depth 2 (the merge commit and its parents) for --base HEAD^1.",
+  "patches": [
+    {
+      "file": "platform-validation.yml",
+      "find": "            path: s/config\n            fetchDepth: 2\n",
+      "replace": "            path: s/config\n            fetchDepth: 1\n"
+    }
+  ]
+}

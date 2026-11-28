@@ -1,0 +1,11 @@
+{
+  "rule": "P18",
+  "description": "easyauth-delete takes exactly --job, --vault, --secret-name and --output (ADR-0061).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "--secret-name \"$secret\" --output \"$result\" || rc=$?",
+      "replace": "--secret-name \"$secret\" --output \"$result\" --purge || rc=$?"
+    }
+  ]
+}

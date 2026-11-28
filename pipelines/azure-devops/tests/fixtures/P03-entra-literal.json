@@ -1,0 +1,11 @@
+{
+  "rule": "P03",
+  "description": "sc-platform-entra is named only by stage entra (entra.yml, entra.sh).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "\nprov_environment\nprov_units_check\nsource_env=",
+      "replace": "\nprov_environment\nprov_units_check\n[ \"$SAF_SERVICE_CONNECTION\" != sc-platform-entra ] || saf_die \"unexpected connection\"\nsource_env="
+    }
+  ]
+}

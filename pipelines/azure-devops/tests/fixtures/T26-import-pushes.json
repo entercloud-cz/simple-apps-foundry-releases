@@ -1,0 +1,11 @@
+{
+  "rule": "T26",
+  "description": "Import mode that pushes with oras is rejected (the promotion identity has no push right).",
+  "patches": [
+    {
+      "file": "scripts/deploy.sh",
+      "find": "  saf_info \"Importing $digest from $promote_from into $login_server/$repository:$tag\"\n",
+      "replace": "  saf_info \"Importing $digest from $promote_from into $login_server/$repository:$tag\"\n  oras cp --to-registry-config \"$auth\" \"$source_repository@$digest\" \"$login_server/$repository:$tag\"\n"
+    }
+  ]
+}

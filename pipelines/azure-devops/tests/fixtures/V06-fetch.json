@@ -1,0 +1,11 @@
+{
+  "rule": "V06",
+  "description": "No fetch of the default branch: the checkout persists no credentials, and HEAD^1 is in it (depth 2).",
+  "patches": [
+    {
+      "file": "scripts/platform-validation.sh",
+      "find": "  effects=0\n",
+      "replace": "  effects=0\n  git -C \"$SAF_CONFIG\" fetch --depth 1 origin main\n"
+    }
+  ]
+}

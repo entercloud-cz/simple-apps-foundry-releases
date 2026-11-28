@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "The deploy event must never handle the pipeline's OIDC token.",
+  "patches": [
+    {
+      "file": "templates/steps/deployment-finish.yml",
+      "find": "      SAF_JOB_STATUS: $(Agent.JobStatus)\n",
+      "replace": "      SAF_JOB_STATUS: $(Agent.JobStatus)\n      SAF_OIDC_URI: $(System.OidcRequestUri)\n"
+    }
+  ]
+}

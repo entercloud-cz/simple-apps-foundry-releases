@@ -1,0 +1,11 @@
+{
+  "rule": "V06",
+  "description": "The base of the Entra effect is the target branch's file (HEAD^1), not the pull request's own.",
+  "patches": [
+    {
+      "file": "scripts/platform-validation.sh",
+      "find": "      git -C \"$SAF_CONFIG\" show \"HEAD^1:$path\" > \"$base_file\"\n",
+      "replace": "      git -C \"$SAF_CONFIG\" show \"HEAD:$path\" > \"$base_file\"\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The app resource group is deleted only after the check for management locks (ADR-0056: provisioning never removes a lock).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "    locks=\"$(az lock list --resource-group \"$rg\" --query 'length(@)' --output tsv --only-show-errors)\"\n",
+      "replace": "    locks=0\n"
+    }
+  ]
+}

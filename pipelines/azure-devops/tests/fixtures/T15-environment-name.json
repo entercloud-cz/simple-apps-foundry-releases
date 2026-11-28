@@ -1,0 +1,11 @@
+{
+  "rule": "T15",
+  "description": "An ADO environment name that differs from naming.bicep is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/deploy.yml",
+      "find": "        environment: ${{ parameters.app.slug }}-${{ parameters.environment.name }}\n",
+      "replace": "        environment: ${{ parameters.environment.name }}\n"
+    }
+  ]
+}

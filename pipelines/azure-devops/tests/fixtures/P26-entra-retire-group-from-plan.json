@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "The old Entra record is deleted only in the instance's group names.bicep names, never in a group taken from elsewhere (ADR-0063, ADR-0052).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  instance_rg=\"$(prov_name \"$names\" entraResourceGroup)\"\n  entra_name=\"$(prov_name \"$names\" entraDeployment)\"\n  az deployment group show",
+      "replace": "  instance_rg=\"$(jq -r '.group' \"$plan/entra-group.json\")\"\n  entra_name=\"$(prov_name \"$names\" entraDeployment)\"\n  az deployment group show"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+# Builds the platform CLI from the core checkout at the pinned release tag (the same commit as
+# these templates): lockfile install without lifecycle scripts, then tsc. Needs node from
+# install-tools.yml. Run as: node "$PIPELINE_WORKSPACE/s/core/tools/platform-cli/dist/src/cli.js".
+
+steps:
+  - bash: |
+      set -euo pipefail
+      export PATH="$AGENT_TOOLSDIRECTORY/saf/bin:$PATH"
+      cd "$PIPELINE_WORKSPACE/s/core/tools/platform-cli"
+      node --version
+      npm ci --ignore-scripts --omit=optional --no-audit --no-fund
+      npm run build
+      node dist/src/cli.js --version
+    displayName: Build platform CLI from the core checkout
+    target:
+      commands: restricted
+      settableVariables: none

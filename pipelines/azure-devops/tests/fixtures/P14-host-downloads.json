@@ -1,0 +1,11 @@
+{
+  "rule": "P14",
+  "description": "The portal host's azure_post stage downloads the landing-zone outputs of every environment (portal-side endpoints, ADR-0025).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure-post.yml",
+      "find": "                - ${{ each env in parameters.environments }}:\n                  - ${{ if and(eq(parameters.environment.name, parameters.hostEnvironment), ne(env.name, parameters.environment.name)) }}:\n                    - azure_${{ env.name }}\n",
+      "replace": ""
+    }
+  ]
+}

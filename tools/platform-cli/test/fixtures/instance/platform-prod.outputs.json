@@ -1,0 +1,14 @@
+{
+  "platformResourceGroupName": {
+    "type": "String",
+    "value": "rg-contoso-platform-prod"
+  },
+  "logAnalyticsWorkspaceId": {
+    "type": "String",
+    "value": "/subscriptions/00000000-0000-0000-0000-00000000b001/resourceGroups/rg-contoso-platform-prod/providers/Microsoft.OperationalInsights/workspaces/log-contoso-prod"
+  },
+  "platformActionGroupId": {
+    "type": "String",
+    "value": "/subscriptions/00000000-0000-0000-0000-00000000b001/resourceGroups/rg-contoso-platform-prod/providers/Microsoft.Insights/actionGroups/ag-contoso-platform-prod"
+  }
+}

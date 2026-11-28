@@ -1,0 +1,97 @@
+/*
+ * The app's styles. Colours, fonts and the corner radius are the --brand-* variables of the app's
+ * theme: theme/theme.css at the repository root, imported in main.tsx when it exists. Without a
+ * theme, the defaults below keep the neutral look: the system font and the browser's light or
+ * dark colours. Style everything with the variables, never with hard-coded colours or fonts
+ * (see the ui-and-brand skill).
+ */
+
+/* Neutral defaults. :where() gives them no weight, so the theme's :root values always win. */
+:where(:root) {
+  color-scheme: light dark;
+  --brand-primary: LinkText;
+  --brand-on-primary: Canvas;
+  --brand-background: Canvas;
+  --brand-surface: Canvas;
+  --brand-text: CanvasText;
+  --brand-muted-text: color-mix(in srgb, CanvasText 70%, Canvas);
+  --brand-border: color-mix(in srgb, CanvasText 25%, Canvas);
+  --brand-accent: LinkText;
+  --brand-font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --brand-heading-font: var(--brand-font);
+  --brand-radius: 6px;
+}
+
+:root {
+  font-family: var(--brand-font);
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  background: var(--brand-background);
+  color: var(--brand-text);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--brand-heading-font);
+}
+
+a {
+  color: var(--brand-primary);
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Building blocks for new screens: use these classes, or follow their pattern. */
+
+.button {
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--brand-radius);
+  background: var(--brand-primary);
+  color: var(--brand-on-primary);
+  cursor: pointer;
+}
+
+.button.secondary {
+  background: var(--brand-surface);
+  color: var(--brand-text);
+  border-color: var(--brand-border);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.card {
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--brand-radius);
+  padding: 1rem 1.25rem;
+}
+
+.muted {
+  color: var(--brand-muted-text);
+}
+
+:is(.button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+}

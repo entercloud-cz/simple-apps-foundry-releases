@@ -1,0 +1,15 @@
+{
+  "description": "No environment.",
+  "entry": "app-provisioning.yml",
+  "parameters": {
+    "environments": [],
+    "hostEnvironment": "nonprod",
+    "scope": "changed",
+    "upgrade": "none"
+  },
+  "expect": {
+    "errors": [
+      "parameters.environments lists no environment"
+    ]
+  }
+}

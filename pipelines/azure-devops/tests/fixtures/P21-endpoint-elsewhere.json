@@ -1,0 +1,10 @@
+{
+  "rule": "P21",
+  "description": "The portal-side endpoint is deployed only in azure-post.sh, inside portal_endpoint().",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "append": "\nportal_quick() {\n  prov_arm create portal-endpoint \"$1\" \"$2\" \"$3\" \"$4\"\n}\n"
+    }
+  ]
+}

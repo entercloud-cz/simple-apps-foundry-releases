@@ -1,0 +1,61 @@
+{
+  "prefix": "contoso",
+  "environmentName": "prod",
+  "environmentKind": "prod",
+  "location": "westeurope",
+  "slug": "hotel-inventory",
+  "generation": 0,
+  "vaultGeneration": 0,
+  "networkMode": "externalHybrid",
+  "cell": "01",
+  "externalOnlyNetwork": "managed",
+  "hybridExistingVnetId": "/subscriptions/00000000-0000-0000-0000-00000000b001/resourceGroups/rg-network-prod/providers/Microsoft.Network/virtualNetworks/vnet-spoke-apps-prod",
+  "modeChange": null,
+  "promoteFrom": {
+    "environmentName": "nonprod",
+    "subscriptionId": "00000000-0000-0000-0000-00000000a001"
+  },
+  "owner": {
+    "principalId": "00000000-0000-0000-0000-00000000e001",
+    "principalType": "User",
+    "email": "jane.owner@contoso.com"
+  },
+  "deputy": {
+    "principalId": "00000000-0000-0000-0000-00000000e002",
+    "principalType": "User",
+    "email": "john.deputy@contoso.com"
+  },
+  "developers": [
+    {
+      "principalId": "00000000-0000-0000-0000-00000000e003",
+      "principalType": "Group"
+    }
+  ],
+  "data": {
+    "postgres": {
+      "skuName": "Standard_B2s",
+      "tier": "Burstable",
+      "storageGb": 64,
+      "version": "16"
+    },
+    "storage": {
+      "redundancy": "ZRS",
+      "softDeleteDays": 35,
+      "pointInTimeRestore": true
+    }
+  },
+  "backupRetentionDays": 35,
+  "postgresGeoRedundantBackup": true,
+  "alertEmails": [
+    "jane.owner@contoso.com",
+    "john.deputy@contoso.com",
+    "platform-team@contoso.com"
+  ],
+  "postgresCpuCreditAlert": true,
+  "budget": null,
+  "deliveryFederation": null,
+  "easyAuthSecretExists": false,
+  "managedBy": "SAF",
+  "costCenter": "CC-4711",
+  "portalIdentityPrincipalId": "00000000-0000-0000-0000-00000000e102"
+}

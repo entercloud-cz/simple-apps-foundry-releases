@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "entra-delete gets the current app's own uniqueName, checked against {prefix}-{slug}-{env}[--i{incarnation}] first (ADR-0061): never an earlier app's registration with the slug.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  [ \"$unique_name\" = \"$expected\" ] || saf_die",
+      "replace": "  true || saf_die"
+    }
+  ]
+}

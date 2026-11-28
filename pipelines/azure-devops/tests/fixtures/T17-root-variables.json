@@ -1,0 +1,11 @@
+{
+  "rule": "T17",
+  "description": "Root variables in the entry point are rejected.",
+  "patches": [
+    {
+      "file": "app-delivery.yml",
+      "find": "\nstages:\n",
+      "replace": "\nvariables:\n  - group: shared-secrets\n\nstages:\n"
+    }
+  ]
+}

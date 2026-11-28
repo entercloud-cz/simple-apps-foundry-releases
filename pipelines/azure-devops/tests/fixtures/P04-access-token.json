@@ -1,0 +1,11 @@
+{
+  "rule": "P04",
+  "description": "System.AccessToken in a provisioning stage is rejected.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/ado.yml",
+      "find": "              SAF_ADO_PHASE: ${{ parameters.phase }}\n",
+      "replace": "              SAF_ADO_PHASE: ${{ parameters.phase }}\n              SYSTEM_ACCESSTOKEN: $(System.AccessToken)\n"
+    }
+  ]
+}

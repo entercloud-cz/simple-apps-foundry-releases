@@ -1,0 +1,11 @@
+{
+  "rule": "P18",
+  "description": "The Easy Auth secret's delete (ADR-0061) starts only in azure.sh lz_secret_delete, never from another script.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/record.sh",
+      "find": "prov_environment\nprov_units_check\n",
+      "replace": "prov_environment\nprov_units_check\nsaf_cli provisioning easyauth-delete --job x --vault y --secret-name easyauth-demo --output z\n"
+    }
+  ]
+}

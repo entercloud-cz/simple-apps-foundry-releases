@@ -1,0 +1,26 @@
+{
+  "portalResourceGroupName": {
+    "type": "String",
+    "value": "rg-contoso-portal-prod"
+  },
+  "managedEnvironmentId": {
+    "type": "String",
+    "value": "/subscriptions/00000000-0000-0000-0000-00000000b001/resourceGroups/rg-contoso-portal-prod/providers/Microsoft.App/managedEnvironments/cae-contoso-portal-prod"
+  },
+  "managedEnvironmentDefaultDomain": {
+    "type": "String",
+    "value": "happyfield-00000000.westeurope.azurecontainerapps.io"
+  },
+  "portalFqdn": {
+    "type": "String",
+    "value": "ca-contoso-portal.happyfield-00000000.westeurope.azurecontainerapps.io"
+  },
+  "portalHostName": {
+    "type": "String",
+    "value": "portal.contoso.com"
+  },
+  "portalUrl": {
+    "type": "String",
+    "value": "https://portal.contoso.com"
+  }
+}

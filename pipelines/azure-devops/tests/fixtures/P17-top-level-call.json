@@ -1,0 +1,16 @@
+{
+  "rule": "P17",
+  "description": "easyauth-secret runs inside a function (per app, in prov_run_app).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  prov_secret_tokens\n  saf_cli provisioning easyauth-secret --mode \"$mode\" --client-id \"$client_id\" --job \"$secret_job\" \\\n    --secret-name \"$secret_name\" --vault \"$secret_vault\" --display-name \"$display\" \\\n    --current-created \"$secret_created\" --current-expires \"$secret_expires\" --loaded-created \"$secret_loaded\" \\\n    --output \"$result\" || rc=$?\n  unset SAF_GRAPH_TOKEN SAF_ARM_TOKEN\n",
+      "replace": ""
+    },
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "saf_info \"Entra registrations to deploy or Easy Auth secrets to write or rotate: ${#targets[@]}.\"\n",
+      "replace": "saf_info \"Entra registrations to deploy or Easy Auth secrets to write or rotate: ${#targets[@]}.\"\nprov_secret_tokens\nsaf_cli provisioning easyauth-secret --mode new --client-id x --job y --secret-name z --vault v --display-name d --current-created none --current-expires none --loaded-created none --output o\nunset SAF_GRAPH_TOKEN SAF_ARM_TOKEN\n"
+    }
+  ]
+}

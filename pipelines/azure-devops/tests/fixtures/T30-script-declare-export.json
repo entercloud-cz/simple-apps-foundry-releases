@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "declare -x exports the token as well.",
+  "patches": [
+    {
+      "file": "scripts/report.sh",
+      "find": "hdr=\"$work/authorization.header\"\n",
+      "replace": "declare -x TOKEN\nhdr=\"$work/authorization.header\"\n"
+    }
+  ]
+}

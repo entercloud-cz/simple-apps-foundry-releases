@@ -1,0 +1,11 @@
+{
+  "rule": "P05",
+  "description": "Job variables are only saf.coreRef of validate and saf.result.<artifact> elsewhere.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/report.yml",
+      "find": "          - name: saf.result.ado\n",
+      "replace": "          - name: saf.debug\n            value: 'true'\n          - name: saf.result.ado\n"
+    }
+  ]
+}

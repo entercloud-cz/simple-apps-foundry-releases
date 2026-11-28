@@ -1,0 +1,11 @@
+{
+  "rule": "T04",
+  "description": "A skippable provisioning stage is rejected.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/report.yml",
+      "find": "    isSkippable: false\n",
+      "replace": "    isSkippable: true\n"
+    }
+  ]
+}

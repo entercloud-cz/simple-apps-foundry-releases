@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:simple-apps-foundry:schema:app-manifest:1.0-draft",
+  "title": "App runtime settings (platform.yaml) — DRAFT",
+  "description": "Runtime settings the app developer controls. What the app is ALLOWED to have (network mode, databases, domains, auth roles, budget) is NOT here — that lives in the app definition apps/{slug}/app.yaml (app.schema.json) in the instance platform-config repo and changes only via portal request + approval (docs/adr/0008-gitops-config-repo-and-portal-workflow.md). Validated by `platform check` locally and in CI.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "app"],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0-draft"
+    },
+    "app": {
+      "description": "App slug as registered in the portal (ADR-0020): 3-20 lowercase letters, digits and single hyphens, starts with a letter, ends with a letter or digit. Immutable. Must match the registration; the pipeline rejects a mismatch. Reserved-word checks run in `platform check` and the portal.",
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 20,
+      "pattern": "^[a-z](-?[a-z0-9])+$",
+      "not": { "enum": ["platform", "portal"] }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dockerfile": { "type": "string", "default": "Dockerfile" },
+        "context": { "type": "string", "default": "." }
+      }
+    },
+    "runtime": {
+      "$ref": "#/$defs/runtime"
+    },
+    "deploy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "branches": {
+          "description": "Branch globs that deploy to nonprod on push. Default: all branches (last push wins). The default branch additionally creates a prod release request.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "default": ["*"]
+        }
+      }
+    },
+    "secrets": {
+      "description": "Secret NAMES in the app's own Key Vault. Never URLs, never values. Values are set per environment by the owner in the portal.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/secretName" },
+      "default": []
+    },
+    "environments": {
+      "description": "Per-environment overrides of runtime settings, keyed by environment name (e.g. nonprod, prod).",
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9]{1,7}$" },
+      "additionalProperties": {
+        "$ref": "#/$defs/runtime"
+      }
+    }
+  },
+  "$defs": {
+    "secretName": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,126}$"
+    },
+    "envVar": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "value"],
+          "properties": {
+            "name": { "$ref": "#/$defs/envVarName" },
+            "value": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "secret"],
+          "properties": {
+            "name": { "$ref": "#/$defs/envVarName" },
+            "secret": {
+              "description": "Must also be listed in top-level `secrets` (checked by `platform check`).",
+              "$ref": "#/$defs/secretName"
+            }
+          }
+        }
+      ]
+    },
+    "envVarName": {
+      "type": "string",
+      "pattern": "^[A-Z_][A-Z0-9_]*$",
+      "not": {
+        "description": "Reserved: injected by the platform or by Azure Container Apps (contract: docs/architecture/data-services.md#environment-variables-injected-by-the-platform).",
+        "enum": [
+          "PORT",
+          "AZURE_CLIENT_ID",
+          "APPLICATIONINSIGHTS_CONNECTION_STRING",
+          "CONTAINER_APP_NAME",
+          "DATABASE_HOST",
+          "DATABASE_NAME",
+          "DATABASE_USER",
+          "STORAGE_BLOB_ENDPOINT",
+          "FRONT_DOOR_ID"
+        ]
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "port": {
+          "description": "Port the container listens on; also exported as $PORT.",
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 65535,
+          "default": 8080
+        },
+        "size": {
+          "description": "Container size: xs = 0.25 vCPU / 0.5 GiB, s = 0.5 / 1, m = 1 / 2, l = 2 / 4. Larger sizes may need approval (instance policy).",
+          "enum": ["xs", "s", "m", "l"],
+          "default": "s"
+        },
+        "scale": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "minReplicas": { "type": "integer", "minimum": 0, "maximum": 10 },
+            "maxReplicas": { "type": "integer", "minimum": 1, "maximum": 10 }
+          }
+        },
+        "health": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "liveness": { "type": "string", "pattern": "^/", "default": "/healthz" },
+            "readiness": { "type": "string", "pattern": "^/" }
+          }
+        },
+        "env": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/envVar" },
+          "default": []
+        }
+      }
+    }
+  }
+}

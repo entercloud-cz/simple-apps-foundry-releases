@@ -1,0 +1,11 @@
+{
+  "rule": "E12",
+  "description": "The deploy stage no longer depends on validate.",
+  "patches": [
+    {
+      "file": "templates/platform/stages/deploy.yml",
+      "find": "    dependsOn:\n      - validate\n      - plan\n",
+      "replace": "    dependsOn:\n      - plan\n"
+    }
+  ]
+}

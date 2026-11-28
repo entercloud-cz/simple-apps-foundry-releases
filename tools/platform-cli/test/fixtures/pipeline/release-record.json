@@ -1,0 +1,20 @@
+{
+  "prefix": { "type": "String", "value": "contoso" },
+  "environmentName": { "type": "String", "value": "nonprod" },
+  "slug": { "type": "String", "value": "demo" },
+  "generation": { "type": "Int", "value": 0 },
+  "vaultGeneration": { "type": "Int", "value": 0 },
+  "location": { "type": "String", "value": "westeurope" },
+  "networkMode": { "type": "String", "value": "externalOnly" },
+  "externalOnlyNetwork": { "type": "String", "value": "managed" },
+  "deployedBy": { "type": "String", "value": "provisioning" },
+  "image": { "type": "Object", "value": { "bootstrapImage": "mcr.microsoft.com/k8se/quickstart:latest" } },
+  "runtime": { "type": "Object", "value": { "port": 80, "size": "xs", "minReplicas": 0, "maxReplicas": 1, "livenessPath": "/", "readinessPath": "/" } },
+  "env": { "type": "Array", "value": [] },
+  "secrets": { "type": "Array", "value": [] },
+  "landingZone": { "type": "Object", "value": { "runtimeIdentityClientId": "00000000-0000-0000-0000-00000000e002", "storageBlobEndpoint": null } },
+  "frontDoor": { "type": "Object", "value": { "mode": "none", "backendIpRanges": [] } },
+  "customDomains": { "type": "Array", "value": [] },
+  "authentication": { "type": "Object", "value": { "mode": "required", "clientId": "00000000-0000-0000-0000-00000000e003" } },
+  "alertsEnabled": { "type": "Bool", "value": true }
+}

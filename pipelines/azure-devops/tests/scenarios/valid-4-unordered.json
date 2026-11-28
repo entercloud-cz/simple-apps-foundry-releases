@@ -1,0 +1,29 @@
+{
+  "description": "Prod listed before its source; explicit dependsOn keeps the graph right.",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "prod",
+        "kind": "prod",
+        "promoteFrom": "nonprod"
+      },
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      }
+    ]
+  },
+  "expect": {
+    "stages": [
+      "verify",
+      "preview_prod",
+      "deploy_prod",
+      "deploy_nonprod"
+    ]
+  }
+}
