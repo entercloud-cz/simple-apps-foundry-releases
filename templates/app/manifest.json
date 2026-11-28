@@ -1,0 +1,140 @@
+{
+  "$comment": "How the generator and `platform sync-agent-files` turn templates/ into an app repo. Format documented in templates/README.md. Source paths are relative to templates/, target paths to the app repo root.",
+  "formatVersion": 1,
+  "placeholders": {
+    "APP_NAME": { "from": "app", "description": "App title as registered in the portal" },
+    "APP_SLUG": { "from": "app", "description": "App slug (ADR-0020), equals `app` in platform.yaml" },
+    "APP_DESCRIPTION": { "from": "app", "description": "One-sentence purpose from the portal wizard" },
+    "APP_DATA": { "from": "app", "description": "The app's database and file storage in plain words (data in app.yaml), or none yet" },
+    "APP_ROLES_JSON": { "from": "app", "description": "ADR-0078: .platform/roles.json in one line, {signIn, roles: [{value, displayName, description, level}]}, read by the starters' access policy" },
+    "APP_ROLES": { "from": "app", "description": "The app's roles and what each may do (app.yaml roles, else the instance's default roles), \"Reader: …; Editor: …\"" },
+    "CREATED_DATE": { "from": "app", "description": "Repo creation date, YYYY-MM-DD (UTC)" },
+    "STACK": { "from": "stack", "description": "Stack id: node-ts | python-fastapi | dotnet | byo" },
+    "STACK_LABEL": { "from": "stack", "description": "Human-readable stack name" },
+    "PREREQUISITES": { "from": "stack", "description": "Tools needed to run the app locally" },
+    "INSTALL_COMMAND": { "from": "stack", "description": "Install dependencies" },
+    "DEV_COMMAND": { "from": "stack", "description": "Run the app locally" },
+    "TEST_COMMAND": { "from": "stack", "description": "Run the tests" },
+    "LINT_COMMAND": { "from": "stack", "description": "Lint and type checks" },
+    "BUILD_COMMAND": { "from": "stack", "description": "Build the app" },
+    "LOCAL_URL": { "from": "stack", "description": "URL to open after DEV_COMMAND" },
+    "LOCAL_SETTINGS": { "from": "stack", "description": "Where local settings such as DEV_FAKE_USER go" },
+    "PORTAL_URL": { "from": "instance", "description": "Portal base URL" },
+    "APP_PORTAL_URL": { "from": "instance", "description": "Deep link to this app in the portal" },
+    "PLATFORM_DOCS_URL": { "from": "instance", "description": "Platform documentation for app developers" },
+    "ENVIRONMENT_NAMES": { "from": "instance", "description": "Environment names of the instance, comma-separated, e.g. `nonprod, prod`" },
+    "TEMPLATE_VERSION": { "from": "core", "description": "Core release tag the template comes from, e.g. v1.4.0" },
+    "PLATFORM_CLI_VERSION": { "from": "core", "description": "Exact `@simple-apps-foundry/platform-cli` version of the core release (`version` in tools/platform-cli/package.json at that tag), e.g. 0.1.0: no range, no leading v" },
+    "MANIFEST_SCHEMA_VERSION": { "from": "core", "description": "`schemaVersion` const of config/schema/app-manifest.schema.json" }
+  },
+  "files": [
+    { "source": "app/agent-files/AGENTS.md.tmpl", "target": "AGENTS.md", "mode": "managed", "preserveBlock": "app-notes" },
+    { "source": "app/agent-files/CLAUDE.md.tmpl", "target": "CLAUDE.md", "mode": "create" },
+    { "source": "app/agent-files/skills", "target": ".agents/skills", "type": "dir", "mode": "managed" },
+    { "type": "mirror", "from": ".agents/skills", "target": ".claude/skills" },
+    { "source": "app/agent-files/claude-settings.json.tmpl", "target": ".claude/settings.json", "mode": "mergeJson" },
+    { "source": "app/agent-files/gemini-settings.json.tmpl", "target": ".gemini/settings.json", "mode": "managed" },
+    { "source": "app/agent-files/copilot-instructions.md.tmpl", "target": ".github/copilot-instructions.md", "mode": "managed" },
+    { "source": "app/agent-files/gitattributes.tmpl", "target": ".gitattributes", "mode": "mergeLines" },
+    { "source": "app/agent-files/gitignore.tmpl", "target": ".gitignore", "mode": "mergeLines" },
+    { "source": "app/agent-files/dockerignore.tmpl", "target": ".dockerignore", "mode": "mergeLines" },
+    { "source": "app/agent-files/editorconfig.tmpl", "target": ".editorconfig", "mode": "create" },
+    { "source": "app/agent-files/platform-cli-version.tmpl", "target": ".platform/cli-version", "mode": "managed" },
+    { "source": "app/agent-files/platform-roles.json.tmpl", "target": ".platform/roles.json", "mode": "managed" },
+    { "source": "app/platform.yaml.tmpl", "target": "platform.yaml", "mode": "create" },
+    { "source": "app/docs/README.md.tmpl", "target": "README.md", "mode": "create" },
+    { "source": "app/docs/CHANGELOG.md.tmpl", "target": "CHANGELOG.md", "mode": "create" },
+    { "source": "app/docs/docs/architecture.md.tmpl", "target": "docs/architecture.md", "mode": "create" },
+    { "source": "app/docs/docs/decisions/0001-record-decisions.md.tmpl", "target": "docs/decisions/0001-record-decisions.md", "mode": "create" },
+    { "generate": "themeCss", "target": "theme/theme.css", "mode": "create", "when": "theme" },
+    { "generate": "themeJson", "target": "theme/theme.json", "mode": "create", "when": "theme" },
+    { "source": "app/theme/README.md.tmpl", "target": "theme/README.md", "mode": "create", "when": "theme" }
+  ],
+  "syncAgentFiles": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".agents/skills",
+    ".claude/skills",
+    ".claude/settings.json",
+    ".gemini/settings.json",
+    ".github/copilot-instructions.md",
+    ".gitattributes",
+    ".platform/cli-version",
+    ".platform/roles.json"
+  ],
+  "onboarding": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".agents/skills",
+    ".claude/skills",
+    ".claude/settings.json",
+    ".gemini/settings.json",
+    ".github/copilot-instructions.md",
+    ".gitattributes",
+    ".gitignore",
+    ".dockerignore",
+    ".editorconfig",
+    ".platform/cli-version",
+    ".platform/roles.json",
+    "platform.yaml"
+  ],
+  "stacks": {
+    "node-ts": {
+      "default": true,
+      "source": "stacks/node-ts",
+      "values": {
+        "STACK_LABEL": "Node.js 22 + TypeScript (Fastify API + React/Vite UI)",
+        "PREREQUISITES": "Node.js 22 LTS (22.12 or newer) with npm",
+        "INSTALL_COMMAND": "npm ci",
+        "DEV_COMMAND": "npm run dev",
+        "TEST_COMMAND": "npm test",
+        "LINT_COMMAND": "npm run lint",
+        "BUILD_COMMAND": "npm run build",
+        "LOCAL_URL": "http://localhost:5173",
+        "LOCAL_SETTINGS": "copy `example.env` to `.env` and edit it (`.env` is never committed)"
+      }
+    },
+    "python-fastapi": {
+      "source": "stacks/python-fastapi",
+      "values": {
+        "STACK_LABEL": "Python 3.13 + FastAPI",
+        "PREREQUISITES": "Python 3.13 (3.12 works for development)",
+        "INSTALL_COMMAND": "python -m venv .venv && . .venv/bin/activate && pip install -r requirements-dev.txt",
+        "DEV_COMMAND": "python -m app",
+        "TEST_COMMAND": "pytest",
+        "LINT_COMMAND": "ruff check . && ruff format --check .",
+        "BUILD_COMMAND": "docker build -t app .",
+        "LOCAL_URL": "http://localhost:8080",
+        "LOCAL_SETTINGS": "copy `example.env` to `.env` and edit it (`.env` is never committed)"
+      }
+    },
+    "dotnet": {
+      "source": "stacks/dotnet",
+      "values": {
+        "STACK_LABEL": ".NET 10 (ASP.NET Core minimal API)",
+        "PREREQUISITES": ".NET SDK 10.0.400 or a newer 10.0.4xx patch",
+        "INSTALL_COMMAND": "dotnet restore App.slnx",
+        "DEV_COMMAND": "dotnet run --project src/App",
+        "TEST_COMMAND": "dotnet test",
+        "LINT_COMMAND": "dotnet build App.slnx && dotnet format App.slnx --verify-no-changes",
+        "BUILD_COMMAND": "dotnet publish src/App/App.csproj -c Release",
+        "LOCAL_URL": "http://localhost:8080",
+        "LOCAL_SETTINGS": "`src/App/Properties/launchSettings.json` (no secrets there; use `dotnet user-secrets` for local secret values)"
+      }
+    },
+    "byo": {
+      "source": null,
+      "values": {
+        "STACK_LABEL": "Bring your own container",
+        "PREREQUISITES": "Docker (and the tools of the app's language)",
+        "INSTALL_COMMAND": "docker build -t app .",
+        "DEV_COMMAND": "docker run --rm -p 8080:8080 -e DEV_FAKE_USER=dev@contoso.com -e DEV_FAKE_ROLES=Admin app",
+        "TEST_COMMAND": "see README.md",
+        "LINT_COMMAND": "see README.md",
+        "BUILD_COMMAND": "docker build -t app .",
+        "LOCAL_URL": "http://localhost:8080",
+        "LOCAL_SETTINGS": "pass them to `docker run` with `-e NAME=value`"
+      }
+    }
+  }
+}

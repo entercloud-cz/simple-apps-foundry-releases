@@ -1,0 +1,11 @@
+{
+  "rule": "V02",
+  "description": "No Azure task or service connection in the validation pipeline.",
+  "patches": [
+    {
+      "file": "platform-validation.yml",
+      "find": "          - template: templates/steps/platform-cli.yml\n",
+      "replace": "          - template: templates/steps/platform-cli.yml\n          - task: AzureCLI@2\n            inputs:\n              azureSubscription: sc-platform-ado\n              scriptType: bash\n              scriptLocation: inlineScript\n              inlineScript: az account show\n            target:\n              commands: restricted\n              settableVariables: none\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "T25",
+  "description": "A prod promotion without the enforced scan gate is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/promote.yml",
+      "find": "                  - bash: bash \"$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/gate.sh\"\n                    displayName: Prod scan gate (instance.yaml scanning)\n                    target:\n                      commands: restricted\n",
+      "replace": ""
+    }
+  ]
+}

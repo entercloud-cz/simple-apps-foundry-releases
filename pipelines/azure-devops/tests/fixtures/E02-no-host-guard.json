@@ -1,0 +1,11 @@
+{
+  "rule": "E02",
+  "description": "The compile-time guard for an empty hostEnvironment is missing.",
+  "patches": [
+    {
+      "file": "platform-environment.yml",
+      "find": "    - 'SAF template error: parameters.hostEnvironment is empty': fail\n",
+      "replace": ""
+    }
+  ]
+}

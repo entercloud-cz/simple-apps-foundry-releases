@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>App</RootNamespace>
+    <AssemblyName>App</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Exact versions. Update deliberately, then run the tests. -->
+    <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="App.Tests" />
+  </ItemGroup>
+
+  <!-- The app's roles and their levels: .platform/roles.json at the repository root (written by the
+       platform) goes next to App.dll, where Auth/AppRoles.cs reads it. Without it the core's default roles apply. -->
+  <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)/../../.platform/roles.json')">
+    <None Include="$(MSBuildProjectDirectory)/../../.platform/roles.json" Link=".platform/roles.json"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

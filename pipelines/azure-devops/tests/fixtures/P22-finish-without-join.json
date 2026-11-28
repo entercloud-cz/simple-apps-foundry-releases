@@ -1,0 +1,11 @@
+{
+  "rule": "P22",
+  "description": "prov_finish waits for every unit first.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "  local u f s e status\n  prov_join\n",
+      "replace": "  local u f s e status\n"
+    }
+  ]
+}

@@ -1,0 +1,349 @@
+{
+  "error": null,
+  "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/providers/Microsoft.Resources/deployments/lz-demo2-nonprod",
+  "location": "westeurope",
+  "name": "lz-demo2-nonprod",
+  "properties": {
+    "correlationId": "00000000-0000-0000-0000-0000000b0001",
+    "debugSetting": null,
+    "dependencies": [
+      {
+        "dependsOn": [
+          {
+            "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-app-demo2-nonprod",
+            "resourceName": "rg-contoso-app-demo2-nonprod",
+            "resourceType": "Microsoft.Resources/resourceGroups"
+          },
+          {
+            "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-platform-nonprod/providers/Microsoft.App/managedEnvironments/cae-contoso-ext-nonprod",
+            "resourceGroup": "rg-contoso-platform-nonprod",
+            "resourceName": "cae-contoso-ext-nonprod",
+            "resourceType": "Microsoft.App/managedEnvironments"
+          },
+          {
+            "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-platform-nonprod/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-contoso-dbinit-nonprod",
+            "resourceGroup": "rg-contoso-platform-nonprod",
+            "resourceName": "id-contoso-dbinit-nonprod",
+            "resourceType": "Microsoft.ManagedIdentity/userAssignedIdentities"
+          },
+          {
+            "apiVersion": "2025-01-01",
+            "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-platform-nonprod/providers/Microsoft.App/managedEnvironments/cae-contoso-ext-nonprod",
+            "resourceGroup": "rg-contoso-platform-nonprod",
+            "resourceName": "cae-contoso-ext-nonprod",
+            "resourceType": "Microsoft.App/managedEnvironments"
+          }
+        ],
+        "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-app-demo2-nonprod/providers/Microsoft.Resources/deployments/resources-xxxxxxxxxxxxx",
+        "resourceGroup": "rg-contoso-app-demo2-nonprod",
+        "resourceName": "resources-xxxxxxxxxxxxx",
+        "resourceType": "Microsoft.Resources/deployments"
+      },
+      {
+        "dependsOn": [
+          {
+            "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-app-demo2-nonprod/providers/Microsoft.Resources/deployments/resources-xxxxxxxxxxxxx",
+            "resourceGroup": "rg-contoso-app-demo2-nonprod",
+            "resourceName": "resources-xxxxxxxxxxxxx",
+            "resourceType": "Microsoft.Resources/deployments"
+          }
+        ],
+        "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-platform-nonprod/providers/Microsoft.Resources/deployments/joinerOnCae-xxxxxxxxxxxxx",
+        "resourceGroup": "rg-contoso-platform-nonprod",
+        "resourceName": "joinerOnCae-xxxxxxxxxxxxx",
+        "resourceType": "Microsoft.Resources/deployments"
+      },
+      {
+        "dependsOn": [
+          {
+            "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-app-demo2-nonprod/providers/Microsoft.Resources/deployments/resources-xxxxxxxxxxxxx",
+            "resourceGroup": "rg-contoso-app-demo2-nonprod",
+            "resourceName": "resources-xxxxxxxxxxxxx",
+            "resourceType": "Microsoft.Resources/deployments"
+          }
+        ],
+        "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-platform-nonprod/providers/Microsoft.Resources/deployments/easyAuthOnSecret-xxxxxxxxxxxxx",
+        "resourceGroup": "rg-contoso-platform-nonprod",
+        "resourceName": "easyAuthOnSecret-xxxxxxxxxxxxx",
+        "resourceType": "Microsoft.Resources/deployments"
+      }
+    ],
+    "diagnostics": [
+      {
+        "additionalInfo": null,
+        "code": "NestedDeploymentShortCircuited",
+        "level": "Warning",
+        "message": "A nested deployment got short-circuited and all its resources got skipped from validation. This is due to a nested template having a parameter that was not fully evaluated (e.g. contains a reference() function). Please see https://aka.ms/WhatIfEvalStopped for more guidance.",
+        "target": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-app-demo2-nonprod/providers/Microsoft.Resources/deployments/resources-xxxxxxxxxxxxx"
+      },
+      {
+        "additionalInfo": null,
+        "code": "NestedDeploymentShortCircuited",
+        "level": "Warning",
+        "message": "A nested deployment got short-circuited and all its resources got skipped from validation. This is due to a nested template having a parameter that was not fully evaluated (e.g. contains a reference() function). Please see https://aka.ms/WhatIfEvalStopped for more guidance.",
+        "target": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-platform-nonprod/providers/Microsoft.Resources/deployments/joinerOnCae-xxxxxxxxxxxxx"
+      },
+      {
+        "additionalInfo": null,
+        "code": "NestedDeploymentShortCircuited",
+        "level": "Warning",
+        "message": "A nested deployment got short-circuited and all its resources got skipped from validation. This is due to a nested template having a parameter that was not fully evaluated (e.g. contains a reference() function). Please see https://aka.ms/WhatIfEvalStopped for more guidance.",
+        "target": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-platform-nonprod/providers/Microsoft.Resources/deployments/easyAuthOnSecret-xxxxxxxxxxxxx"
+      }
+    ],
+    "duration": "PT0S",
+    "error": null,
+    "extensions": [],
+    "mode": "Incremental",
+    "onErrorDeployment": null,
+    "outputResources": null,
+    "outputs": null,
+    "parameters": {
+      "alertEmails": {
+        "type": "Array",
+        "value": [
+          "jane.owner@contoso.com",
+          "john.deputy@contoso.com"
+        ]
+      },
+      "backupRetentionDays": {
+        "type": "Int",
+        "value": 7
+      },
+      "budget": {
+        "type": "Object",
+        "value": {
+          "amount": 10,
+          "forecastNotifyAtPercent": [
+            100
+          ],
+          "notifyAtPercent": [
+            80,
+            100
+          ],
+          "startDate": "2026-10-01"
+        }
+      },
+      "costCenter": {
+        "type": "String",
+        "value": ""
+      },
+      "data": {
+        "type": "Object",
+        "value": {}
+      },
+      "deliveryFederation": {
+        "type": "Object",
+        "value": {
+          "issuer": "https://login.microsoftonline.com/00000000-0000-0000-0000-000000000001/v2.0",
+          "subject": "/eid1/c/pub/t/AAAAAAAAAAAAAAAAAAAAAA/a/BBBBBBBBBBBBBBBBBBBBBB/sc/00000000-0000-0000-0000-0000000b0002/00000000-0000-0000-0000-0000000b0003"
+        }
+      },
+      "deputy": {
+        "type": "Object",
+        "value": {
+          "email": "john.deputy@contoso.com",
+          "principalId": "00000000-0000-0000-0000-00000000e002",
+          "principalType": "User"
+        }
+      },
+      "developers": {
+        "type": "Array",
+        "value": []
+      },
+      "easyAuthSecretExists": {
+        "type": "Bool",
+        "value": true
+      },
+      "environmentKind": {
+        "type": "String",
+        "value": "nonprod"
+      },
+      "environmentName": {
+        "type": "String",
+        "value": "nonprod"
+      },
+      "externalOnlyNetwork": {
+        "type": "String",
+        "value": "managed"
+      },
+      "generation": {
+        "type": "Int",
+        "value": 0
+      },
+      "hybridExistingVnetId": {
+        "type": "String",
+        "value": null
+      },
+      "location": {
+        "type": "String",
+        "value": "westeurope"
+      },
+      "managedBy": {
+        "type": "String",
+        "value": "SAF"
+      },
+      "networkMode": {
+        "type": "String",
+        "value": "externalOnly"
+      },
+      "owner": {
+        "type": "Object",
+        "value": {
+          "email": "jane.owner@contoso.com",
+          "principalId": "00000000-0000-0000-0000-00000000e001",
+          "principalType": "User"
+        }
+      },
+      "postgresCpuCreditAlert": {
+        "type": "Bool",
+        "value": true
+      },
+      "postgresGeoRedundantBackup": {
+        "type": "Bool",
+        "value": false
+      },
+      "prefix": {
+        "type": "String",
+        "value": "contoso"
+      },
+      "promoteFrom": {
+        "type": "Object",
+        "value": null
+      },
+      "slug": {
+        "type": "String",
+        "value": "demo2"
+      },
+      "vaultGeneration": {
+        "type": "Int",
+        "value": 0
+      }
+    },
+    "parametersLink": null,
+    "providers": [
+      {
+        "id": null,
+        "namespace": "Microsoft.App",
+        "providerAuthorizationConsentState": null,
+        "registrationPolicy": null,
+        "registrationState": null,
+        "resourceTypes": [
+          {
+            "aliases": null,
+            "apiProfiles": null,
+            "apiVersions": null,
+            "capabilities": null,
+            "defaultApiVersion": null,
+            "locationMappings": null,
+            "locations": [
+              null
+            ],
+            "properties": null,
+            "resourceType": "managedEnvironments",
+            "zoneMappings": null
+          }
+        ]
+      },
+      {
+        "id": null,
+        "namespace": "Microsoft.ManagedIdentity",
+        "providerAuthorizationConsentState": null,
+        "registrationPolicy": null,
+        "registrationState": null,
+        "resourceTypes": [
+          {
+            "aliases": null,
+            "apiProfiles": null,
+            "apiVersions": null,
+            "capabilities": null,
+            "defaultApiVersion": null,
+            "locationMappings": null,
+            "locations": [
+              null
+            ],
+            "properties": null,
+            "resourceType": "userAssignedIdentities",
+            "zoneMappings": null
+          }
+        ]
+      },
+      {
+        "id": null,
+        "namespace": "Microsoft.Resources",
+        "providerAuthorizationConsentState": null,
+        "registrationPolicy": null,
+        "registrationState": null,
+        "resourceTypes": [
+          {
+            "aliases": null,
+            "apiProfiles": null,
+            "apiVersions": null,
+            "capabilities": null,
+            "defaultApiVersion": null,
+            "locationMappings": null,
+            "locations": [
+              "westeurope"
+            ],
+            "properties": null,
+            "resourceType": "resourceGroups",
+            "zoneMappings": null
+          },
+          {
+            "aliases": null,
+            "apiProfiles": null,
+            "apiVersions": null,
+            "capabilities": null,
+            "defaultApiVersion": null,
+            "locationMappings": null,
+            "locations": [
+              null
+            ],
+            "properties": null,
+            "resourceType": "deployments",
+            "zoneMappings": null
+          }
+        ]
+      }
+    ],
+    "provisioningState": "Succeeded",
+    "templateHash": "10529696251844577568",
+    "templateLink": null,
+    "timestamp": "2026-10-29T10:47:37.672147+00:00",
+    "validatedResources": [
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-app-demo2-nonprod",
+        "identifiers": null,
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-app-demo2-nonprod/providers/Microsoft.Resources/deployments/resources-xxxxxxxxxxxxx",
+        "identifiers": null,
+        "resourceGroup": "rg-contoso-app-demo2-nonprod",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-platform-nonprod/providers/Microsoft.Resources/deployments/easyAuthOnSecret-xxxxxxxxxxxxx",
+        "identifiers": null,
+        "resourceGroup": "rg-contoso-platform-nonprod",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/00000000-0000-0000-0000-00000000a001/resourceGroups/rg-contoso-platform-nonprod/providers/Microsoft.Resources/deployments/joinerOnCae-xxxxxxxxxxxxx",
+        "identifiers": null,
+        "resourceGroup": "rg-contoso-platform-nonprod",
+        "resourceType": null
+      }
+    ],
+    "validationLevel": null
+  },
+  "type": "Microsoft.Resources/deployments"
+}

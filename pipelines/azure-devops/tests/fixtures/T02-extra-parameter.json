@@ -1,0 +1,11 @@
+{
+  "rule": "T02",
+  "description": "A third entry parameter (a skip flag) is rejected.",
+  "patches": [
+    {
+      "file": "app-delivery.yml",
+      "find": "  - name: environments\n    type: object\n",
+      "replace": "  - name: environments\n    type: object\n  - name: skipScan\n    type: object\n    default: {}\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "No other delivery script gets Entra tokens.",
+  "patches": [
+    {
+      "file": "scripts/deploy.sh",
+      "find": "saf_registry\n",
+      "replace": "saf_registry\naz account get-access-token --output none\n"
+    }
+  ]
+}

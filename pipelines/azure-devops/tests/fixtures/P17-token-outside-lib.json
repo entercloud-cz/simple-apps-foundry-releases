@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "The Graph token comes only from prov_secret_tokens().",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra.sh",
+      "find": "  prov_secret_tokens\n",
+      "replace": "  SAF_GRAPH_TOKEN=\"$(az account get-access-token --resource https://graph.microsoft.com/ --query accessToken --output tsv)\"\n  export SAF_GRAPH_TOKEN\n"
+    }
+  ]
+}

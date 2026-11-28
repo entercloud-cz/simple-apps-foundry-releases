@@ -1,0 +1,11 @@
+{
+  "rule": "P01",
+  "description": "hostEnvironment has no default: a missing value fails the run instead of picking a host.",
+  "patches": [
+    {
+      "file": "app-provisioning.yml",
+      "find": "  - name: hostEnvironment\n    type: string\n",
+      "replace": "  - name: hostEnvironment\n    type: string\n    default: prod\n"
+    }
+  ]
+}

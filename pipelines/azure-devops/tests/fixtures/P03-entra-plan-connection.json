@@ -1,0 +1,16 @@
+{
+  "rule": "P03",
+  "description": "entra_plan (only reads; no check of its own) may not use the Entra connection.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra-plan.yml",
+      "find": "              azureSubscription: sc-platform-provisioning-${{ parameters.hostEnvironment }}\n",
+      "replace": "              azureSubscription: sc-platform-entra\n"
+    },
+    {
+      "file": "templates/provisioning/stages/entra-plan.yml",
+      "find": "              SAF_SERVICE_CONNECTION: sc-platform-provisioning-${{ parameters.hostEnvironment }}\n",
+      "replace": "              SAF_SERVICE_CONNECTION: sc-platform-entra\n"
+    }
+  ]
+}

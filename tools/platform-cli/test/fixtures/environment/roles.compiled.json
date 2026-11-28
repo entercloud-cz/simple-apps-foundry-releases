@@ -1,0 +1,41 @@
+{
+  "variables": {
+    "appDeployerActions": [
+      "Microsoft.Resources/subscriptions/resourceGroups/read",
+      "Microsoft.Resources/deployments/read",
+      "Microsoft.Resources/deployments/write",
+      "Microsoft.Resources/deployments/validate/action",
+      "Microsoft.Resources/deployments/whatIf/action",
+      "Microsoft.Resources/deployments/cancel/action",
+      "Microsoft.Resources/deployments/operations/read",
+      "Microsoft.Resources/deployments/operationstatuses/read",
+      "Microsoft.App/containerApps/read",
+      "Microsoft.App/containerApps/write",
+      "Microsoft.App/containerApps/revisions/read",
+      "Microsoft.App/containerApps/revisions/replicas/read",
+      "Microsoft.App/containerApps/detectors/read",
+      "Microsoft.App/jobs/read",
+      "Microsoft.App/jobs/write",
+      "Microsoft.App/jobs/start/action",
+      "Microsoft.App/jobs/executions/read",
+      "Microsoft.App/locations/containerappOperationStatuses/read",
+      "Microsoft.App/locations/containerappOperationResults/read",
+      "Microsoft.App/locations/containerappsjobOperationStatuses/read",
+      "Microsoft.App/locations/containerappsjobOperationResults/read",
+      "Microsoft.ContainerRegistry/registries/read",
+      "Microsoft.Insights/components/read"
+    ],
+    "appEnvironmentJoinerActions": [
+      "Microsoft.App/managedEnvironments/read",
+      "Microsoft.App/managedEnvironments/join/action"
+    ],
+    "platformJobSecretWriterActions": [
+      "Microsoft.App/jobs/read",
+      "Microsoft.App/jobs/write",
+      "Microsoft.App/jobs/start/action",
+      "Microsoft.App/jobs/executions/read",
+      "Microsoft.App/locations/containerappsjobOperationStatuses/read",
+      "Microsoft.App/locations/containerappsjobOperationResults/read"
+    ]
+  }
+}

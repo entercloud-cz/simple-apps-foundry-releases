@@ -1,0 +1,374 @@
+# Stage `verify`: build, check and scan the app WITHOUT Azure credentials (ADR-0006, ADR-0024).
+# No service connection, no environment, no AzureCLI task, no System.AccessToken in any job.
+#
+#   prepare (trusted)   validate-run against instance.yaml; artifact `platform-inputs`
+#                       (platform-owned secret scan allowlist). Never checks out the app.
+#   build (UNTRUSTED)   runs the app's Dockerfile and the image: buildx OCI export, docker load,
+#                       `platform check --strict --image`. Every step has
+#                       `target: { commands: restricted, settableVariables: none }`, so output from
+#                       app code cannot set variables, prepend PATH or upload anything through
+#                       logging commands. Artifacts `image` and `CodeAnalysisLogs-build`.
+#   scan (trusted)      never runs app code (reads platform.yaml as data): image digest, Trivy DB
+#                       (+ Java DB when the image holds Java archives),
+#                       Trivy scan, scan gate, release inputs, the `decide` output variables
+#                       (deployBuildEnvironments, promote) and the release manifest.
+#                       Artifacts `scan` and `release-manifest`.
+#
+# Layout in every job: core -> $(Pipeline.Workspace)/s/core, platform-config (self) -> s/config,
+# app -> s/app. Untrusted values reach scripts only through `env:`.
+
+parameters:
+  - name: app
+    type: object
+  - name: environments
+    type: object
+  # Only so that SAF_PARAMS_JSON (convertToJson(parameters)) carries all five parameters of
+  # app-delivery.yml for validate-run; the verify stage runs for action deliver only.
+  - name: action
+    type: string
+    default: deliver
+    values:
+      - deliver
+  - name: targetEnvironment
+    type: string
+    default: none
+  - name: sourceRunId
+    type: number
+    default: 0
+
+stages:
+  - stage: verify
+    displayName: Verify (build, check, scan)
+    dependsOn: []
+    isSkippable: false
+    pool:
+      name: Azure Pipelines
+      vmImage: ubuntu-24.04
+    jobs:
+      # ---------------------------------------------------------------------------------------
+      # prepare: trusted. Checks the run's parameters and core ref before any app code is fetched.
+      # ---------------------------------------------------------------------------------------
+      - job: prepare
+        displayName: Prepare (validate run, platform inputs)
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 20
+        variables:
+          # Repository resource metadata, as runtime expressions (documented form); mapped into
+          # the step environment below, never used as a macro in script text.
+          # Mapped explicitly rather than relying on RESOURCES_REPOSITORIES_* being exported; the
+          # values arrive as expected (sandbox, 2026-10-29).
+          - name: saf.coreRef
+            value: $[ resources.repositories.core.ref ]
+        steps:
+          - checkout: core
+            path: s/core
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+            lfs: false
+            persistCredentials: false
+            target:
+              commands: restricted
+              settableVariables: none
+          - checkout: self
+            path: s/config
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+            lfs: false
+            persistCredentials: false
+            target:
+              commands: restricted
+              settableVariables: none
+          - template: ../steps/install-tools.yml
+            parameters:
+              tools: [node]
+          - template: ../steps/platform-cli.yml
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/prepare.sh"
+            displayName: Validate run parameters and write platform inputs
+            env:
+              SAF_PARAMS_JSON: ${{ convertToJson(parameters) }}
+              SAF_SLUG: ${{ parameters.app.slug }}
+              RESOURCES_REPOSITORIES_CORE_REF: $(saf.coreRef)
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: PublishPipelineArtifact@1
+            displayName: Publish platform-inputs
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/platform-inputs
+              artifact: platform-inputs
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none
+
+      # ---------------------------------------------------------------------------------------
+      # build: UNTRUSTED. The app's Dockerfile and image run here. No credentials of any kind;
+      # every step restricted. platform-config is checked out for instance.yaml (data only).
+      # ---------------------------------------------------------------------------------------
+      - job: build
+        displayName: Build and check (untrusted)
+        dependsOn: prepare
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 60
+        steps:
+          # checkout, DownloadPipelineArtifact@2 and PublishPipelineArtifact@1 work under
+          # `commands: restricted` + `settableVariables: none` (agent plugins, not logging
+          # commands); checkout only warns that it can't update the repository path (sandbox,
+          # 2026-10-29).
+          - checkout: core
+            path: s/core
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+            lfs: false
+            persistCredentials: false
+            target:
+              commands: restricted
+              settableVariables: none
+          - checkout: self
+            path: s/config
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+            lfs: false
+            persistCredentials: false
+            target:
+              commands: restricted
+              settableVariables: none
+          - checkout: app
+            path: s/app
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+            lfs: false
+            persistCredentials: false
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: DownloadPipelineArtifact@2
+            displayName: Download platform-inputs
+            inputs:
+              buildType: current
+              artifactName: platform-inputs
+              targetPath: $(Pipeline.Workspace)/platform-inputs
+            target:
+              commands: restricted
+              settableVariables: none
+          - template: ../steps/install-tools.yml
+            parameters:
+              tools: [node, buildx]
+          - template: ../steps/platform-cli.yml
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/build-image.sh"
+            displayName: Build the image (buildx, OCI export, docker load)
+            env:
+              SAF_SLUG: ${{ parameters.app.slug }}
+              SAF_ENVIRONMENTS_JSON: ${{ convertToJson(parameters.environments) }}
+            target:
+              commands: restricted
+              settableVariables: none
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/check-app.sh"
+            displayName: platform check --strict (image smoke test)
+            target:
+              commands: restricted
+              settableVariables: none
+          # PublishPipelineArtifact@1 works with `commands: restricted` (agent plugin, not the
+          # artifact.upload logging command; sandbox, 2026-10-29).
+          - task: PublishPipelineArtifact@1
+            displayName: Publish image
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/image
+              artifact: image
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: PublishPipelineArtifact@1
+            displayName: Publish SARIF
+            condition: succeededOrFailed()
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/CodeAnalysisLogs
+              artifact: CodeAnalysisLogs-build
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none
+
+      # ---------------------------------------------------------------------------------------
+      # scan: trusted, never runs app code. The app checkout is data only (platform.yaml and the
+      # build paths release-inputs resolves). Full shallow checkout: release-inputs must resolve
+      # build.dockerfile and build.context, whose paths are only known after reading platform.yaml,
+      # so a sparse checkout of platform.yaml alone would not do.
+      # ---------------------------------------------------------------------------------------
+      - job: scan
+        displayName: Scan and release manifest
+        dependsOn: build
+        pool:
+          name: Azure Pipelines
+          vmImage: ubuntu-24.04
+        timeoutInMinutes: 45
+        variables:
+          - name: saf.appRef
+            value: $[ resources.repositories.app.ref ]
+          - name: saf.appVersion
+            value: $[ resources.repositories.app.version ]
+          - name: saf.coreRef
+            value: $[ resources.repositories.core.ref ]
+        steps:
+          - checkout: core
+            path: s/core
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+            lfs: false
+            persistCredentials: false
+            target:
+              commands: restricted
+              settableVariables: none
+          - checkout: self
+            path: s/config
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+            lfs: false
+            persistCredentials: false
+            target:
+              commands: restricted
+              settableVariables: none
+          - checkout: app
+            path: s/app
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+            lfs: false
+            persistCredentials: false
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: DownloadPipelineArtifact@2
+            displayName: Download image
+            inputs:
+              buildType: current
+              artifactName: image
+              targetPath: $(Pipeline.Workspace)/image
+            target:
+              commands: restricted
+              settableVariables: none
+          - template: ../steps/install-tools.yml
+            parameters:
+              tools: [node, trivy, oras]
+          - template: ../steps/platform-cli.yml
+          - bash: |
+              set -euo pipefail
+              bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/image-digest.sh" \
+                "$PIPELINE_WORKSPACE/image/image.oci.tar" \
+                "$PIPELINE_WORKSPACE/saf-work/layout" \
+                "$PIPELINE_WORKSPACE/saf-work/image-digest.txt"
+            displayName: Verify the image archive and compute its digest
+            target:
+              commands: restricted
+              settableVariables: none
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/trivy-db.sh" resolve
+            name: trivydb
+            displayName: Resolve the Trivy DB by digest
+            target:
+              commands: restricted
+              settableVariables:
+                - SAF_TRIVY_DB_LAYER
+          - task: Cache@2
+            displayName: Cache the Trivy DB (keyed by layer digest)
+            inputs:
+              key: '"saf-trivy-db" | "$(SAF_TRIVY_DB_LAYER)"'
+              path: $(Pipeline.Workspace)/saf-cache/trivy-db
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/trivy-db.sh" install
+            displayName: Verify and install the Trivy DB (sha256, max age)
+            target:
+              commands: restricted
+              settableVariables: none
+          # Java index DB (~1 GB), only for images with Java archives: Trivy can't scan a JAR
+          # without it when DB updates are off. Same content-addressed pattern as the vuln DB.
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/java-archives.sh" "$PIPELINE_WORKSPACE/saf-work/layout"
+            name: javacheck
+            displayName: Look for Java archives in the image (file names only)
+            target:
+              commands: restricted
+              settableVariables:
+                - SAF_SCAN_JAVA
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/trivy-db.sh" resolve java
+            name: trivyjavadb
+            displayName: Resolve the Trivy Java DB by digest
+            condition: and(succeeded(), eq(variables['SAF_SCAN_JAVA'], 'true'))
+            target:
+              commands: restricted
+              settableVariables:
+                - SAF_TRIVY_JAVA_DB_LAYER
+          # TODO(verify): Cache@2 stores and restores a ~1 GB entry on hosted agents (TOOL-3).
+          - task: Cache@2
+            displayName: Cache the Trivy Java DB (keyed by layer digest)
+            condition: and(succeeded(), eq(variables['SAF_SCAN_JAVA'], 'true'))
+            inputs:
+              key: '"saf-trivy-java-db" | "$(SAF_TRIVY_JAVA_DB_LAYER)"'
+              path: $(Pipeline.Workspace)/saf-cache/trivy-java-db
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/trivy-db.sh" install java
+            displayName: Verify and install the Trivy Java DB (sha256, max age)
+            condition: and(succeeded(), eq(variables['SAF_SCAN_JAVA'], 'true'))
+            target:
+              commands: restricted
+              settableVariables: none
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/scan.sh" "$PIPELINE_WORKSPACE/saf-work/layout"
+            displayName: Trivy scan (clean directory, platform config) and scan gate
+            target:
+              commands: restricted
+              settableVariables: none
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/release-manifest.sh" inputs
+            displayName: Release inputs from platform.yaml
+            env:
+              SAF_SLUG: ${{ parameters.app.slug }}
+              SAF_ENVIRONMENTS_JSON: ${{ convertToJson(parameters.environments) }}
+            target:
+              commands: restricted
+              settableVariables: none
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/release-manifest.sh" decide
+            name: decide
+            displayName: Decide what deploys (deploy.branches, default branch)
+            env:
+              RESOURCES_REPOSITORIES_APP_REF: $(saf.appRef)
+              SAF_DEFAULT_BRANCH: ${{ parameters.app.defaultBranch }}
+            target:
+              commands: restricted
+              settableVariables:
+                - deployBuildEnvironments
+                - promote
+          - bash: bash "$PIPELINE_WORKSPACE/s/core/pipelines/azure-devops/scripts/release-manifest.sh" manifest
+            displayName: Release manifest
+            env:
+              RESOURCES_REPOSITORIES_APP_REF: $(saf.appRef)
+              RESOURCES_REPOSITORIES_APP_VERSION: $(saf.appVersion)
+              RESOURCES_REPOSITORIES_CORE_REF: $(saf.coreRef)
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: PublishPipelineArtifact@1
+            displayName: Publish scan results
+            condition: succeededOrFailed()
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/scan
+              artifact: scan
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none
+          - task: PublishPipelineArtifact@1
+            displayName: Publish release manifest
+            inputs:
+              targetPath: $(Pipeline.Workspace)/saf-out/release-manifest
+              artifact: release-manifest
+              publishLocation: pipeline
+            target:
+              commands: restricted
+              settableVariables: none

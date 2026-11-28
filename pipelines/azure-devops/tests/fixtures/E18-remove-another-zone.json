@@ -1,0 +1,11 @@
+{
+  "rule": "E18",
+  "description": "plat_former_db_remove() also deletes the portal's vault zone, which still holds the portal-side vault endpoints.",
+  "patches": [
+    {
+      "file": "scripts/platform/plat-lib.sh",
+      "find": "            \"$base/Microsoft.Network/privateDnsZones/$zone\"; do\n",
+      "replace": "            \"$base/Microsoft.Network/privateDnsZones/$zone\" \\\n            \"$base/Microsoft.Network/privateDnsZones/privatelink.vaultcore.azure.net\"; do\n"
+    }
+  ]
+}

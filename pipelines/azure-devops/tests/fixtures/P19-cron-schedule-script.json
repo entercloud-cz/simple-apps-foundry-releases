@@ -1,0 +1,11 @@
+{
+  "rule": "P19",
+  "description": "No script decides on the schedule that started the run (BUILD_CRONSCHEDULE_DISPLAYNAME).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra-plan.sh",
+      "find": "    action=rotate\n",
+      "replace": "    [ -n \"${BUILD_CRONSCHEDULE_DISPLAYNAME:-}\" ] || return 0\n    action=rotate\n"
+    }
+  ]
+}

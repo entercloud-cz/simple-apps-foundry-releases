@@ -1,0 +1,11 @@
+{
+  "rule": "T03",
+  "description": "No boolean parameter in provisioning templates either (e.g. a download switch).",
+  "patches": [
+    {
+      "file": "templates/provisioning/steps/download.yml",
+      "find": "  - name: artifacts\n    type: object\n",
+      "replace": "  - name: artifacts\n    type: object\n  - name: withEntra\n    type: boolean\n    default: false\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P02",
+  "description": "The compile-time guard for promoteFrom listed later is required.",
+  "patches": [
+    {
+      "file": "app-provisioning.yml",
+      "find": "'SAF template error: promoteFrom must name an environment listed earlier'",
+      "replace": "'SAF template error: order'"
+    }
+  ]
+}

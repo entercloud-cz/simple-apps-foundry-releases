@@ -1,0 +1,11 @@
+{
+  "rule": "P03",
+  "description": "An Azure stage may not use the ADO service connection.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure.yml",
+      "find": "              azureSubscription: sc-platform-provisioning-${{ parameters.environment.name }}\n",
+      "replace": "              azureSubscription: sc-platform-ado\n"
+    }
+  ]
+}

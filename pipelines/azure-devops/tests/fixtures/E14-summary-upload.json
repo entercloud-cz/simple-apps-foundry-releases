@@ -1,0 +1,10 @@
+{
+  "rule": "E14",
+  "description": "A platform script uploads a run summary (a logging command restricted mode forbids).",
+  "patches": [
+    {
+      "file": "scripts/platform/plan.sh",
+      "append": "printf '##vso[task.uploadsummary]%s\\n' \"$out/what-if.txt\"\n"
+    }
+  ]
+}

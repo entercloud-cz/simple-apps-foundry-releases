@@ -1,0 +1,11 @@
+{
+  "rule": "P11",
+  "description": "entra-plan.sh checks the pinned bicep before the app loop.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra-plan.sh",
+      "find": "\nsaf_bicep_pin_check\n",
+      "replace": "\n"
+    }
+  ]
+}

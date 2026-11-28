@@ -1,0 +1,11 @@
+{
+  "description": "The platform pipeline of a non-host environment.",
+  "entry": "platform-environment.yml",
+  "parameters": {
+    "environment": "nonprod",
+    "hostEnvironment": "prod"
+  },
+  "expect": {
+    "stages": ["validate", "plan", "deploy"]
+  }
+}

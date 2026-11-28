@@ -1,0 +1,24 @@
+{
+  "description": "An action outside the allowed values fails compilation.",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      }
+    ],
+    "action": "rollback",
+    "targetEnvironment": "nonprod",
+    "sourceRunId": 12
+  },
+  "expect": {
+    "errors": [
+      "parameter action: value 'rollback' is not allowed"
+    ]
+  }
+}

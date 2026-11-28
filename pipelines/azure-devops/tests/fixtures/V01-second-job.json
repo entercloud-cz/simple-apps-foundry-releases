@@ -1,0 +1,11 @@
+{
+  "rule": "V01",
+  "description": "Exactly one job: validate.",
+  "patches": [
+    {
+      "file": "platform-validation.yml",
+      "find": "    jobs:\n      - job: validate\n",
+      "replace": "    jobs:\n      - job: extra\n        pool:\n          name: Azure Pipelines\n          vmImage: ubuntu-24.04\n        steps:\n          - checkout: none\n            target:\n              commands: restricted\n              settableVariables: none\n      - job: validate\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P14",
+  "description": "Stage entra creates its artifact folder before the checkouts and the AzureCLI login, so a failed job still publishes entra.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra.yml",
+      "find": "              artifact: entra\n",
+      "replace": ""
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "T09",
+  "description": "A `script:` step (instead of bash) is rejected.",
+  "patches": [
+    {
+      "file": "templates/steps/platform-cli.yml",
+      "find": "  - bash: |\n",
+      "replace": "  - script: |\n"
+    }
+  ]
+}

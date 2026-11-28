@@ -1,0 +1,11 @@
+{
+  "rule": "P13",
+  "description": "azure_post_<env> runs on its own output post_<env>, not another stage's.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/azure-post.yml",
+      "find": "eq(dependencies.plan.outputs['decide.decide.post_${{ parameters.environment.name }}'], 'true'))",
+      "replace": "eq(dependencies.plan.outputs['decide.decide.lz_${{ parameters.environment.name }}'], 'true'))"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "description": "One build environment (increment 1 shape).",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      }
+    ]
+  },
+  "expect": {
+    "stages": [
+      "verify",
+      "deploy_nonprod"
+    ]
+  }
+}

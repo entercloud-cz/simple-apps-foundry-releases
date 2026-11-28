@@ -1,0 +1,11 @@
+{
+  "rule": "P14",
+  "description": "Only validate builds the platform CLI; the other jobs install this run's (ADR-0048).",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/report.yml",
+      "find": "              tools: [node]\n              cli: artifact\n",
+      "replace": "              tools: [node]\n              cli: build\n"
+    }
+  ]
+}

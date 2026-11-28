@@ -1,0 +1,22 @@
+{
+  "description": "Empty slug and a defaultBranch without refs/heads/.",
+  "parameters": {
+    "app": {
+      "slug": "",
+      "defaultBranch": "main"
+    },
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      }
+    ]
+  },
+  "expect": {
+    "errors": [
+      "parameters.app.slug is empty",
+      "parameters.app.defaultBranch must start with refs/heads/"
+    ]
+  }
+}

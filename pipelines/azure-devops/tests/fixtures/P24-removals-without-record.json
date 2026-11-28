@@ -1,0 +1,11 @@
+{
+  "rule": "P24",
+  "description": "entra-removals reads only the record of the platform's own deployment.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra-plan.sh",
+      "find": "--record \"$PROV_DIR/entra-record.json\"",
+      "replace": "--record \"$SAF_IN/any-record.json\""
+    }
+  ]
+}
