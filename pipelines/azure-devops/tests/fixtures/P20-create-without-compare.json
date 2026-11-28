@@ -1,0 +1,11 @@
+{
+  "rule": "P20",
+  "description": "front_door_step() creates the deployment only when the record is not up to date.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  if [ \"$prov_verdict\" = up-to-date ]; then\n    cp \"$dir/record.json\" \"$dir/deployment.json\"\n",
+      "replace": "  if [ -n \"$prov_verdict\" ]; then\n    cp \"$dir/record.json\" \"$dir/deployment.json\"\n"
+    }
+  ]
+}

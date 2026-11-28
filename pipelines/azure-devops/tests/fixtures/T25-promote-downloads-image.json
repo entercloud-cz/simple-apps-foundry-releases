@@ -1,0 +1,11 @@
+{
+  "rule": "T25",
+  "description": "A promotion stage that downloads the image archive (and could push it) is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/promote.yml",
+      "find": "                - ${{ if eq(parameters.environment.kind, 'prod') }}:\n                  - task: DownloadPipelineArtifact@2\n",
+      "replace": "                - task: DownloadPipelineArtifact@2\n                  inputs:\n                    buildType: current\n                    artifactName: image\n                    targetPath: $(Pipeline.Workspace)/image\n                  target:\n                    commands: restricted\n                - ${{ if eq(parameters.environment.kind, 'prod') }}:\n                  - task: DownloadPipelineArtifact@2\n"
+    }
+  ]
+}

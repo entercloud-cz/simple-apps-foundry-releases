@@ -1,0 +1,11 @@
+{
+  "rule": "T18",
+  "description": "A deployment job that checks out the app repo is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/deploy.yml",
+      "find": "                - task: DownloadPipelineArtifact@2\n                  displayName: Download release-manifest\n",
+      "replace": "                - checkout: app\n                  path: s/app\n                  fetchDepth: 1\n                  fetchTags: false\n                  submodules: false\n                  lfs: false\n                  persistCredentials: false\n                - task: DownloadPipelineArtifact@2\n                  displayName: Download release-manifest\n"
+    }
+  ]
+}

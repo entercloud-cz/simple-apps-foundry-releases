@@ -1,0 +1,11 @@
+{
+  "rule": "T15",
+  "description": "A service connection name that differs from naming.bicep is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/deploy.yml",
+      "find": "azureSubscription: sc-${{ parameters.app.slug }}-${{ parameters.environment.name }}",
+      "replace": "azureSubscription: ${{ parameters.app.slug }}-${{ parameters.environment.name }}-sc"
+    }
+  ]
+}

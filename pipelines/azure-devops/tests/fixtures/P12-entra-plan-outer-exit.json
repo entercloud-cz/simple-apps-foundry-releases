@@ -1,0 +1,11 @@
+{
+  "rule": "P12",
+  "description": "The per-environment loop around entra-plan.sh's app loop may not stop it either.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/entra-plan.sh",
+      "find": "  prov_plan_apps \"$e\"\n",
+      "replace": "  prov_plan_apps \"$e\" || exit 1\n"
+    }
+  ]
+}

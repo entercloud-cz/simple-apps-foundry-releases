@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "A deploy-event step in the preview job (no deployment job) is rejected.",
+  "patches": [
+    {
+      "file": "templates/stages/preview.yml",
+      "find": "          # task.uploadsummary is not allowed in restricted mode; this step prints only the fixed\n",
+      "replace": "          - task: AzureCLI@2\n            displayName: Report\n            condition: succeededOrFailed()\n            continueOnError: true\n            timeoutInMinutes: 5\n            inputs:\n              azureSubscription: sc-${{ parameters.app.slug }}-${{ parameters.environment.name }}\n              scriptType: bash\n              scriptLocation: scriptPath\n              scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/report.sh\n            target:\n              commands: restricted\n          # task.uploadsummary is not allowed in restricted mode; this step prints only the fixed\n"
+    }
+  ]
+}

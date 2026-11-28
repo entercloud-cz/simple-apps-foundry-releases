@@ -1,0 +1,35 @@
+# Fixture: the sandbox app whose deployment records are in this folder (lz-demo2-nonprod.json,
+# release-demo2.json, entra-demo2-nonprod.json: real `az deployment ... show -o json` output, and
+# lz-demo2-nonprod.validate.json: `az deployment sub validate` of the same inputs), all with IDs,
+# names and addresses replaced by placeholders. Use with ../../config/instance.yaml.
+schemaVersion: "1.0-draft"
+slug: demo2
+title: Demo 2
+description: Second test app, created through the provisioning steps.
+generation: 0
+owner:
+  objectId: 00000000-0000-0000-0000-00000000e001
+  principalType: User
+  email: jane.owner@contoso.com
+deputy:
+  objectId: 00000000-0000-0000-0000-00000000e002
+  principalType: User
+  email: john.deputy@contoso.com
+developers: []
+repository:
+  provider: azureDevOps
+  project: Apps
+  name: demo2
+  defaultBranch: main
+authentication:
+  mode: required
+  assignments:
+    - role: Admin
+      principalType: User
+      objectId: 00000000-0000-0000-0000-00000000e002
+      displayName: John Deputy
+environments:
+  nonprod:
+    networkMode: externalOnly
+    budget:
+      monthlyAmount: 10

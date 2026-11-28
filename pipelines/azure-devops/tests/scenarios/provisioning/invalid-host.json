@@ -1,0 +1,26 @@
+{
+  "description": "hostEnvironment names no environment of the list.",
+  "entry": "app-provisioning.yml",
+  "parameters": {
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      },
+      {
+        "name": "prod",
+        "kind": "prod",
+        "promoteFrom": "nonprod"
+      }
+    ],
+    "hostEnvironment": "portal",
+    "scope": "changed",
+    "upgrade": "none"
+  },
+  "expect": {
+    "errors": [
+      "hostEnvironment must name an environment of the list"
+    ]
+  }
+}

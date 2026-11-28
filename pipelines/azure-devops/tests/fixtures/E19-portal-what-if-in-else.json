@@ -1,0 +1,11 @@
+{
+  "rule": "E19",
+  "description": "The portal's what-if runs only when the portal is up to date, the opposite of what the approvers need.",
+  "patches": [
+    {
+      "file": "scripts/platform/plan.sh",
+      "find": "  if [ \"$portal_changed\" = true ]; then\n    plat_arm what-if portal ",
+      "replace": "  if [ \"$portal_changed\" != true ]; then\n    plat_arm what-if portal "
+    }
+  ]
+}

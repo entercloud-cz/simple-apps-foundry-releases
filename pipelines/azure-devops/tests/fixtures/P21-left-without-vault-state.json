@@ -1,0 +1,11 @@
+{
+  "rule": "P21",
+  "description": "The portal-side endpoint of a vault no longer VNet-based goes only when portal_vault_state finds no other connection (ADR-0025 amendment 2026-11-14): otherwise the portal VNet could not resolve the vault.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure-post.sh",
+      "find": "  state=\"$(portal_vault_state \"$vault_id\" \"$endpoint_id\")\"\n",
+      "replace": "  state=free\n"
+    }
+  ]
+}

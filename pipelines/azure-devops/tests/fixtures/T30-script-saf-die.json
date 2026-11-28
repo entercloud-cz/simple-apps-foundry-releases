@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "saf_die exits 1 and would fail the job.",
+  "patches": [
+    {
+      "file": "scripts/report.sh",
+      "find": "|| skip \"SAF_SLUG has an invalid shape\"",
+      "replace": "|| saf_die \"SAF_SLUG has an invalid shape\""
+    }
+  ]
+}

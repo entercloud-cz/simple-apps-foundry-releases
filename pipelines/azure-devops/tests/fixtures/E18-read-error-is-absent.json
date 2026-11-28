@@ -1,0 +1,11 @@
+{
+  "rule": "E18",
+  "description": "plat_former_db_read() takes any read error for a missing object, so a throttled read would skip the removal silently and a wrong one would hide the server.",
+  "patches": [
+    {
+      "file": "scripts/platform/plat-lib.sh",
+      "find": "    if ! grep -Eq 'ResourceNotFound|ResourceGroupNotFound' \"$err\"; then\n",
+      "replace": "    if false; then\n"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "P26",
+  "description": "PE010's clean-up removes only assignments the app's own failed landing zone named with RoleAssignmentUpdateNotPermitted (an ID from the app's own record, ADR-0052).",
+  "patches": [
+    {
+      "file": "scripts/provisioning/prov-lib.sh",
+      "find": "        and ((.properties.statusMessage // {}) | tostring | test(\"RoleAssignmentUpdateNotPermitted\"))) | .properties.targetResource.id // empty' \\\n",
+      "replace": "        ) | .properties.targetResource.id // empty' \\\n"
+    }
+  ]
+}

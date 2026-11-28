@@ -1,0 +1,11 @@
+{
+  "rule": "P25",
+  "description": "A job that downloads an optional artifact maps its job's result.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/report.yml",
+      "find": "          - name: saf.result.entra\n            value: $[ stageDependencies.entra.registrations.result ]\n",
+      "replace": ""
+    }
+  ]
+}

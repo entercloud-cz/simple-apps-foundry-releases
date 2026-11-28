@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{APP_NAME}}</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script type="module" src="/static/app.js"></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="header">
+        <h1>{{APP_NAME}}</h1>
+        <!-- The user menu: who is signed in, their roles, Sign out and Sign in as another user (app.js fills it). Keep it. -->
+        <div class="user-menu" id="user-menu" hidden>
+          <button
+            type="button"
+            class="button secondary"
+            id="user-menu-button"
+            aria-expanded="false"
+            aria-controls="user-menu-panel"
+          >
+            <span class="visually-hidden">Your account: </span><span id="user-menu-button-name"></span>
+          </button>
+          <div class="card user-menu-panel" id="user-menu-panel" hidden>
+            <p class="user-menu-name" id="user-name"></p>
+            <p class="muted" id="user-email" hidden></p>
+            <p class="user-menu-label" id="user-roles-label">Your roles</p>
+            <ul class="user-menu-roles" id="user-roles" aria-labelledby="user-roles-label"></ul>
+            <p class="muted" id="user-no-roles" hidden>You have no role in this app yet.</p>
+            <!-- The platform's sign-in pages; they exist only on the platform. -->
+            <ul class="user-menu-actions" id="user-actions" hidden>
+              <li><a href="/.auth/logout?post_logout_redirect_uri=/">Sign out</a></li>
+              <li><a href="/.auth/login/aad?prompt=select_account&amp;post_login_redirect_uri=/">Sign in as another user</a></li>
+            </ul>
+            <p class="muted user-menu-note" id="user-local-note" hidden>
+              On your computer you are the fake user from DEV_FAKE_USER, with the roles in DEV_FAKE_ROLES. Signing in
+              and out is the platform's: it works once the app runs there.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <p id="status">Loading…</p>
+
+        <section id="home" hidden>
+          <p>Hello, <span id="home-name"></span>.</p>
+        </section>
+
+        <!-- A signed-in user without a role sees this instead of pages whose requests the server would refuse. -->
+        <section class="card" id="no-role" aria-labelledby="no-role-heading" hidden>
+          <h2 id="no-role-heading">You have no role in this app yet</h2>
+          <p id="no-role-platform">Ask the app's owner to give you one. Once you have it, sign out and sign in again.</p>
+          <p id="no-role-local" hidden>
+            On your computer, give the fake user a role: set DEV_FAKE_ROLES, for example Reader.
+          </p>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

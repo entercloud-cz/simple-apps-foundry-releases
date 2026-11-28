@@ -1,0 +1,11 @@
+{
+  "rule": "T13",
+  "description": "The token must not be on curl's command line.",
+  "patches": [
+    {
+      "file": "scripts/report.sh",
+      "find": "--request POST --header @\"$hdr\"",
+      "replace": "--request POST --header \"Authorization: Bearer $token\""
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "rule": "T16",
+  "description": "A job without the hosted pool's name is rejected (no default queue on API-created pipelines).",
+  "patches": [
+    {
+      "file": "templates/stages/verify.yml",
+      "find": "        displayName: Build and check (untrusted)\n        dependsOn: prepare\n        pool:\n          name: Azure Pipelines\n          vmImage: ubuntu-24.04\n",
+      "replace": "        displayName: Build and check (untrusted)\n        dependsOn: prepare\n        pool:\n          vmImage: ubuntu-24.04\n"
+    }
+  ]
+}

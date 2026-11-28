@@ -1,0 +1,11 @@
+{
+  "rule": "E19",
+  "description": "The plan skips the environment's what-if for a change as well (here for a new environment), so the approvers approve a deploy they haven't seen.",
+  "patches": [
+    {
+      "file": "scripts/platform/plan.sh",
+      "find": "if [ \"$env_changed\" = true ]; then\n  plat_arm what-if environment ",
+      "replace": "if [ \"$env_changed\" = true ] && [ \"$pass\" = 2 ]; then\n  plat_arm what-if environment "
+    }
+  ]
+}

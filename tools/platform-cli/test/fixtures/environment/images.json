@@ -1,0 +1,20 @@
+{
+  "$comment": "Test fixture: core images/images.json with placeholder digests (the platform pipeline's example inputs in infra/platform/pipeline/examples use the saf-jobs and saf-portal ones; the saf-portal one is PORTAL_DIGEST of infra/tests/check-infra.py).",
+  "formatVersion": 1,
+  "images": {
+    "saf-placeholder": {
+      "repository": "saf-placeholder",
+      "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "runtime": { "port": 8080, "livenessPath": "/healthz", "readinessPath": "/readyz" }
+    },
+    "saf-jobs": {
+      "repository": "saf-jobs",
+      "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "saf-portal": {
+      "repository": "saf-portal",
+      "digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "runtime": { "port": 8080, "livenessPath": "/healthz", "readinessPath": "/readyz" }
+    }
+  }
+}

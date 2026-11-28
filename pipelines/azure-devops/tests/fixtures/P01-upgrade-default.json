@@ -1,0 +1,11 @@
+{
+  "rule": "P01",
+  "description": "The parameter upgrade has no default in the entry template (generate's provisioning.yml sets it).",
+  "patches": [
+    {
+      "file": "app-provisioning.yml",
+      "find": "  - name: upgrade\n    type: string\n",
+      "replace": "  - name: upgrade\n    type: string\n    default: none\n"
+    }
+  ]
+}

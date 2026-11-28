@@ -1,0 +1,11 @@
+{
+  "rule": "P24",
+  "description": "prov_graph_token is called only by entra.sh.",
+  "patches": [
+    {
+      "file": "scripts/provisioning/azure.sh",
+      "find": "  prov_write_frontdoor_entry \"$out\"\n",
+      "replace": "  prov_write_frontdoor_entry \"$out\"\n  prov_graph_token\n"
+    }
+  ]
+}

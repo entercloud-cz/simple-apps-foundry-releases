@@ -1,0 +1,11 @@
+{
+  "rule": "V02",
+  "description": "The validation script gets no token.",
+  "patches": [
+    {
+      "file": "scripts/platform-validation.sh",
+      "find": "failed=0\n",
+      "replace": "failed=0\ntoken=\"$(az account get-access-token --query accessToken -o tsv)\"\nexport AZURE_DEVOPS_TOKEN=\"$token\"\n"
+    }
+  ]
+}

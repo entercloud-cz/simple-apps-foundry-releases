@@ -1,0 +1,11 @@
+{
+  "rule": "T14",
+  "description": "A tool without a SHA-256 pin is rejected.",
+  "patches": [
+    {
+      "file": "tools/tools.json",
+      "find": "\"sha256\": \"66fb0ad7206f3f6fa77ed5b552049d364ccf4b50b1684554f731f76302b52ca0\",",
+      "replace": ""
+    }
+  ]
+}

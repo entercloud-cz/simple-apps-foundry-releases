@@ -1,0 +1,24 @@
+{
+  "description": "redeploy without a source run.",
+  "parameters": {
+    "app": {
+      "slug": "demo",
+      "defaultBranch": "refs/heads/main"
+    },
+    "environments": [
+      {
+        "name": "nonprod",
+        "kind": "nonprod",
+        "promoteFrom": ""
+      }
+    ],
+    "action": "redeploy",
+    "targetEnvironment": "nonprod",
+    "sourceRunId": 0
+  },
+  "expect": {
+    "errors": [
+      "action redeploy needs sourceRunId > 0"
+    ]
+  }
+}

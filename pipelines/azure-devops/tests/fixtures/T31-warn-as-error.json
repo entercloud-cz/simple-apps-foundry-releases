@@ -1,0 +1,11 @@
+{
+  "rule": "T31",
+  "description": "saf_warn prints a warning, nothing else.",
+  "patches": [
+    {
+      "file": "scripts/lib.sh",
+      "find": "  printf '##vso[task.logissue type=warning]%s\\n' \"$*\"\n",
+      "replace": "  printf '##vso[task.logissue type=warning]%s\\n' \"$*\"\n  printf '##vso[task.complete result=Failed]\\n'\n"
+    }
+  ]
+}

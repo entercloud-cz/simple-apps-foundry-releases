@@ -1,0 +1,11 @@
+{
+  "rule": "P01",
+  "description": "The parameter upgrade is a string, never a boolean or an object.",
+  "patches": [
+    {
+      "file": "app-provisioning.yml",
+      "find": "  - name: upgrade\n    type: string\n",
+      "replace": "  - name: upgrade\n    type: object\n"
+    }
+  ]
+}

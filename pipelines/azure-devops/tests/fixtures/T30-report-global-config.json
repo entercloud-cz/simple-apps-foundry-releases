@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "The deploy event's az login must stay in its step (useGlobalConfig: false).",
+  "patches": [
+    {
+      "file": "templates/steps/deployment-finish.yml",
+      "find": "      scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/report.sh\n      addSpnToEnvironment: false\n      useGlobalConfig: false\n",
+      "replace": "      scriptPath: $(Pipeline.Workspace)/s/core/pipelines/azure-devops/scripts/report.sh\n      addSpnToEnvironment: false\n      useGlobalConfig: true\n"
+    }
+  ]
+}

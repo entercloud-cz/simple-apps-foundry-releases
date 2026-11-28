@@ -1,0 +1,11 @@
+{
+  "rule": "P17",
+  "description": "No template passes a Graph or ARM token.",
+  "patches": [
+    {
+      "file": "templates/provisioning/stages/entra.yml",
+      "find": "              SAF_SERVICE_CONNECTION: sc-platform-entra\n",
+      "replace": "              SAF_SERVICE_CONNECTION: sc-platform-entra\n              SAF_GRAPH_TOKEN: $(saf.graphToken)\n"
+    }
+  ]
+}

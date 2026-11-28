@@ -1,0 +1,11 @@
+{
+  "rule": "T30",
+  "description": "set -a would export every variable, the token included.",
+  "patches": [
+    {
+      "file": "scripts/report.sh",
+      "find": "set -euo pipefail\n\nhdr=\"\"\n",
+      "replace": "set -euo pipefail\nset -a\n\nhdr=\"\"\n"
+    }
+  ]
+}
